@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sell on SokoHub</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">Soko<span>Hub</span></a>
+    <div class="search-wrap" style="max-width:300px">
+      <input id="globalSearch" type="text" placeholder="Search…"/>
+      <button class="btn-search" onclick="handleSearch()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+    </div>
+    <nav class="top-actions">
+      <a href="account.html" class="btn-account" id="accountBtn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+    </nav>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <a href="../index.html" class="tab" data-tab="home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+  <a href="categories.html" class="tab" data-tab="categories"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Categories</span></a>
+  <a href="shop.html" class="tab" data-tab="shop"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></a>
+  <a href="account.html" class="tab" data-tab="account"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Account</span></a>
+</nav>
+
+<div class="page-hero">
+  <div class="container">
+    <h1>🏪 List a Product</h1>
+    <p>Free to post up to 30 products per month. No commission on sales.</p>
+  </div>
+</div>
+
+<div class="container form-page">
+
+  <!-- Login gate -->
+  <div id="loginGate" style="display:none">
+    <div class="empty-state">
+      <div class="empty-emoji">🔐</div>
+      <h3>Sign in to sell on SokoHub</h3>
+      <p>Create a free account to start listing your products today.</p>
+      <a href="account.html" class="btn-primary" style="display:inline-block;margin-top:8px">Create Account / Sign In</a>
+    </div>
+  </div>
+
+  <!-- Sell form -->
+  <div id="sellForm">
+    <!-- Monthly limit bar -->
+    <div class="limit-bar" id="limitBar">
+      <div class="limit-info">
+        <p><strong id="limitUsed">0</strong> of <strong id="limitMax">30</strong> products used this month</p>
+        <div class="limit-track"><div class="limit-fill" id="limitFill" style="width:0%"></div></div>
+      </div>
+      <button class="btn-upgrade" id="upgradeBtn" style="display:none" onclick="showUpgrade()">Get More</button>
+    </div>
+
+    <!-- Limit reached -->
+    <div id="limitReached" style="display:none">
+      <div class="pricing-box">
+        <h3>🚀 Monthly Limit Reached</h3>
+        <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px">You've used all 30 free listings for this month. Upgrade to post 30 more!</p>
+        <div class="price-big">RWF 2,000</div>
+        <div class="price-unit">for 30 more listings this month</div>
+        <ul>
+          <li>30 additional product listings</li>
+          <li>Valid for the current month</li>
+          <li>WhatsApp payment — fast & easy</li>
+          <li>Activated within minutes</li>
+        </ul>
+        <a id="payWhatsApp" href="#" target="_blank" class="btn-primary" style="display:inline-block;text-align:center">Pay via WhatsApp</a>
+      </div>
+    </div>
+
+    <!-- Product form -->
+    <div id="formContent">
+      <div class="form-card">
+        <h3>📦 Product Details</h3>
+        <div class="field">
+          <label>Product Name <span class="required">*</span></label>
+          <input type="text" id="productName" placeholder="e.g. Samsung Galaxy A54 — 128GB" maxlength="100"/>
+          <span class="field-error" id="err_productName">Please enter a product name</span>
+        </div>
+        <div class="field">
+          <label>Description <span class="required">*</span></label>
+          <textarea id="description" placeholder="Describe your product — condition, features, what's included…" maxlength="500"></textarea>
+          <div class="field-hint">Max 500 characters. More detail = more buyers.</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Category <span class="required">*</span></label>
+            <select id="category" onchange="updateSubcategories()">
+              <option value="">Select category…</option>
+            </select>
+            <span class="field-error" id="err_category">Please select a category</span>
+          </div>
+          <div class="field">
+            <label>Subcategory</label>
+            <select id="subcategory">
+              <option value="">Select subcategory…</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Price (RWF) <span class="required">*</span></label>
+          <input type="number" id="price" placeholder="e.g. 50000" min="0"/>
+          <span class="field-error" id="err_price">Please enter a valid price</span>
+          <div class="field-hint">This is your default/starting price. You can set a different price per image below (e.g. different colors or sizes).</div>
+        </div>
+
+        <div class="field">
+          <label>Product Photos <span class="required">*</span> (up to 5)</label>
+          <div class="field-hint" style="margin-bottom:10px">💡 Upload your photos to <a href="https://imgbb.com" target="_blank" style="color:var(--primary)">imgbb.com</a> (free) and paste each link below. Tag each photo with a color, size, or option — and give it its own price if it's different.</div>
+          <div id="imageSlots"></div>
+          <button type="button" id="addImageBtn" onclick="addImageSlot()" style="margin-top:8px;padding:10px 16px;border:1.5px dashed var(--primary);background:transparent;color:var(--primary);border-radius:var(--radius-sm);font-weight:600;font-size:0.85rem;cursor:pointer;width:100%">
+            + Add Another Photo
+          </button>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3>👤 Your Contact Details</h3>
+        <div class="field-row">
+          <div class="field">
+            <label>Your Name <span class="required">*</span></label>
+            <input type="text" id="sellerName" placeholder="Full name"/>
+            <span class="field-error" id="err_sellerName">Please enter your name</span>
+          </div>
+          <div class="field">
+            <label>City / District <span class="required">*</span></label>
+            <input type="text" id="sellerCity" placeholder="e.g. Kigali"/>
+            <span class="field-error" id="err_sellerCity">Please enter your city</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Phone Number <span class="required">*</span></label>
+            <input type="tel" id="sellerPhone" placeholder="+250 7XX XXX XXX"/>
+            <span class="field-error" id="err_sellerPhone">Please enter a valid phone number</span>
+          </div>
+          <div class="field">
+            <label>WhatsApp Number</label>
+            <input type="tel" id="sellerWhatsApp" placeholder="Same as phone if same"/>
+            <div class="field-hint">Leave empty to use same as phone</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="sellerEmail" placeholder="your@email.com"/>
+          <div class="field-hint">Used for account login. Not shown publicly.</div>
+        </div>
+
+        <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);font-size:0.82rem;color:var(--text-muted)">
+          📍 <strong>Your location</strong> is used for "Near Me" filtering. 
+          <button onclick="detectLocation()" style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer;font-size:0.82rem">Auto-detect location</button>
+          <input type="hidden" id="sellerLat"/>
+          <input type="hidden" id="sellerLng"/>
+          <span id="locStatus"></span>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="submitListing()">
+        🚀 Post My Product — It's Free!
+      </button>
+
+      <p style="text-align:center;font-size:0.78rem;color:var(--text-light);margin-top:12px">
+        By posting, you agree buyers will contact you directly via phone or WhatsApp.
+      </p>
+    </div>
+  </div>
+
+  <!-- Success state -->
+  <div id="successState" style="display:none">
+    <div class="empty-state">
+      <div class="empty-emoji">🎉</div>
+      <h3>Product Listed Successfully!</h3>
+      <p>Your product is now visible on SokoHub. Buyers can contact you directly.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px">
+        <a href="shop.html" class="btn-primary">View in Shop</a>
+        <button onclick="resetForm()" class="btn-outline" style="border-color:var(--primary);color:var(--primary)">List Another</button>
+      </div>
+      <div style="margin-top:24px;padding:16px;background:var(--bg);border-radius:var(--radius);font-size:0.85rem;color:var(--text-muted);text-align:left">
+        <strong>📬 What happens next?</strong><br/><br/>
+        Your listing was saved locally and <strong>also sent to the admin's Google Sheet</strong> for approval. 
+        Once approved (usually within a few hours), it goes live for all users.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/app.js"></script>
+<script>
+function initSellPage() {
+  // Populate categories
+  const catSel = document.getElementById('category');
+  CONFIG.CATEGORIES.filter(c=>c.id!=='all').forEach(cat=>{
+    const o=document.createElement('option'); o.value=cat.id; o.textContent=`${cat.emoji} ${cat.label}`; catSel.appendChild(o);
+  });
+
+  // Pre-fill from logged-in user
+  const user = DB.getCurrentUser();
+  if (user) {
+    if(document.getElementById('sellerName')) document.getElementById('sellerName').value=user.name||'';
+    if(document.getElementById('sellerPhone')) document.getElementById('sellerPhone').value=user.phone||'';
+    if(document.getElementById('sellerWhatsApp')) document.getElementById('sellerWhatsApp').value=user.whatsapp||'';
+    if(document.getElementById('sellerEmail')) document.getElementById('sellerEmail').value=user.email||'';
+    if(document.getElementById('sellerCity')) document.getElementById('sellerCity').value=user.city||'';
+    updateLimitBar();
+  } else {
+    document.getElementById('loginGate').style.display='block';
+    document.getElementById('formContent').style.display='none';
+    document.getElementById('limitBar').style.display='none';
+  }
+
+  // Start with one image slot
+  addImageSlot();
+
+  // Pay via WhatsApp link
+  const payLink = document.getElementById('payWhatsApp');
+  if(payLink) {
+    const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan to post 30 more products this month.');
+    payLink.href=`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`;
+  }
+}
+
+const MAX_IMAGES = 5;
+let imageSlotCount = 0;
+
+function addImageSlot() {
+  if (imageSlotCount >= MAX_IMAGES) {
+    showToast(`You can add up to ${MAX_IMAGES} photos per product`, 'error');
+    return;
+  }
+  imageSlotCount++;
+  const wrap = document.getElementById('imageSlots');
+  const slotId = 'imgSlot_' + imageSlotCount;
+  const div = document.createElement('div');
+  div.className = 'image-slot';
+  div.id = slotId;
+  div.innerHTML = `
+    <div class="image-slot-preview" id="${slotId}_preview">🖼️</div>
+    <div class="image-slot-fields">
+      <input type="url" placeholder="Image URL (e.g. from imgbb.com)" class="img-url-input" oninput="previewSlotImage('${slotId}', this.value)"/>
+      <div class="image-slot-row">
+        <input type="text" placeholder="Tag — e.g. Red, Size M, Box of 12 (optional)" class="img-tag-input"/>
+        <input type="number" placeholder="Price (optional)" class="img-price-input" min="0"/>
+      </div>
+    </div>
+    <button type="button" class="image-slot-remove" onclick="removeImageSlot('${slotId}')">✕</button>
+  `;
+  wrap.appendChild(div);
+
+  if (imageSlotCount >= MAX_IMAGES) {
+    document.getElementById('addImageBtn').style.display = 'none';
+  }
+}
+
+function removeImageSlot(slotId) {
+  const el = document.getElementById(slotId);
+  if (el) el.remove();
+  imageSlotCount--;
+  document.getElementById('addImageBtn').style.display = 'block';
+}
+
+function previewSlotImage(slotId, url) {
+  const preview = document.getElementById(slotId + '_preview');
+  if (!preview) return;
+  if (!url) { preview.innerHTML = '🖼️'; return; }
+  preview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='⚠️'"/>`;
+}
+
+function collectImages() {
+  const slots = document.querySelectorAll('.image-slot');
+  const images = [];
+  const basePrice = parseFloat(document.getElementById('price').value) || 0;
+  slots.forEach(slot => {
+    const url   = slot.querySelector('.img-url-input')?.value.trim();
+    const tag   = slot.querySelector('.img-tag-input')?.value.trim();
+    const price = slot.querySelector('.img-price-input')?.value;
+    if (url) {
+      images.push({
+        url,
+        tag: tag || '',
+        price: price ? parseFloat(price) : basePrice
+      });
+    }
+  });
+  return images;
+}
+
+function updateLimitBar() {
+  const used  = DB.getMonthlyCount();
+  const limit = DB.getProductLimit();
+  const pct   = Math.min((used/limit)*100,100);
+  const fill  = document.getElementById('limitFill');
+  const usedEl= document.getElementById('limitUsed');
+  const maxEl = document.getElementById('limitMax');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const limitReached = document.getElementById('limitReached');
+  const formContent  = document.getElementById('formContent');
+
+  if(usedEl) usedEl.textContent=used;
+  if(maxEl)  maxEl.textContent=limit;
+  if(fill) {
+    fill.style.width=pct+'%';
+    fill.className='limit-fill'+(pct>=100?' danger':pct>=70?' warning':'');
+  }
+
+  if(used>=limit) {
+    if(upgradeBtn) upgradeBtn.style.display='block';
+    if(limitReached) limitReached.style.display='block';
+    if(formContent) formContent.style.display='none';
+  } else {
+    if(pct>=70 && upgradeBtn) upgradeBtn.style.display='block';
+    if(limitReached) limitReached.style.display='none';
+    if(formContent) formContent.style.display='block';
+  }
+}
+
+function updateSubcategories() {
+  const cat = document.getElementById('category')?.value;
+  const subSel = document.getElementById('subcategory');
+  subSel.innerHTML='<option value="">Select subcategory…</option>';
+  const subs = CONFIG.SUBCATEGORIES[cat]||[];
+  subs.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; subSel.appendChild(o); });
+}
+
+function detectLocation() {
+  const status = document.getElementById('locStatus');
+  if(!navigator.geolocation){ if(status) status.textContent=' Not supported.'; return; }
+  if(status) status.textContent=' Detecting…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('sellerLat').value=pos.coords.latitude;
+    document.getElementById('sellerLng').value=pos.coords.longitude;
+    if(status) status.textContent=` ✓ Got it (${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)})`;
+  }, ()=>{ if(status) status.textContent=' ✗ Could not detect. Allow location access.'; });
+}
+
+function validate() {
+  let ok=true;
+  const required=[
+    {id:'productName', errId:'err_productName'},
+    {id:'description',  errId:null},
+    {id:'category',     errId:'err_category'},
+    {id:'price',        errId:'err_price'},
+    {id:'sellerName',   errId:'err_sellerName'},
+    {id:'sellerPhone',  errId:'err_sellerPhone'},
+    {id:'sellerCity',   errId:'err_sellerCity'},
+  ];
+  required.forEach(({id, errId})=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const err=errId?document.getElementById(errId):null;
+    if(!el.value.trim()) {
+      el.classList.add('error');
+      if(err) err.classList.add('show');
+      ok=false;
+    } else {
+      el.classList.remove('error');
+      if(err) err.classList.remove('show');
+    }
+  });
+  if(parseFloat(document.getElementById('price')?.value)<0) ok=false;
+  if(collectImages().length === 0) {
+    showToast('Please add at least one product photo','error');
+    ok=false;
+  }
+  return ok;
+}
+
+async function submitListing() {
+  if(!validate()) { showToast('Please fill in all required fields','error'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='Posting…';
+
+  const product = {
+    productName:   document.getElementById('productName').value.trim(),
+    description:   document.getElementById('description').value.trim(),
+    category:      document.getElementById('category').value,
+    subcategory:   document.getElementById('subcategory').value,
+    price:         parseFloat(document.getElementById('price').value),
+    images:        collectImages(),
+    sellerName:    document.getElementById('sellerName').value.trim(),
+    sellerPhone:   document.getElementById('sellerPhone').value.trim(),
+    sellerWhatsApp:document.getElementById('sellerWhatsApp').value.trim() || document.getElementById('sellerPhone').value.trim(),
+    sellerEmail:   document.getElementById('sellerEmail').value.trim(),
+    sellerCity:    document.getElementById('sellerCity').value.trim(),
+    sellerLat:     parseFloat(document.getElementById('sellerLat').value)||null,
+    sellerLng:     parseFloat(document.getElementById('sellerLng').value)||null,
+  };
+
+  try {
+    // Increment monthly count
+    DB.incrementMonthlyCount();
+    // Save locally so it appears instantly
+    DB.saveMyListing(product);
+
+    // Send to Google Sheets via Form (fires and forgets — no CORS issue)
+    sendToGoogleForm(product);
+
+    // Show success
+    document.getElementById('sellForm').style.display='none';
+    document.getElementById('successState').style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+
+  } catch(e) {
+    if(e.message==='limit_reached') {
+      updateLimitBar();
+      showToast('Monthly limit reached. Please upgrade.','error');
+    } else {
+      showToast('Something went wrong. Please try again.','error');
+    }
+    btn.disabled=false;
+    btn.textContent='🚀 Post My Product — It\'s Free!';
+  }
+}
+
+function sendToGoogleForm(product) {
+  // This sends data to Google Forms silently using a hidden iframe
+  // Replace entry.XXXXX values with your actual Google Form entry IDs
+  // Find entry IDs: open your form → right-click → Inspect → search for "entry."
+  if(CONFIG.FORM_URL.includes('YOUR_FORM_ID')) return; // not configured yet
+
+  const formUrl = CONFIG.FORM_URL.replace('/viewform','/formResponse');
+  const params = new URLSearchParams();
+  // ⚠️ Replace these entry IDs with YOUR Google Form's actual entry IDs
+  params.set('entry.SELLER_NAME',     product.sellerName);
+  params.set('entry.SELLER_PHONE',    product.sellerPhone);
+  params.set('entry.SELLER_WHATSAPP', product.sellerWhatsApp);
+  params.set('entry.SELLER_EMAIL',    product.sellerEmail);
+  params.set('entry.SELLER_CITY',     product.sellerCity);
+  params.set('entry.SELLER_LAT',      product.sellerLat||'');
+  params.set('entry.SELLER_LNG',      product.sellerLng||'');
+  params.set('entry.PRODUCT_NAME',    product.productName);
+  params.set('entry.DESCRIPTION',     product.description);
+  params.set('entry.PRICE',           product.price);
+  params.set('entry.CATEGORY',        product.category);
+  params.set('entry.SUBCATEGORY',     product.subcategory);
+  // Images (with tags & per-variant price) sent as a single JSON string field.
+  // In your Sheet this lands in one column — the site re-parses it with JSON.parse().
+  params.set('entry.IMAGES_JSON',     JSON.stringify(product.images));
+
+  const iframe = document.createElement('iframe');
+  iframe.style.display='none';
+  iframe.src = `${formUrl}?${params.toString()}`;
+  document.body.appendChild(iframe);
+  setTimeout(()=>iframe.remove(), 5000);
+}
+
+function resetForm() {
+  document.getElementById('sellForm').style.display='block';
+  document.getElementById('successState').style.display='none';
+  ['productName','description','price','sellerWhatsApp'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('category').value='';
+  document.getElementById('subcategory').innerHTML='<option value="">Select subcategory…</option>';
+  // Reset image slots back to one empty slot
+  document.getElementById('imageSlots').innerHTML = '';
+  imageSlotCount = 0;
+  document.getElementById('addImageBtn').style.display='block';
+  addImageSlot();
+  updateLimitBar();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showUpgrade() {
+  const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan to post 30 more products this month.');
+  window.open(`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`,'_blank');
+}
+
+document.addEventListener('DOMContentLoaded', initSellPage);
+</script>
+</body>
+</html>

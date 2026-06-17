@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Account — SokoHub</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">Soko<span>Hub</span></a>
+    <div style="flex:1"></div>
+    <nav class="top-actions">
+      <a href="sell.html" class="btn-sell">+ Sell</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <a href="../index.html" class="tab" data-tab="home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+  <a href="categories.html" class="tab" data-tab="categories"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Categories</span></a>
+  <a href="shop.html" class="tab" data-tab="shop"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></a>
+  <a href="account.html" class="tab active" data-tab="account"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Account</span></a>
+</nav>
+
+<!-- AUTH SECTION (shown when logged out) -->
+<div id="authSection">
+  <div class="auth-page">
+    <div class="auth-card">
+      <span class="logo">Soko<span>Hub</span></span>
+      <h2 id="authTitle">Welcome back</h2>
+      <p id="authSubtitle">Sign in to manage your listings</p>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="your@email.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••"/>
+        </div>
+        <button class="btn-submit" onclick="doLogin()" style="margin-top:4px">Sign In</button>
+        <div class="auth-switch">Don't have an account? <a href="#" onclick="showRegister()">Create one free</a></div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" style="display:none">
+        <div class="field-row">
+          <div class="field">
+            <label>Full Name <span class="required">*</span></label>
+            <input type="text" id="regName" placeholder="Your name"/>
+          </div>
+          <div class="field">
+            <label>City / District <span class="required">*</span></label>
+            <input type="text" id="regCity" placeholder="Kigali"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Email Address <span class="required">*</span></label>
+          <input type="email" id="regEmail" placeholder="your@email.com"/>
+        </div>
+        <div class="field">
+          <label>Phone Number <span class="required">*</span></label>
+          <input type="tel" id="regPhone" placeholder="+250 7XX XXX XXX"/>
+        </div>
+        <div class="field">
+          <label>WhatsApp Number</label>
+          <input type="tel" id="regWhatsApp" placeholder="Same as phone if same"/>
+        </div>
+        <div class="field">
+          <label>Password <span class="required">*</span></label>
+          <input type="password" id="regPassword" placeholder="At least 6 characters"/>
+        </div>
+        <button class="btn-submit" onclick="doRegister()" style="margin-top:4px">Create Free Account</button>
+        <div class="auth-switch">Already have an account? <a href="#" onclick="showLogin()">Sign in</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD SECTION (shown when logged in) -->
+<div id="dashSection" style="display:none">
+  <div class="container account-page">
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="dashAvatar">👤</div>
+      <div class="profile-info">
+        <h2 id="dashName">Seller</h2>
+        <p id="dashEmail"></p>
+        <p id="dashPhone"></p>
+        <span class="profile-badge" id="dashPlan">Free Plan</span>
+      </div>
+    </div>
+
+    <!-- Listing stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+      <div style="background:white;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--primary)" id="statUsed">0</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Used This Month</div>
+      </div>
+      <div style="background:white;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--success)" id="statRemain">30</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Remaining</div>
+      </div>
+      <div style="background:white;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--accent)" id="statTotal">0</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Total Listings</div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="account-card">
+      <div class="account-card-title">Quick Actions</div>
+      <a href="sell.html" class="account-menu-item" style="text-decoration:none;color:inherit">
+        <div class="menu-icon" style="background:#e8eaf6">➕</div>
+        <div class="menu-text"><strong>List a New Product</strong><span>Post a product for free</span></div>
+        <span class="menu-arrow">›</span>
+      </a>
+      <div class="account-menu-item" onclick="showMyListings()">
+        <div class="menu-icon" style="background:#e8f5e9">📦</div>
+        <div class="menu-text"><strong>My Listings</strong><span>View and manage your products</span></div>
+        <span class="menu-badge" id="listingsBadge">0</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <a href="shop.html" class="account-menu-item" style="text-decoration:none;color:inherit">
+        <div class="menu-icon" style="background:#fff3e0">🛍️</div>
+        <div class="menu-text"><strong>Browse Shop</strong><span>Find products from other sellers</span></div>
+        <span class="menu-arrow">›</span>
+      </a>
+    </div>
+
+    <!-- Plan & upgrade -->
+    <div class="account-card">
+      <div class="account-card-title">Plan & Billing</div>
+      <div class="account-menu-item" onclick="showUpgradeModal()">
+        <div class="menu-icon" style="background:#fff8e1">🚀</div>
+        <div class="menu-text"><strong>Upgrade Plan</strong><span>Get 30 more listings for RWF 2,000/month</span></div>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Account settings -->
+    <div class="account-card">
+      <div class="account-card-title">Account</div>
+      <div class="account-menu-item" onclick="showEditProfile()">
+        <div class="menu-icon" style="background:#e3f2fd">✏️</div>
+        <div class="menu-text"><strong>Edit Profile</strong><span>Update your name, phone, city</span></div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="account-menu-item" onclick="doLogout()" style="color:var(--danger)">
+        <div class="menu-icon" style="background:#ffeaea">🚪</div>
+        <div class="menu-text"><strong>Sign Out</strong><span>Log out of your account</span></div>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MY LISTINGS PANEL -->
+<div id="myListingsPanel" style="display:none">
+  <div class="container account-page">
+    <div class="back-btn" onclick="hideMyListings()">← Back to Account</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">My Listings</h2>
+    <div id="myListingsGrid" class="products-grid"></div>
+    <div id="myListingsEmpty" class="empty-state" style="display:none">
+      <div class="empty-emoji">📦</div>
+      <h3>No listings yet</h3>
+      <p>Start selling today — it's free for your first 30 products!</p>
+      <a href="sell.html" class="btn-primary" style="display:inline-block;margin-top:8px">+ List a Product</a>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE PANEL -->
+<div id="editProfilePanel" style="display:none">
+  <div class="container form-page">
+    <div class="back-btn" onclick="hideEditProfile()">← Back to Account</div>
+    <h1>Edit Profile</h1>
+    <div class="form-card">
+      <div class="field-row">
+        <div class="field"><label>Full Name</label><input type="text" id="editName"/></div>
+        <div class="field"><label>City / District</label><input type="text" id="editCity"/></div>
+      </div>
+      <div class="field"><label>Phone Number</label><input type="tel" id="editPhone"/></div>
+      <div class="field"><label>WhatsApp Number</label><input type="tel" id="editWhatsApp"/></div>
+      <button class="btn-submit" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/app.js"></script>
+<script>
+function initAccount() {
+  const user = DB.getCurrentUser();
+  if (user) showDashboard(user);
+  else showAuth();
+}
+
+function showAuth() {
+  document.getElementById('authSection').style.display='block';
+  document.getElementById('dashSection').style.display='none';
+}
+
+function showDashboard(user) {
+  document.getElementById('authSection').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+  document.getElementById('myListingsPanel').style.display='none';
+  document.getElementById('editProfilePanel').style.display='none';
+
+  document.getElementById('dashAvatar').textContent = user.name?.charAt(0).toUpperCase()||'👤';
+  document.getElementById('dashName').textContent   = user.name||'Seller';
+  document.getElementById('dashEmail').textContent  = user.email||'';
+  document.getElementById('dashPhone').textContent  = user.phone||'';
+  document.getElementById('dashPlan').textContent   = user.plan==='paid'?'⭐ Paid Plan':'Free Plan';
+
+  const used   = DB.getMonthlyCount();
+  const limit  = DB.getProductLimit();
+  const myList = DB.getMyListings();
+
+  document.getElementById('statUsed').textContent   = used;
+  document.getElementById('statRemain').textContent = Math.max(0,limit-used);
+  document.getElementById('statTotal').textContent  = myList.length;
+  document.getElementById('listingsBadge').textContent = myList.length;
+}
+
+function showLogin() {
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('registerForm').style.display='none';
+  document.getElementById('authTitle').textContent='Welcome back';
+  document.getElementById('authSubtitle').textContent='Sign in to manage your listings';
+}
+
+function showRegister() {
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('registerForm').style.display='block';
+  document.getElementById('authTitle').textContent='Create free account';
+  document.getElementById('authSubtitle').textContent='Start selling in minutes';
+}
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  if(!email||!pass){ showToast('Please enter email and password','error'); return; }
+  try {
+    const user = DB.login(email, pass);
+    showToast('Welcome back, '+user.name+'!','success');
+    showDashboard(user);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function doRegister() {
+  const name  = document.getElementById('regName').value.trim();
+  const city  = document.getElementById('regCity').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const wa    = document.getElementById('regWhatsApp').value.trim();
+  const pass  = document.getElementById('regPassword').value;
+  if(!name||!email||!phone||!pass||!city){ showToast('Please fill all required fields','error'); return; }
+  if(pass.length<6){ showToast('Password must be at least 6 characters','error'); return; }
+  try {
+    const user = DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass});
+    showToast('Account created! Welcome to SokoHub 🎉','success');
+    showDashboard(user);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function doLogout() {
+  if(!confirm('Sign out of your account?')) return;
+  DB.logout();
+  showToast('Signed out. See you soon!');
+  showAuth();
+}
+
+function showMyListings() {
+  document.getElementById('dashSection').style.display='none';
+  document.getElementById('myListingsPanel').style.display='block';
+  const listings = DB.getMyListings();
+  const grid  = document.getElementById('myListingsGrid');
+  const empty = document.getElementById('myListingsEmpty');
+  if(listings.length===0){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = listings.map(p=>{
+    const firstImg = (Array.isArray(p.images) && p.images[0]?.url) ? p.images[0].url : p.imageUrl;
+    return `
+    <div class="product-card">
+      ${firstImg
+        ? `<img class="card-img" src="${escHtml(firstImg)}" alt="${escHtml(p.productName)}" loading="lazy"/>`
+        : `<div class="card-img-placeholder">${getCatEmoji(p.category)}</div>`}
+      <div class="card-body">
+        <div class="card-category">${getCatLabel(p.category)}</div>
+        <div class="card-title">${escHtml(p.productName)}</div>
+        <div class="card-footer">
+          <span class="card-price">${formatPrice(p.price)}</span>
+          <span class="card-location">📍 ${escHtml(p.sellerCity||'')}</span>
+        </div>
+        <button onclick="deleteListingConfirm('${p.id}')" style="width:100%;margin-top:12px;padding:10px;background:#ffeaea;color:var(--danger);border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-size:0.85rem">
+          🗑 Delete Listing
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function hideMyListings() {
+  document.getElementById('myListingsPanel').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+}
+
+function deleteListingConfirm(id) {
+  if(!confirm('Delete this listing? This cannot be undone.')) return;
+  DB.deleteMyListing(id);
+  showToast('Listing deleted','success');
+  showMyListings();
+  const user=DB.getCurrentUser();
+  if(user) showDashboard(user);
+}
+
+function showEditProfile() {
+  const user=DB.getCurrentUser();
+  if(!user) return;
+  document.getElementById('editName').value=user.name||'';
+  document.getElementById('editCity').value=user.city||'';
+  document.getElementById('editPhone').value=user.phone||'';
+  document.getElementById('editWhatsApp').value=user.whatsapp||'';
+  document.getElementById('dashSection').style.display='none';
+  document.getElementById('editProfilePanel').style.display='block';
+}
+
+function hideEditProfile() {
+  document.getElementById('editProfilePanel').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+}
+
+function saveProfile() {
+  const updates={
+    name:     document.getElementById('editName').value.trim(),
+    city:     document.getElementById('editCity').value.trim(),
+    phone:    document.getElementById('editPhone').value.trim(),
+    whatsapp: document.getElementById('editWhatsApp').value.trim(),
+  };
+  if(!updates.name||!updates.phone){ showToast('Name and phone are required','error'); return; }
+  const user=DB.updateUser(updates);
+  showToast('Profile updated!','success');
+  hideEditProfile();
+  showDashboard(user);
+}
+
+function showUpgradeModal() {
+  const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan — 30 more products for RWF 2,000. Please activate my account.');
+  window.open(`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`,'_blank');
+}
+
+document.addEventListener('DOMContentLoaded', initAccount);
+</script>
+</body>
+</html>
