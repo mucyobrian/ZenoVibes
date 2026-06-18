@@ -24,7 +24,7 @@ const CONFIG = {
   //   Copy the Form URL below as FORM_URL
 
   SHEET_ID: "YOUR_GOOGLE_SHEET_ID_HERE",
-  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:json&sheet=Products",
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/1gH8vnMAJqV1DflEzfFEolANPuIT7Z5tcPoyM-EVD_eQ/gviz/tq?tqx=out:json&sheet=Sheet1",
   FORM_URL: "https://docs.google.com/forms/d/YOUR_FORM_ID/viewform",
 
   // ── SELLER LIMITS ──────────────────────────────
