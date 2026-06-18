@@ -23,9 +23,9 @@ const CONFIG = {
   // STEP 3: For the FORM, create a Google Form linked to this sheet
   //   Copy the Form URL below as FORM_URL
 
-  SHEET_ID: "YOUR_GOOGLE_SHEET_ID_HERE",
-  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/1gH8vnMAJqV1DflEzfFEolANPuIT7Z5tcPoyM-EVD_eQ/gviz/tq?tqx=out:json&sheet=Sheet1",
-  FORM_URL: "https://docs.google.com/forms/d/YOUR_FORM_ID/viewform",
+  SHEET_ID: "1YVGwMNkJNbtJI8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo",
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/1YVGwMNkJNbtJI8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo/gviz/tq?tqx=out:json&sheet=Sheet1",
+  FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/viewform",
 
   // ── SELLER LIMITS ──────────────────────────────
   FREE_LIMIT: 30,           // free products per month

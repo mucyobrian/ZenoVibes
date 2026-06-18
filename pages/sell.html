@@ -421,35 +421,27 @@ async function submitListing() {
 }
 
 function sendToGoogleForm(product) {
-  // This sends data to Google Forms silently using a hidden iframe
-  // Replace entry.XXXXX values with your actual Google Form entry IDs
-  // Find entry IDs: open your form → right-click → Inspect → search for "entry."
-  if(CONFIG.FORM_URL.includes('YOUR_FORM_ID')) return; // not configured yet
-
-  const formUrl = CONFIG.FORM_URL.replace('/viewform','/formResponse');
+  const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/formResponse';
   const params = new URLSearchParams();
-  // ⚠️ Replace these entry IDs with YOUR Google Form's actual entry IDs
-  params.set('entry.SELLER_NAME',     product.sellerName);
-  params.set('entry.SELLER_PHONE',    product.sellerPhone);
-  params.set('entry.SELLER_WHATSAPP', product.sellerWhatsApp);
-  params.set('entry.SELLER_EMAIL',    product.sellerEmail);
-  params.set('entry.SELLER_CITY',     product.sellerCity);
-  params.set('entry.SELLER_LAT',      product.sellerLat||'');
-  params.set('entry.SELLER_LNG',      product.sellerLng||'');
-  params.set('entry.PRODUCT_NAME',    product.productName);
-  params.set('entry.DESCRIPTION',     product.description);
-  params.set('entry.PRICE',           product.price);
-  params.set('entry.CATEGORY',        product.category);
-  params.set('entry.SUBCATEGORY',     product.subcategory);
-  // Images (with tags & per-variant price) sent as a single JSON string field.
-  // In your Sheet this lands in one column — the site re-parses it with JSON.parse().
-  params.set('entry.IMAGES_JSON',     JSON.stringify(product.images));
+  params.set('entry.862644534',  product.sellerName);
+  params.set('entry.1250576708', product.sellerPhone);
+  params.set('entry.1719434925', product.sellerWhatsApp);
+  params.set('entry.1358767187', product.sellerEmail);
+  params.set('entry.678321680',  product.sellerCity);
+  params.set('entry.1295880774', product.sellerLat||'');
+  params.set('entry.1205633446', product.sellerLng||'');
+  params.set('entry.235954322',  product.productName);
+  params.set('entry.1645371455', product.description);
+  params.set('entry.593771608',  product.price);
+  params.set('entry.1750631076', product.category);
+  params.set('entry.1493886285', product.subcategory);
+  params.set('entry.928448056',  JSON.stringify(product.images||[]));
 
   const iframe = document.createElement('iframe');
-  iframe.style.display='none';
+  iframe.style.display = 'none';
   iframe.src = `${formUrl}?${params.toString()}`;
   document.body.appendChild(iframe);
-  setTimeout(()=>iframe.remove(), 5000);
+  setTimeout(() => iframe.remove(), 5000);
 }
 
 function resetForm() {

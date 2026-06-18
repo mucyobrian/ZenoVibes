@@ -90,9 +90,9 @@ const DB = (() => {
           subcategory: p.subcategory || '',
           images,
           timestamp: p.timestamp || new Date().toISOString(),
-          status: p.status || 'active',
+          status: p.status || 'active',  // blank status = live immediately
         };
-      }).filter(p => p.status === 'active');
+      }).filter(p => p.status === 'active' || p.status === '');
 
       localStorage.setItem(STORAGE_KEYS.PRODUCTS_CACHE, JSON.stringify(normalized));
       localStorage.setItem(STORAGE_KEYS.CACHE_TIME, String(now));
