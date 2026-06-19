@@ -27,6 +27,9 @@ const CONFIG = {
   SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/1YVGwMNkJNbtJI8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo/gviz/tq?tqx=out:json&sheet=Sheet1",
   FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/viewform",
 
+  // Apps Script Web App — handles editing/deleting listings directly in the Sheet
+  LISTINGS_API_URL: "https://script.google.com/macros/s/AKfycbzrC7pwuGmnAVq8nZdt2cGZRugwv4MwHMoyydgM1RmluOVRlWjZ6FNmgzBy9IBqnWjeEw/exec",
+
   // ── SELLER LIMITS ──────────────────────────────
   FREE_LIMIT: 30,           // free products per month
   PAID_EXTRA: 30,           // extra products when paid

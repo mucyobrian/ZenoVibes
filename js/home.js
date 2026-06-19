@@ -14,11 +14,12 @@ async function initHome() {
 
   try {
     allProducts = await DB.getProducts();
-    // Merge local listings so sellers see their own products live
-    const myLocal = DB.getMyListings();
-    if (myLocal.length) {
-      const localIds = new Set(myLocal.map(p => p.id));
-      allProducts = [...myLocal, ...allProducts.filter(p => !localIds.has(p.id))];
+    // Merge in any listing that hasn't synced to the Sheet yet (id starts with 'local_')
+    const liveNames = new Set(allProducts.map(p => p.productName));
+    const stillLocalOnly = JSON.parse(localStorage.getItem('sokohub_my_listings') || '[]')
+      .filter(p => String(p.id).startsWith('local_') && !liveNames.has(p.productName));
+    if (stillLocalOnly.length) {
+      allProducts = [...stillLocalOnly, ...allProducts];
     }
     updateStats();
     buildCategorySections();

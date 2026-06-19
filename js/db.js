@@ -61,38 +61,9 @@ const DB = (() => {
     // Try live data
     const live = await fetchFromSheets();
     if (live && live.length > 0) {
-      // Normalize column names from sheets
-      const normalized = live.map(p => {
-        let images = [];
-        const rawImages = p.imagesjson || p.images_json || p.images;
-        if (rawImages) {
-          try {
-            const parsed = typeof rawImages === 'string' ? JSON.parse(rawImages) : rawImages;
-            if (Array.isArray(parsed)) images = parsed;
-          } catch (e) { /* not valid JSON, ignore */ }
-        }
-        if (images.length === 0 && (p.imageurl || p.image)) {
-          images = [{ url: p.imageurl || p.image, tag: '', price: parseFloat(String(p.price||'0').replace(/[^0-9.]/g,'')) }];
-        }
-
-        return {
-          id: p.id,
-          sellerName: p.sellername || p.name || 'Seller',
-          sellerPhone: p.sellerphone || p.phone || '',
-          sellerWhatsApp: p.sellerwhatsapp || p.whatsapp || p.sellerphone || '',
-          sellerCity: p.sellercity || p.city || '',
-          sellerLat: parseFloat(p.sellerlat || p.lat || 0),
-          sellerLng: parseFloat(p.sellerlng || p.lng || 0),
-          productName: p.productname || p.product || 'Product',
-          description: p.description || '',
-          price: parseFloat(String(p.price || '0').replace(/[^0-9.]/g, '')),
-          category: (p.category || 'other').toLowerCase(),
-          subcategory: p.subcategory || '',
-          images,
-          timestamp: p.timestamp || new Date().toISOString(),
-          status: p.status || 'active',  // blank status = live immediately
-        };
-      }).filter(p => p.status === 'active' || p.status === '');
+      const normalized = live
+        .map(p => normalizeProduct(p))
+        .filter(p => p.status === 'active' || p.status === '');
 
       localStorage.setItem(STORAGE_KEYS.PRODUCTS_CACHE, JSON.stringify(normalized));
       localStorage.setItem(STORAGE_KEYS.CACHE_TIME, String(now));
@@ -103,15 +74,65 @@ const DB = (() => {
     return CONFIG.DEMO_PRODUCTS;
   }
 
-  // ── Get my listings (from localStorage) ─────────
-  function getMyListings() {
+  // ── Get my listings (from the live Sheet, by seller email) ─
+  async function getMyListings() {
     const user = getCurrentUser();
     if (!user) return [];
-    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
-    return all.filter(p => p.sellerEmail === user.email);
+    // Always fetch fresh (not the 5-min product cache) so deletes/edits show immediately
+    const live = await fetchFromSheets();
+    if (!live) return [];
+    const liveMine = live
+      .filter(p => p.status === 'active' && String(p.selleremail || '').toLowerCase() === user.email.toLowerCase())
+      .map(p => normalizeProduct(p));
+
+    // Clean up any local-only stub whose product has now synced to the Sheet
+    // (matched by same product name, since the synced row gets a new gs_ id)
+    const localStubs = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
+    if (localStubs.length) {
+      const liveNames = new Set(liveMine.map(p => p.productName));
+      const stillPending = localStubs.filter(p => !liveNames.has(p.productName));
+      if (stillPending.length !== localStubs.length) {
+        localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(stillPending));
+      }
+    }
+
+    return liveMine;
   }
 
-  // ── Save a new listing locally ──────────────────
+  // ── Shared normalizer (sheet row -> app product shape) ──
+  function normalizeProduct(p) {
+    let images = [];
+    const rawImages = p.imagesjson || p.images_json || p.images;
+    if (rawImages) {
+      try {
+        const parsed = typeof rawImages === 'string' ? JSON.parse(rawImages) : rawImages;
+        if (Array.isArray(parsed)) images = parsed;
+      } catch (e) { /* not valid JSON, ignore */ }
+    }
+    if (images.length === 0 && (p.imageurl || p.image)) {
+      images = [{ url: p.imageurl || p.image, tag: '', price: parseFloat(String(p.price||'0').replace(/[^0-9.]/g,'')) }];
+    }
+    return {
+      id: p.id,
+      sellerName: p.sellername || p.name || 'Seller',
+      sellerPhone: p.sellerphone || p.phone || '',
+      sellerWhatsApp: p.sellerwhatsapp || p.whatsapp || p.sellerphone || '',
+      sellerEmail: p.selleremail || p.email || '',
+      sellerCity: p.sellercity || p.city || '',
+      sellerLat: parseFloat(p.sellerlat || p.lat || 0),
+      sellerLng: parseFloat(p.sellerlng || p.lng || 0),
+      productName: p.productname || p.product || 'Product',
+      description: p.description || '',
+      price: parseFloat(String(p.price || '0').replace(/[^0-9.]/g, '')),
+      category: (p.category || 'other').toLowerCase(),
+      subcategory: p.subcategory || '',
+      images,
+      timestamp: p.timestamp || new Date().toISOString(),
+      status: p.status || 'active',
+    };
+  }
+
+  // ── Save a new listing locally (instant UI feedback only) ──
   function saveMyListing(product) {
     const existing = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
     const newProduct = {
@@ -125,11 +146,50 @@ const DB = (() => {
     return newProduct;
   }
 
-  // ── Delete a listing ────────────────────────────
-  function deleteMyListing(id) {
-    const existing = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
-    const updated = existing.filter(p => p.id !== id);
-    localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(updated));
+  // ── Delete a listing (removes the row from the Sheet) ──────
+  async function deleteMyListing(id) {
+    const user = getCurrentUser();
+    if (!user) throw new Error('You must be signed in');
+
+    // If it's a local-only listing that never synced, just clear it locally
+    if (String(id).startsWith('local_')) {
+      const existing = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
+      localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(existing.filter(p => p.id !== id)));
+      return { success: true };
+    }
+
+    const res = await fetch(CONFIG.LISTINGS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight on Apps Script
+      body: JSON.stringify({ action: 'delete', id, sellerEmail: user.email }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Delete failed');
+
+    // Free up a slot in this month's count
+    const used = getMonthlyCount();
+    updateUser({ monthlyCount: Math.max(0, used - 1) });
+
+    // Bust the shared product cache so the homepage reflects the delete immediately
+    localStorage.removeItem(STORAGE_KEYS.CACHE_TIME);
+    return data;
+  }
+
+  // ── Update a listing (edits fields on its row in the Sheet) ─
+  async function updateMyListing(id, updates) {
+    const user = getCurrentUser();
+    if (!user) throw new Error('You must be signed in');
+
+    const res = await fetch(CONFIG.LISTINGS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'update', id, sellerEmail: user.email, updates }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Update failed');
+
+    localStorage.removeItem(STORAGE_KEYS.CACHE_TIME);
+    return data;
   }
 
   // ── USER AUTH (localStorage-based) ─────────────
@@ -254,6 +314,7 @@ const DB = (() => {
     getMyListings,
     saveMyListing,
     deleteMyListing,
+    updateMyListing,
     getCurrentUser,
     register,
     login,
