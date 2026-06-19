@@ -159,10 +159,11 @@ async function initShop() {
   if (cat) { activeCat = cat; document.getElementById('filterCat').value = cat; }
 
   allProducts = await DB.getProducts();
-  const myLocal = DB.getMyListings();
-  if (myLocal.length) {
-    const ids = new Set(myLocal.map(p=>p.id));
-    allProducts = [...myLocal, ...allProducts.filter(p=>!ids.has(p.id))];
+  const liveNames = new Set(allProducts.map(p => p.productName));
+  const stillLocalOnly = JSON.parse(localStorage.getItem('sokohub_my_listings') || '[]')
+    .filter(p => String(p.id).startsWith('local_') && !liveNames.has(p.productName));
+  if (stillLocalOnly.length) {
+    allProducts = [...stillLocalOnly, ...allProducts];
   }
   applyFilters(q);
 }

@@ -218,10 +218,12 @@ async function initDetail() {
   if (!id) { showNotFound(); return; }
 
   let all = await DB.getProducts();
-  const myLocal = DB.getMyListings();
-  if (myLocal.length) {
-    const ids = new Set(myLocal.map(p=>p.id));
-    all = [...myLocal, ...all.filter(p=>!ids.has(p.id))];
+
+  // If this id is a not-yet-synced local stub, pull it in directly
+  if (String(id).startsWith('local_')) {
+    const localStubs = JSON.parse(localStorage.getItem('sokohub_my_listings') || '[]');
+    const stub = localStubs.find(p => String(p.id) === String(id));
+    if (stub) all = [stub, ...all];
   }
 
   product = all.find(p => String(p.id) === String(id));
