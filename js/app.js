@@ -62,23 +62,18 @@ function buildProductCard(product, userLat, userLng, listView) {
 
   if (listView) {
     return `
-  <div class="product-card product-card--list" onclick="goToProduct('${product.id}')">
-    <div style="position:relative;flex-shrink:0;width:110px;height:110px">
+  <div class="product-card--list" onclick="goToProduct('${product.id}')">
+    <div class="list-img-wrap">
       ${imgHtml}
       ${multiImgBadge}
     </div>
-    <div class="card-body" style="flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between">
-      <div>
-        <div style="font-size:0.7rem;font-weight:600;color:var(--primary);margin-bottom:4px">${getCatEmoji(product.category)} ${getCatLabel(product.category)}</div>
-        <div class="card-title" style="font-size:0.95rem;margin-bottom:4px">${escHtml(product.productName)}</div>
-        <div class="card-desc" style="font-size:0.8rem;-webkit-line-clamp:2">${escHtml(product.description || '')}</div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-        <span class="card-price" style="font-size:1rem">${formatPrice(product.price)}</span>
-        <span class="card-location" style="font-size:0.75rem">
-          📍 ${escHtml(product.sellerCity || '')}
-          ${dist !== null ? `<span style="color:var(--success);margin-left:4px">${formatDist(dist)}</span>` : ''}
-        </span>
+    <div class="list-info">
+      <div class="list-cat">${getCatEmoji(product.category)} ${getCatLabel(product.category)}</div>
+      <div class="list-title">${escHtml(product.productName)}</div>
+      <div class="list-desc">${escHtml(product.description || '')}</div>
+      <div class="list-footer">
+        <span class="list-price">${formatPrice(product.price)}</span>
+        <span class="list-loc">📍 ${escHtml(product.sellerCity || '')}${dist !== null ? ` · <span style="color:var(--success)">${formatDist(dist)}</span>` : ''}</span>
       </div>
     </div>
   </div>`;
