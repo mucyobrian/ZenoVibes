@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Account — SokoHub</title>
+  <title>My Account — StillWorks</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <link rel="stylesheet" href="../css/components.css"/>
 </head>
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="logo" href="../index.html">Soko<span>Hub</span></a>
+    <a class="logo" href="../index.html">Still<span>Works</span></a>
     <div style="flex:1"></div>
     <nav class="top-actions">
       <a href="sell.html" class="btn-sell">+ Sell</a>
@@ -28,9 +28,9 @@
 <div id="authSection">
   <div class="auth-page">
     <div class="auth-card">
-      <span class="logo">Soko<span>Hub</span></span>
+      <span class="logo">Still<span>Works</span></span>
       <h2 id="authTitle">Welcome back</h2>
-      <p id="authSubtitle">Sign in to manage your listings</p>
+      <p id="authSubtitle">Sign in to manage your posts</p>
 
       <!-- Login Form -->
       <div id="loginForm">
@@ -108,7 +108,7 @@
       </div>
       <div style="background:white;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)">
         <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--accent)" id="statTotal">0</div>
-        <div style="font-size:0.75rem;color:var(--text-muted)">Total Listings</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Total Posts</div>
       </div>
     </div>
 
@@ -117,12 +117,12 @@
       <div class="account-card-title">Quick Actions</div>
       <a href="sell.html" class="account-menu-item" style="text-decoration:none;color:inherit">
         <div class="menu-icon" style="background:#e8eaf6">➕</div>
-        <div class="menu-text"><strong>List a New Product</strong><span>Post a product for free</span></div>
+        <div class="menu-text"><strong>New Post</strong><span>Share something for free</span></div>
         <span class="menu-arrow">›</span>
       </a>
       <div class="account-menu-item" onclick="showMyListings()">
         <div class="menu-icon" style="background:#e8f5e9">📦</div>
-        <div class="menu-text"><strong>My Listings</strong><span>View and manage your products</span></div>
+        <div class="menu-text"><strong>My Posts</strong><span>View and manage your posts</span></div>
         <span class="menu-badge" id="listingsBadge">0</span>
         <span class="menu-arrow">›</span>
       </div>
@@ -138,7 +138,7 @@
       <div class="account-card-title">Plan & Billing</div>
       <div class="account-menu-item" onclick="showUpgradeModal()">
         <div class="menu-icon" style="background:#fff8e1">🚀</div>
-        <div class="menu-text"><strong>Upgrade Plan</strong><span>Get 30 more listings for RWF 2,000/month</span></div>
+        <div class="menu-text"><strong>Upgrade Plan</strong><span>Get 30 more posts for RWF 2,000/month</span></div>
         <span class="menu-arrow">›</span>
       </div>
     </div>
@@ -164,11 +164,11 @@
 <div id="myListingsPanel" style="display:none">
   <div class="container account-page">
     <div class="back-btn" onclick="hideMyListings()">← Back to Account</div>
-    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">My Listings</h2>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">My Posts</h2>
     <div id="myListingsGrid" class="products-grid"></div>
     <div id="myListingsEmpty" class="empty-state" style="display:none">
       <div class="empty-emoji">📦</div>
-      <h3>No listings yet</h3>
+      <h3>No posts yet</h3>
       <p>Start selling today — it's free for your first 30 products!</p>
       <a href="sell.html" class="btn-primary" style="display:inline-block;margin-top:8px">+ List a Product</a>
     </div>
@@ -178,8 +178,8 @@
 <!-- EDIT LISTING PANEL -->
 <div id="editListingPanel" style="display:none">
   <div class="container account-page">
-    <div class="back-btn" onclick="hideEditListing()">← Back to My Listings</div>
-    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">Edit Listing</h2>
+    <div class="back-btn" onclick="hideEditListing()">← Back to My Posts</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">Edit Post</h2>
     <input type="hidden" id="editListingId"/>
     <div class="field">
       <label>Product Name <span class="required">*</span></label>
@@ -194,7 +194,7 @@
       <input type="number" id="editListingPrice" min="0" placeholder="Price"/>
     </div>
     <button class="btn-submit" onclick="saveEditListing()">Save Changes</button>
-    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:10px">Note: to change photos, please delete this listing and create a new one.</p>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:10px">Note: to change photos, please delete this post and create a new one.</p>
   </div>
 </div>
 
@@ -261,7 +261,7 @@ function showLogin() {
   document.getElementById('loginForm').style.display='block';
   document.getElementById('registerForm').style.display='none';
   document.getElementById('authTitle').textContent='Welcome back';
-  document.getElementById('authSubtitle').textContent='Sign in to manage your listings';
+  document.getElementById('authSubtitle').textContent='Sign in to manage your posts';
 }
 
 function showRegister() {
@@ -293,7 +293,7 @@ function doRegister() {
   if(pass.length<6){ showToast('Password must be at least 6 characters','error'); return; }
   try {
     const user = DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass});
-    showToast('Account created! Welcome to SokoHub 🎉','success');
+    showToast('Account created! Welcome to StillWorks 🎉','success');
     showDashboard(user);
   } catch(e) { showToast(e.message,'error'); }
 }
@@ -311,7 +311,7 @@ async function showMyListings() {
   const grid  = document.getElementById('myListingsGrid');
   const empty = document.getElementById('myListingsEmpty');
   empty.style.display='none';
-  grid.innerHTML = '<p style="color:var(--text-muted);padding:20px 0">Loading your listings…</p>';
+  grid.innerHTML = '<p style="color:var(--text-muted);padding:20px 0">Loading your posts…</p>';
 
   const listings = await DB.getMyListings();
 
@@ -349,16 +349,16 @@ function hideMyListings() {
 }
 
 async function deleteListingConfirm(id) {
-  if(!confirm('Delete this listing permanently? This cannot be undone.')) return;
+  if(!confirm('Delete this post permanently? This cannot be undone.')) return;
   showToast('Deleting…');
   try {
     await DB.deleteMyListing(id);
-    showToast('Listing deleted','success');
+    showToast('Post deleted','success');
     showMyListings();
     const user=DB.getCurrentUser();
     if(user) showDashboard(user);
   } catch(e) {
-    showToast(e.message || 'Could not delete listing','error');
+    showToast(e.message || 'Could not delete post','error');
   }
 }
 
@@ -391,11 +391,11 @@ async function saveEditListing() {
       description: desc,
       price: price,
     });
-    showToast('Listing updated!','success');
+    showToast('Post updated!','success');
     hideEditListing();
     showMyListings();
   } catch(e) {
-    showToast(e.message || 'Could not update listing','error');
+    showToast(e.message || 'Could not update post','error');
   }
 }
 
@@ -430,7 +430,7 @@ function saveProfile() {
 }
 
 function showUpgradeModal() {
-  const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan — 30 more products for RWF 2,000. Please activate my account.');
+  const msg=encodeURIComponent('Hi! I want to upgrade my StillWorks post plan — 30 more posts for RWF 2,000. Please activate my account.');
   window.open(`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`,'_blank');
 }
 

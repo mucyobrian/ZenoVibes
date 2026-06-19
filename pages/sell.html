@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sell on SokoHub</title>
+  <title>Post on StillWorks</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <link rel="stylesheet" href="../css/components.css"/>
 </head>
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="logo" href="../index.html">Soko<span>Hub</span></a>
+    <a class="logo" href="../index.html">Still<span>Works</span></a>
     <div class="search-wrap" style="max-width:300px">
       <input id="globalSearch" type="text" placeholder="Search…"/>
       <button class="btn-search" onclick="handleSearch()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
@@ -40,8 +40,8 @@
   <div id="loginGate" style="display:none">
     <div class="empty-state">
       <div class="empty-emoji">🔐</div>
-      <h3>Sign in to sell on SokoHub</h3>
-      <p>Create a free account to start listing your products today.</p>
+      <h3>Sign in to post on StillWorks</h3>
+      <p>Create a free account and start posting today.</p>
       <a href="account.html" class="btn-primary" style="display:inline-block;margin-top:8px">Create Account / Sign In</a>
     </div>
   </div>
@@ -61,11 +61,11 @@
     <div id="limitReached" style="display:none">
       <div class="pricing-box">
         <h3>🚀 Monthly Limit Reached</h3>
-        <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px">You've used all 30 free listings for this month. Upgrade to post 30 more!</p>
+        <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px">You've used all 30 free posts for this month. Upgrade to post 30 more!</p>
         <div class="price-big">RWF 2,000</div>
-        <div class="price-unit">for 30 more listings this month</div>
+        <div class="price-unit">for 30 more posts this month</div>
         <ul>
-          <li>30 additional product listings</li>
+          <li>30 additional posts</li>
           <li>Valid for the current month</li>
           <li>WhatsApp payment — fast & easy</li>
           <li>Activated within minutes</li>
@@ -176,14 +176,14 @@
     <div class="empty-state">
       <div class="empty-emoji">🎉</div>
       <h3>Product Listed Successfully!</h3>
-      <p>Your product is now visible on SokoHub. Buyers can contact you directly.</p>
+      <p>Your post is now live on StillWorks. Buyers can contact you directly.</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px">
         <a href="shop.html" class="btn-primary">View in Shop</a>
         <button onclick="resetForm()" class="btn-outline" style="border-color:var(--primary);color:var(--primary)">List Another</button>
       </div>
       <div style="margin-top:24px;padding:16px;background:var(--bg);border-radius:var(--radius);font-size:0.85rem;color:var(--text-muted);text-align:left">
         <strong>📬 What happens next?</strong><br/><br/>
-        Your listing was saved locally and <strong>also sent to the admin's Google Sheet</strong> for approval. 
+        Your post was saved locally and <strong>also sent to the admin's Google Sheet</strong> for approval. 
         Once approved (usually within a few hours), it goes live for all users.
       </div>
     </div>
@@ -222,7 +222,7 @@ function initSellPage() {
   // Pay via WhatsApp link
   const payLink = document.getElementById('payWhatsApp');
   if(payLink) {
-    const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan to post 30 more products this month.');
+    const msg=encodeURIComponent('Hi! I want to upgrade my StillWorks post plan to post 30 more products this month.');
     payLink.href=`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`;
   }
 }
@@ -556,7 +556,7 @@ function resetForm() {
 }
 
 function showUpgrade() {
-  const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan to post 30 more products this month.');
+  const msg=encodeURIComponent('Hi! I want to upgrade my StillWorks post plan to post 30 more products this month.');
   window.open(`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`,'_blank');
 }
 

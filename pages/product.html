@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Product — SokoHub</title>
+  <title>Post — StillWorks</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <link rel="stylesheet" href="../css/components.css"/>
   <style>
@@ -129,7 +129,7 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="logo" href="../index.html">Soko<span>Hub</span></a>
+    <a class="logo" href="../index.html">Still<span>Works</span></a>
     <div style="flex:1"></div>
     <nav class="top-actions">
       <a href="account.html" class="btn-account" id="accountBtn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
@@ -324,11 +324,11 @@ function renderDetail() {
   if (phone) { callBtn.href = `tel:${phone}`; } else { callBtn.style.display='none'; }
   if (wa) {
     const variantNote = hasTags && images[activeVariantIdx].tag ? ` (${images[activeVariantIdx].tag})` : '';
-    const msg = encodeURIComponent(`Hi ${product.sellerName}, I saw your listing on SokoHub and I'm interested in "${product.productName}"${variantNote}. Is it still available?`);
+    const msg = encodeURIComponent(`Hi ${product.sellerName}, I saw your post on StillWorks and I'm interested in "${product.productName}"${variantNote}. Is it still available?`);
     waBtn.href = `https://wa.me/${wa}?text=${msg}`;
   } else { waBtn.style.display='none'; }
 
-  document.title = `${product.productName} — SokoHub`;
+  document.title = `${product.productName} — StillWorks`;
 }
 
 function selectVariant(i) {
@@ -340,7 +340,7 @@ function selectVariant(i) {
   const wa = String(product.sellerWhatsApp||product.sellerPhone||'').replace(/[\s+]/g,'');
   if (wa) {
     const tag = images[i].tag ? ` (${images[i].tag})` : '';
-    const msg = encodeURIComponent(`Hi ${product.sellerName}, I saw your listing on SokoHub and I'm interested in "${product.productName}"${tag}. Is it still available?`);
+    const msg = encodeURIComponent(`Hi ${product.sellerName}, I saw your post on StillWorks and I'm interested in "${product.productName}"${tag}. Is it still available?`);
     document.getElementById('waBtn').href = `https://wa.me/${wa}?text=${msg}`;
   }
 }
