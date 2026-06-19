@@ -1,612 +1,566 @@
-/* ================================================
-   SOKOHUB – Components CSS
-   ================================================ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sell on SokoHub</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">Soko<span>Hub</span></a>
+    <div class="search-wrap" style="max-width:300px">
+      <input id="globalSearch" type="text" placeholder="Search…"/>
+      <button class="btn-search" onclick="handleSearch()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+    </div>
+    <nav class="top-actions">
+      <a href="account.html" class="btn-account" id="accountBtn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+    </nav>
+  </div>
+</header>
 
-/* ===== FORM STYLES ===== */
-.form-page {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 24px 16px 40px;
+<nav class="tab-bar">
+  <a href="../index.html" class="tab" data-tab="home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+  <a href="categories.html" class="tab" data-tab="categories"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Categories</span></a>
+  <a href="shop.html" class="tab" data-tab="shop"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></a>
+  <a href="account.html" class="tab" data-tab="account"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Account</span></a>
+</nav>
+
+<div class="page-hero">
+  <div class="container">
+    <h1>🏪 List a Product</h1>
+    <p>Free to post up to 30 products per month. No commission on sales.</p>
+  </div>
+</div>
+
+<div class="container form-page">
+
+  <!-- Login gate -->
+  <div id="loginGate" style="display:none">
+    <div class="empty-state">
+      <div class="empty-emoji">🔐</div>
+      <h3>Sign in to sell on SokoHub</h3>
+      <p>Create a free account to start listing your products today.</p>
+      <a href="account.html" class="btn-primary" style="display:inline-block;margin-top:8px">Create Account / Sign In</a>
+    </div>
+  </div>
+
+  <!-- Sell form -->
+  <div id="sellForm">
+    <!-- Monthly limit bar -->
+    <div class="limit-bar" id="limitBar">
+      <div class="limit-info">
+        <p><strong id="limitUsed">0</strong> of <strong id="limitMax">30</strong> products used this month</p>
+        <div class="limit-track"><div class="limit-fill" id="limitFill" style="width:0%"></div></div>
+      </div>
+      <button class="btn-upgrade" id="upgradeBtn" style="display:none" onclick="showUpgrade()">Get More</button>
+    </div>
+
+    <!-- Limit reached -->
+    <div id="limitReached" style="display:none">
+      <div class="pricing-box">
+        <h3>🚀 Monthly Limit Reached</h3>
+        <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px">You've used all 30 free listings for this month. Upgrade to post 30 more!</p>
+        <div class="price-big">RWF 2,000</div>
+        <div class="price-unit">for 30 more listings this month</div>
+        <ul>
+          <li>30 additional product listings</li>
+          <li>Valid for the current month</li>
+          <li>WhatsApp payment — fast & easy</li>
+          <li>Activated within minutes</li>
+        </ul>
+        <a id="payWhatsApp" href="#" target="_blank" class="btn-primary" style="display:inline-block;text-align:center">Pay via WhatsApp</a>
+      </div>
+    </div>
+
+    <!-- Product form -->
+    <div id="formContent">
+      <div class="form-card">
+        <h3>📦 Product Details</h3>
+        <div class="field">
+          <label>Product Name <span class="required">*</span></label>
+          <input type="text" id="productName" placeholder="e.g. Samsung Galaxy A54 — 128GB" maxlength="100"/>
+          <span class="field-error" id="err_productName">Please enter a product name</span>
+        </div>
+        <div class="field">
+          <label>Description <span class="required">*</span></label>
+          <textarea id="description" placeholder="Describe your product — condition, features, what's included…" maxlength="500"></textarea>
+          <div class="field-hint">Max 500 characters. More detail = more buyers.</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Category <span class="required">*</span></label>
+            <select id="category" onchange="updateSubcategories()">
+              <option value="">Select category…</option>
+            </select>
+            <span class="field-error" id="err_category">Please select a category</span>
+          </div>
+          <div class="field">
+            <label>Subcategory</label>
+            <select id="subcategory">
+              <option value="">Select subcategory…</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Price (RWF) <span class="required">*</span></label>
+          <input type="number" id="price" placeholder="e.g. 50000" min="0"/>
+          <span class="field-error" id="err_price">Please enter a valid price</span>
+          <div class="field-hint">This is your default/starting price. You can set a different price per image below (e.g. different colors or sizes).</div>
+        </div>
+
+        <div class="field">
+          <label>Product Photos <span class="required">*</span> (up to 5)</label>
+          <div class="field-hint" style="margin-bottom:10px">📸 Choose photos straight from your phone or computer — they'll be compressed and uploaded automatically. Tag each photo with a color, size, or option, and give it its own price if it's different.</div>
+          <div id="imageSlots"></div>
+          <button type="button" id="addImageBtn" onclick="addImageSlot()" style="margin-top:8px;padding:10px 16px;border:1.5px dashed var(--primary);background:transparent;color:var(--primary);border-radius:var(--radius-sm);font-weight:600;font-size:0.85rem;cursor:pointer;width:100%">
+            + Add Another Photo
+          </button>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3>👤 Your Contact Details</h3>
+        <div class="field-row">
+          <div class="field">
+            <label>Your Name <span class="required">*</span></label>
+            <input type="text" id="sellerName" placeholder="Full name"/>
+            <span class="field-error" id="err_sellerName">Please enter your name</span>
+          </div>
+          <div class="field">
+            <label>City / District <span class="required">*</span></label>
+            <input type="text" id="sellerCity" placeholder="e.g. Kigali"/>
+            <span class="field-error" id="err_sellerCity">Please enter your city</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Phone Number <span class="required">*</span></label>
+            <input type="tel" id="sellerPhone" placeholder="+250 7XX XXX XXX"/>
+            <span class="field-error" id="err_sellerPhone">Please enter a valid phone number</span>
+          </div>
+          <div class="field">
+            <label>WhatsApp Number</label>
+            <input type="tel" id="sellerWhatsApp" placeholder="Same as phone if same"/>
+            <div class="field-hint">Leave empty to use same as phone</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="sellerEmail" placeholder="your@email.com"/>
+          <div class="field-hint">Used for account login. Not shown publicly.</div>
+        </div>
+
+        <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:var(--radius-sm);font-size:0.82rem;color:var(--text-muted)">
+          📍 <strong>Your location</strong> is used for "Near Me" filtering. 
+          <button onclick="detectLocation()" style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer;font-size:0.82rem">Auto-detect location</button>
+          <input type="hidden" id="sellerLat"/>
+          <input type="hidden" id="sellerLng"/>
+          <span id="locStatus"></span>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="submitListing()">
+        🚀 Post My Product — It's Free!
+      </button>
+
+      <p style="text-align:center;font-size:0.78rem;color:var(--text-light);margin-top:12px">
+        By posting, you agree buyers will contact you directly via phone or WhatsApp.
+      </p>
+    </div>
+  </div>
+
+  <!-- Success state -->
+  <div id="successState" style="display:none">
+    <div class="empty-state">
+      <div class="empty-emoji">🎉</div>
+      <h3>Product Listed Successfully!</h3>
+      <p>Your product is now visible on SokoHub. Buyers can contact you directly.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px">
+        <a href="shop.html" class="btn-primary">View in Shop</a>
+        <button onclick="resetForm()" class="btn-outline" style="border-color:var(--primary);color:var(--primary)">List Another</button>
+      </div>
+      <div style="margin-top:24px;padding:16px;background:var(--bg);border-radius:var(--radius);font-size:0.85rem;color:var(--text-muted);text-align:left">
+        <strong>📬 What happens next?</strong><br/><br/>
+        Your listing was saved locally and <strong>also sent to the admin's Google Sheet</strong> for approval. 
+        Once approved (usually within a few hours), it goes live for all users.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/app.js"></script>
+<script>
+function initSellPage() {
+  // Populate categories
+  const catSel = document.getElementById('category');
+  CONFIG.CATEGORIES.filter(c=>c.id!=='all').forEach(cat=>{
+    const o=document.createElement('option'); o.value=cat.id; o.textContent=`${cat.emoji} ${cat.label}`; catSel.appendChild(o);
+  });
+
+  // Pre-fill from logged-in user
+  const user = DB.getCurrentUser();
+  if (user) {
+    if(document.getElementById('sellerName')) document.getElementById('sellerName').value=user.name||'';
+    if(document.getElementById('sellerPhone')) document.getElementById('sellerPhone').value=user.phone||'';
+    if(document.getElementById('sellerWhatsApp')) document.getElementById('sellerWhatsApp').value=user.whatsapp||'';
+    if(document.getElementById('sellerEmail')) document.getElementById('sellerEmail').value=user.email||'';
+    if(document.getElementById('sellerCity')) document.getElementById('sellerCity').value=user.city||'';
+    updateLimitBar();
+  } else {
+    document.getElementById('loginGate').style.display='block';
+    document.getElementById('formContent').style.display='none';
+    document.getElementById('limitBar').style.display='none';
+  }
+
+  // Start with one image slot
+  addImageSlot();
+
+  // Pay via WhatsApp link
+  const payLink = document.getElementById('payWhatsApp');
+  if(payLink) {
+    const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan to post 30 more products this month.');
+    payLink.href=`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`;
+  }
 }
 
-.form-page h1 {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin-bottom: 6px;
+const MAX_IMAGES = 5;
+let imageSlotCount = 0;
+
+function addImageSlot() {
+  if (imageSlotCount >= MAX_IMAGES) {
+    showToast(`You can add up to ${MAX_IMAGES} photos per product`, 'error');
+    return;
+  }
+  imageSlotCount++;
+  const wrap = document.getElementById('imageSlots');
+  const slotId = 'imgSlot_' + imageSlotCount;
+  const div = document.createElement('div');
+  div.className = 'image-slot';
+  div.id = slotId;
+  div.dataset.uploadedUrl = '';
+  div.innerHTML = `
+    <div class="image-slot-preview" id="${slotId}_preview">🖼️</div>
+    <div class="image-slot-fields">
+      <input type="file" accept="image/*" class="img-file-input" id="${slotId}_file" onchange="handleImageFile('${slotId}', this.files[0])"/>
+      <div class="image-slot-status" id="${slotId}_status"></div>
+      <div class="image-slot-row">
+        <input type="text" placeholder="Tag — e.g. Red, Size M, Box of 12 (optional)" class="img-tag-input"/>
+        <input type="number" placeholder="Price (optional)" class="img-price-input" min="0"/>
+      </div>
+    </div>
+    <button type="button" class="image-slot-remove" onclick="removeImageSlot('${slotId}')">✕</button>
+  `;
+  wrap.appendChild(div);
+
+  if (imageSlotCount >= MAX_IMAGES) {
+    document.getElementById('addImageBtn').style.display = 'none';
+  }
 }
 
-.form-page .subtitle {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 28px;
+function removeImageSlot(slotId) {
+  const el = document.getElementById(slotId);
+  if (el) el.remove();
+  imageSlotCount--;
+  document.getElementById('addImageBtn').style.display = 'block';
 }
 
-.form-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 28px 24px;
-  box-shadow: var(--shadow);
-  margin-bottom: 20px;
+// Your Cloudflare Worker URL — proxies uploads to Hugging Face
+const UPLOAD_WORKER_URL = 'https://zenovibes-uploads.mucyobrian2.workers.dev';
+
+// Max width/height for compressed images (keeps file size small, plenty for product photos)
+const MAX_IMAGE_DIMENSION = 1200;
+// JPEG quality for compression (0–1)
+const IMAGE_QUALITY = 0.75;
+
+async function handleImageFile(slotId, file) {
+  if (!file) return;
+  const preview = document.getElementById(slotId + '_preview');
+  const status  = document.getElementById(slotId + '_status');
+  const slot    = document.getElementById(slotId);
+
+  if (!file.type.startsWith('image/')) {
+    if (status) { status.textContent = 'Please choose an image file'; status.className = 'image-slot-status err'; }
+    return;
+  }
+
+  // Show spinner while we work
+  if (preview) { preview.className = 'image-slot-preview uploading'; preview.innerHTML = '<div class="spinner"></div>'; }
+  if (status)  { status.textContent = 'Compressing…'; status.className = 'image-slot-status'; }
+
+  try {
+    const compressedBlob = await compressImage(file);
+
+    if (status) status.textContent = `Uploading… (${(compressedBlob.size/1024).toFixed(0)} KB)`;
+
+    const url = await uploadToWorker(compressedBlob, file.name);
+
+    slot.dataset.uploadedUrl = url;
+    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = `<img src="${url}"/>`; }
+    if (status)  { status.textContent = '✓ Uploaded'; status.className = 'image-slot-status ok'; }
+
+  } catch (err) {
+    slot.dataset.uploadedUrl = '';
+    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = '⚠️'; }
+    if (status)  { status.textContent = 'Upload failed — try again'; status.className = 'image-slot-status err'; }
+    console.error('Image upload failed:', err);
+  }
 }
 
-.form-card h3 {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 18px;
-  padding-bottom: 10px;
-  border-bottom: 1.5px solid var(--border);
-  color: var(--primary);
+// Resizes + compresses an image file in the browser using Canvas, returns a Blob (JPEG)
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => { img.src = e.target.result; };
+    reader.onerror = () => reject(new Error('Could not read file'));
+    img.onerror = () => reject(new Error('Could not load image'));
+
+    img.onload = () => {
+      let { width, height } = img;
+
+      // Scale down if larger than MAX_IMAGE_DIMENSION on the longest side
+      if (width > height && width > MAX_IMAGE_DIMENSION) {
+        height = Math.round(height * (MAX_IMAGE_DIMENSION / width));
+        width = MAX_IMAGE_DIMENSION;
+      } else if (height > MAX_IMAGE_DIMENSION) {
+        width = Math.round(width * (MAX_IMAGE_DIMENSION / height));
+        height = MAX_IMAGE_DIMENSION;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Compression failed'));
+      }, 'image/jpeg', IMAGE_QUALITY);
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
-.field {
-  margin-bottom: 18px;
+// Sends a compressed image blob to the Cloudflare Worker, returns the public Hugging Face URL
+async function uploadToWorker(blob, originalName) {
+  const formData = new FormData();
+  const safeName = (originalName || 'photo.jpg').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  formData.append('file', blob, safeName.replace(/\.\w+$/, '') + '.jpg');
+
+  const res = await fetch(UPLOAD_WORKER_URL, { method: 'POST', body: formData });
+  const data = await res.json();
+
+  if (!res.ok || !data.url) {
+    throw new Error(data.error || 'Upload failed');
+  }
+  return data.url;
 }
 
-.field label {
-  display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
+function collectImages() {
+  const slots = document.querySelectorAll('.image-slot');
+  const images = [];
+  const basePrice = parseFloat(document.getElementById('price').value) || 0;
+  slots.forEach(slot => {
+    const url   = slot.dataset.uploadedUrl;
+    const tag   = slot.querySelector('.img-tag-input')?.value.trim();
+    const price = slot.querySelector('.img-price-input')?.value;
+    if (url) {
+      images.push({
+        url,
+        tag: tag || '',
+        price: price ? parseFloat(price) : basePrice
+      });
+    }
+  });
+  return images;
 }
 
-.field label .required { color: var(--danger); margin-left: 2px; }
+function updateLimitBar() {
+  const used  = DB.getMonthlyCount();
+  const limit = DB.getProductLimit();
+  const pct   = Math.min((used/limit)*100,100);
+  const fill  = document.getElementById('limitFill');
+  const usedEl= document.getElementById('limitUsed');
+  const maxEl = document.getElementById('limitMax');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const limitReached = document.getElementById('limitReached');
+  const formContent  = document.getElementById('formContent');
 
-.field input,
-.field select,
-.field textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.95rem;
-  color: var(--text);
-  background: var(--bg);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  if(usedEl) usedEl.textContent=used;
+  if(maxEl)  maxEl.textContent=limit;
+  if(fill) {
+    fill.style.width=pct+'%';
+    fill.className='limit-fill'+(pct>=100?' danger':pct>=70?' warning':'');
+  }
+
+  if(used>=limit) {
+    if(upgradeBtn) upgradeBtn.style.display='block';
+    if(limitReached) limitReached.style.display='block';
+    if(formContent) formContent.style.display='none';
+  } else {
+    if(pct>=70 && upgradeBtn) upgradeBtn.style.display='block';
+    if(limitReached) limitReached.style.display='none';
+    if(formContent) formContent.style.display='block';
+  }
 }
 
-.field input:focus,
-.field select:focus,
-.field textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(26,20,100,0.08);
+function updateSubcategories() {
+  const cat = document.getElementById('category')?.value;
+  const subSel = document.getElementById('subcategory');
+  subSel.innerHTML='<option value="">Select subcategory…</option>';
+  const subs = CONFIG.SUBCATEGORIES[cat]||[];
+  subs.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; subSel.appendChild(o); });
 }
 
-.field input.error,
-.field select.error,
-.field textarea.error {
-  border-color: var(--danger);
+function detectLocation() {
+  const status = document.getElementById('locStatus');
+  if(!navigator.geolocation){ if(status) status.textContent=' Not supported.'; return; }
+  if(status) status.textContent=' Detecting…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('sellerLat').value=pos.coords.latitude;
+    document.getElementById('sellerLng').value=pos.coords.longitude;
+    if(status) status.textContent=` ✓ Got it (${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)})`;
+  }, ()=>{ if(status) status.textContent=' ✗ Could not detect. Allow location access.'; });
 }
 
-.field-error {
-  color: var(--danger);
-  font-size: 0.78rem;
-  margin-top: 4px;
-  display: none;
-}
-.field-error.show { display: block; }
-
-.field textarea { resize: vertical; min-height: 100px; }
-
-.field-hint {
-  font-size: 0.78rem;
-  color: var(--text-light);
-  margin-top: 4px;
-}
-
-.field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-@media (max-width: 480px) {
-  .field-row { grid-template-columns: 1fr; }
-}
-
-/* Image upload */
-.img-upload-box {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius);
-  padding: 32px 16px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: var(--bg);
-  position: relative;
-}
-.img-upload-box:hover { border-color: var(--primary); background: rgba(26,20,100,0.02); }
-.img-upload-box input[type="file"] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-}
-.img-upload-box .upload-icon { font-size: 2rem; margin-bottom: 8px; }
-.img-upload-box p { font-size: 0.88rem; color: var(--text-muted); }
-.img-upload-box strong { color: var(--primary); }
-
-.img-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 12px;
+function validate() {
+  let ok=true;
+  const required=[
+    {id:'productName', errId:'err_productName'},
+    {id:'description',  errId:null},
+    {id:'category',     errId:'err_category'},
+    {id:'price',        errId:'err_price'},
+    {id:'sellerName',   errId:'err_sellerName'},
+    {id:'sellerPhone',  errId:'err_sellerPhone'},
+    {id:'sellerCity',   errId:'err_sellerCity'},
+  ];
+  required.forEach(({id, errId})=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const err=errId?document.getElementById(errId):null;
+    if(!el.value.trim()) {
+      el.classList.add('error');
+      if(err) err.classList.add('show');
+      ok=false;
+    } else {
+      el.classList.remove('error');
+      if(err) err.classList.remove('show');
+    }
+  });
+  if(parseFloat(document.getElementById('price')?.value)<0) ok=false;
+  if(document.querySelector('.image-slot-preview.uploading')) {
+    showToast('Please wait for photos to finish uploading','error');
+    ok=false;
+  }
+  if(collectImages().length === 0) {
+    showToast('Please add at least one product photo','error');
+    ok=false;
+  }
+  return ok;
 }
 
-.img-preview-item {
-  aspect-ratio: 1;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  position: relative;
-}
-.img-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-.img-preview-item .remove-img {
-  position: absolute;
-  top: 4px; right: 4px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  font-size: 0.7rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+async function submitListing() {
+  if(!validate()) { showToast('Please fill in all required fields','error'); return; }
 
-/* Limit bar */
-.limit-bar {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
+  const btn = document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='Posting…';
 
-.limit-info { flex: 1; }
-.limit-info p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 8px; }
-.limit-info strong { color: var(--text); }
+  const product = {
+    productName:   document.getElementById('productName').value.trim(),
+    description:   document.getElementById('description').value.trim(),
+    category:      document.getElementById('category').value,
+    subcategory:   document.getElementById('subcategory').value,
+    price:         parseFloat(document.getElementById('price').value),
+    images:        collectImages(),
+    sellerName:    document.getElementById('sellerName').value.trim(),
+    sellerPhone:   document.getElementById('sellerPhone').value.trim(),
+    sellerWhatsApp:document.getElementById('sellerWhatsApp').value.trim() || document.getElementById('sellerPhone').value.trim(),
+    sellerEmail:   document.getElementById('sellerEmail').value.trim(),
+    sellerCity:    document.getElementById('sellerCity').value.trim(),
+    sellerLat:     parseFloat(document.getElementById('sellerLat').value)||null,
+    sellerLng:     parseFloat(document.getElementById('sellerLng').value)||null,
+  };
 
-.limit-track {
-  height: 8px;
-  background: var(--border);
-  border-radius: 100px;
-  overflow: hidden;
-}
+  try {
+    // Increment monthly count
+    DB.incrementMonthlyCount();
+    // Save locally so it appears instantly
+    DB.saveMyListing(product);
 
-.limit-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
-  border-radius: 100px;
-  transition: width 0.5s ease;
+    // Send to Google Sheets via Form (fires and forgets — no CORS issue)
+    sendToGoogleForm(product);
+
+    // Show success
+    document.getElementById('sellForm').style.display='none';
+    document.getElementById('successState').style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+
+  } catch(e) {
+    if(e.message==='limit_reached') {
+      updateLimitBar();
+      showToast('Monthly limit reached. Please upgrade.','error');
+    } else {
+      showToast('Something went wrong. Please try again.','error');
+    }
+    btn.disabled=false;
+    btn.textContent='🚀 Post My Product — It\'s Free!';
+  }
 }
 
-.limit-fill.warning { background: linear-gradient(90deg, var(--accent-dark), var(--accent)); }
-.limit-fill.danger { background: linear-gradient(90deg, var(--danger), #f87171); }
+function sendToGoogleForm(product) {
+  const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/formResponse';
+  const params = new URLSearchParams();
+  params.set('entry.862644534',  product.sellerName);
+  params.set('entry.1250576708', product.sellerPhone);
+  params.set('entry.1719434925', product.sellerWhatsApp);
+  params.set('entry.1358767187', product.sellerEmail);
+  params.set('entry.678321680',  product.sellerCity);
+  params.set('entry.1295880774', product.sellerLat||'');
+  params.set('entry.1205633446', product.sellerLng||'');
+  params.set('entry.235954322',  product.productName);
+  params.set('entry.1645371455', product.description);
+  params.set('entry.593771608',  product.price);
+  params.set('entry.1750631076', product.category);
+  params.set('entry.1493886285', product.subcategory);
+  params.set('entry.928448056',  JSON.stringify(product.images||[]));
 
-.btn-upgrade {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-upgrade:hover { background: var(--accent-dark); }
-
-/* Submit button */
-.btn-submit {
-  width: 100%;
-  padding: 16px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 8px;
-}
-.btn-submit:hover:not(:disabled) { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(26,20,100,0.3); }
-.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Image slot upload (multi-image with tags & variant pricing) */
-.image-slot {
-  display: flex;
-  gap: 12px;
-  padding: 14px;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  margin-bottom: 10px;
-  align-items: flex-start;
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = `${formUrl}?${params.toString()}`;
+  document.body.appendChild(iframe);
+  setTimeout(() => iframe.remove(), 5000);
 }
 
-.image-slot-preview {
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.6rem;
-  overflow: hidden;
-}
-.image-slot-preview img { width: 100%; height: 100%; object-fit: cover; }
-
-.image-slot-fields { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.image-slot-fields input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1.5px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.84rem;
-  background: white;
-  outline: none;
-}
-.image-slot-fields input:focus { border-color: var(--primary); }
-.image-slot-row { display: flex; gap: 8px; }
-.image-slot-row input:first-child { flex: 1; }
-.image-slot-row input:last-child { width: 110px; }
-
-.image-slot-remove {
-  background: none;
-  border: none;
-  color: var(--danger);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 4px;
-  flex-shrink: 0;
+function resetForm() {
+  document.getElementById('sellForm').style.display='block';
+  document.getElementById('successState').style.display='none';
+  ['productName','description','price','sellerWhatsApp'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('category').value='';
+  document.getElementById('subcategory').innerHTML='<option value="">Select subcategory…</option>';
+  // Reset image slots back to one empty slot
+  document.getElementById('imageSlots').innerHTML = '';
+  imageSlotCount = 0;
+  document.getElementById('addImageBtn').style.display='block';
+  addImageSlot();
+  updateLimitBar();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-.image-slot-label { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: -4px; }
-
-.image-slot-preview.uploading { font-size: 0.62rem; color: var(--text-muted); text-align: center; line-height: 1.3; padding: 4px; }
-.image-slot-preview .spinner {
-  width: 20px; height: 20px;
-  border: 2.5px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.img-file-input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1.5px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.8rem;
-  background: white;
-  cursor: pointer;
-}
-.image-slot-status { font-size: 0.74rem; margin-top: 2px; }
-.image-slot-status.ok { color: var(--success, #16a34a); }
-.image-slot-status.err { color: var(--danger); }
-
-/* ===== ACCOUNT PAGE ===== */
-.account-page { padding: 24px 16px 40px; max-width: 600px; margin: 0 auto; }
-
-.profile-header {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  border-radius: var(--radius);
-  padding: 28px 24px;
-  color: white;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
+function showUpgrade() {
+  const msg=encodeURIComponent('Hi! I want to upgrade my SokoHub listing plan to post 30 more products this month.');
+  window.open(`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`,'_blank');
 }
 
-.profile-avatar {
-  width: 72px;
-  height: 72px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  flex-shrink: 0;
-  border: 3px solid rgba(255,255,255,0.3);
-}
-
-.profile-info h2 {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.profile-info p {
-  font-size: 0.85rem;
-  color: rgba(255,255,255,0.7);
-}
-
-.profile-badge {
-  display: inline-block;
-  background: var(--accent);
-  color: white;
-  padding: 3px 10px;
-  border-radius: 100px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  margin-top: 6px;
-}
-
-.account-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-
-.account-card-title {
-  padding: 16px 20px;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 700;
-  border-bottom: 1.5px solid var(--border);
-  color: var(--primary);
-}
-
-.account-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.account-menu-item:last-child { border-bottom: none; }
-.account-menu-item:hover { background: var(--bg); }
-
-.menu-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.menu-text { flex: 1; }
-.menu-text strong { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
-.menu-text span { font-size: 0.78rem; color: var(--text-muted); }
-.menu-arrow { color: var(--text-light); font-size: 0.9rem; }
-
-.menu-badge {
-  background: var(--primary);
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 100px;
-}
-
-/* ===== SHOP PAGE ===== */
-.shop-page { padding: 24px 16px 40px; }
-
-.shop-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.shop-header h1 {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 800;
-}
-
-.result-count {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* ===== CATEGORIES PAGE ===== */
-.categories-page { padding: 24px 16px 40px; }
-
-.categories-page h1 {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 800;
-  margin-bottom: 24px;
-}
-
-.cat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px;
-}
-
-.cat-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 24px 16px;
-  text-align: center;
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid transparent;
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-.cat-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-
-.cat-card-emoji { font-size: 2.5rem; margin-bottom: 10px; display: block; }
-.cat-card h3 { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
-.cat-card span { font-size: 0.78rem; color: var(--text-muted); }
-
-/* ===== AUTH FORMS ===== */
-.auth-page {
-  min-height: calc(100vh - var(--top-height) - var(--tab-height));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
-}
-
-.auth-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 36px 28px;
-  box-shadow: var(--shadow-lg);
-  width: 100%;
-  max-width: 400px;
-}
-
-.auth-card .logo {
-  font-size: 1.6rem;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.auth-card h2 {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.auth-card p {
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  margin-bottom: 24px;
-}
-
-.auth-divider {
-  text-align: center;
-  margin: 20px 0;
-  position: relative;
-  color: var(--text-light);
-  font-size: 0.82rem;
-}
-.auth-divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0; right: 0;
-  height: 1px;
-  background: var(--border);
-}
-.auth-divider span { background: var(--surface); padding: 0 12px; position: relative; }
-
-.auth-switch {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 0.88rem;
-  color: var(--text-muted);
-}
-.auth-switch a { color: var(--primary); font-weight: 600; }
-
-/* ===== TOAST ===== */
-.toast-container {
-  position: fixed;
-  bottom: calc(var(--tab-height) + 16px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  pointer-events: none;
-}
-
-.toast {
-  background: var(--text);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 100px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
-  white-space: nowrap;
-}
-.toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
-
-@keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
-
-/* ===== BACK BUTTON ===== */
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  font-weight: 500;
-  margin-bottom: 20px;
-  cursor: pointer;
-  padding: 8px 0;
-}
-.back-btn:hover { color: var(--primary); }
-
-/* ===== EMPTY STATE ===== */
-.empty-state {
-  text-align: center;
-  padding: 60px 16px;
-}
-.empty-state .empty-emoji { font-size: 3rem; margin-bottom: 16px; }
-.empty-state h3 { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
-.empty-state p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
-
-/* ===== PAGE HEADER ===== */
-.page-hero {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  color: white;
-  padding: 32px 16px;
-  margin-bottom: 0;
-}
-.page-hero h1 {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-.page-hero p { font-size: 0.9rem; color: rgba(255,255,255,0.7); }
-
-/* ===== PRICING BOX ===== */
-.pricing-box {
-  background: linear-gradient(135deg, #fff8eb, #fff3d4);
-  border: 2px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 24px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-.pricing-box h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-.pricing-box .price-big { font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; color: var(--primary); }
-.pricing-box .price-unit { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
-.pricing-box ul { list-style: none; text-align: left; margin-bottom: 16px; }
-.pricing-box ul li { padding: 6px 0; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
-.pricing-box ul li::before { content: '✓'; color: var(--success); font-weight: 700; }
+document.addEventListener('DOMContentLoaded', initSellPage);
+</script>
+</body>
+</html>
