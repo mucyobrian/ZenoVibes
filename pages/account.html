@@ -175,6 +175,29 @@
   </div>
 </div>
 
+<!-- EDIT LISTING PANEL -->
+<div id="editListingPanel" style="display:none">
+  <div class="container account-page">
+    <div class="back-btn" onclick="hideEditListing()">← Back to My Listings</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">Edit Listing</h2>
+    <input type="hidden" id="editListingId"/>
+    <div class="field">
+      <label>Product Name <span class="required">*</span></label>
+      <input type="text" id="editListingName" placeholder="Product name"/>
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="editListingDesc" rows="4" placeholder="Describe your product"></textarea>
+    </div>
+    <div class="field">
+      <label>Price (RWF) <span class="required">*</span></label>
+      <input type="number" id="editListingPrice" min="0" placeholder="Price"/>
+    </div>
+    <button class="btn-submit" onclick="saveEditListing()">Save Changes</button>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:10px">Note: to change photos, please delete this listing and create a new one.</p>
+  </div>
+</div>
+
 <!-- EDIT PROFILE PANEL -->
 <div id="editProfilePanel" style="display:none">
   <div class="container form-page">
@@ -207,11 +230,13 @@ function showAuth() {
   document.getElementById('dashSection').style.display='none';
 }
 
-function showDashboard(user) {
+async function showDashboard(user) {
   document.getElementById('authSection').style.display='none';
   document.getElementById('dashSection').style.display='block';
   document.getElementById('myListingsPanel').style.display='none';
   document.getElementById('editProfilePanel').style.display='none';
+  const elp = document.getElementById('editListingPanel');
+  if (elp) elp.style.display='none';
 
   document.getElementById('dashAvatar').textContent = user.name?.charAt(0).toUpperCase()||'👤';
   document.getElementById('dashName').textContent   = user.name||'Seller';
@@ -221,10 +246,13 @@ function showDashboard(user) {
 
   const used   = DB.getMonthlyCount();
   const limit  = DB.getProductLimit();
-  const myList = DB.getMyListings();
 
   document.getElementById('statUsed').textContent   = used;
   document.getElementById('statRemain').textContent = Math.max(0,limit-used);
+  document.getElementById('statTotal').textContent  = '…';
+  document.getElementById('listingsBadge').textContent = '…';
+
+  const myList = await DB.getMyListings();
   document.getElementById('statTotal').textContent  = myList.length;
   document.getElementById('listingsBadge').textContent = myList.length;
 }
@@ -277,14 +305,17 @@ function doLogout() {
   showAuth();
 }
 
-function showMyListings() {
+async function showMyListings() {
   document.getElementById('dashSection').style.display='none';
   document.getElementById('myListingsPanel').style.display='block';
-  const listings = DB.getMyListings();
   const grid  = document.getElementById('myListingsGrid');
   const empty = document.getElementById('myListingsEmpty');
-  if(listings.length===0){ grid.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
+  grid.innerHTML = '<p style="color:var(--text-muted);padding:20px 0">Loading your listings…</p>';
+
+  const listings = await DB.getMyListings();
+
+  if(listings.length===0){ grid.innerHTML=''; empty.style.display='block'; return; }
   grid.innerHTML = listings.map(p=>{
     const firstImg = (Array.isArray(p.images) && p.images[0]?.url) ? p.images[0].url : p.imageUrl;
     return `
@@ -299,9 +330,14 @@ function showMyListings() {
           <span class="card-price">${formatPrice(p.price)}</span>
           <span class="card-location">📍 ${escHtml(p.sellerCity||'')}</span>
         </div>
-        <button onclick="deleteListingConfirm('${p.id}')" style="width:100%;margin-top:12px;padding:10px;background:#ffeaea;color:var(--danger);border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-size:0.85rem">
-          🗑 Delete Listing
-        </button>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button onclick='openEditListing(${JSON.stringify(p).replace(/'/g,"&apos;")})' style="flex:1;padding:10px;background:#e3f2fd;color:#1565c0;border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-size:0.85rem">
+            ✏️ Edit
+          </button>
+          <button onclick="deleteListingConfirm('${p.id}')" style="flex:1;padding:10px;background:#ffeaea;color:var(--danger);border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-size:0.85rem">
+            🗑 Delete
+          </button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -312,13 +348,55 @@ function hideMyListings() {
   document.getElementById('dashSection').style.display='block';
 }
 
-function deleteListingConfirm(id) {
-  if(!confirm('Delete this listing? This cannot be undone.')) return;
-  DB.deleteMyListing(id);
-  showToast('Listing deleted','success');
-  showMyListings();
-  const user=DB.getCurrentUser();
-  if(user) showDashboard(user);
+async function deleteListingConfirm(id) {
+  if(!confirm('Delete this listing permanently? This cannot be undone.')) return;
+  showToast('Deleting…');
+  try {
+    await DB.deleteMyListing(id);
+    showToast('Listing deleted','success');
+    showMyListings();
+    const user=DB.getCurrentUser();
+    if(user) showDashboard(user);
+  } catch(e) {
+    showToast(e.message || 'Could not delete listing','error');
+  }
+}
+
+function openEditListing(p) {
+  document.getElementById('editListingId').value = p.id;
+  document.getElementById('editListingName').value = p.productName || '';
+  document.getElementById('editListingDesc').value = p.description || '';
+  document.getElementById('editListingPrice').value = p.price || '';
+  document.getElementById('myListingsPanel').style.display='none';
+  document.getElementById('editListingPanel').style.display='block';
+}
+
+function hideEditListing() {
+  document.getElementById('editListingPanel').style.display='none';
+  document.getElementById('myListingsPanel').style.display='block';
+}
+
+async function saveEditListing() {
+  const id    = document.getElementById('editListingId').value;
+  const name  = document.getElementById('editListingName').value.trim();
+  const desc  = document.getElementById('editListingDesc').value.trim();
+  const price = document.getElementById('editListingPrice').value;
+
+  if(!name || !price){ showToast('Product name and price are required','error'); return; }
+
+  showToast('Saving…');
+  try {
+    await DB.updateMyListing(id, {
+      productName: name,
+      description: desc,
+      price: price,
+    });
+    showToast('Listing updated!','success');
+    hideEditListing();
+    showMyListings();
+  } catch(e) {
+    showToast(e.message || 'Could not update listing','error');
+  }
 }
 
 function showEditProfile() {
