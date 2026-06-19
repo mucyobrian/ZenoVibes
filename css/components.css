@@ -610,3 +610,23 @@
 .pricing-box ul { list-style: none; text-align: left; margin-bottom: 16px; }
 .pricing-box ul li { padding: 6px 0; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
 .pricing-box ul li::before { content: '✓'; color: var(--success); font-weight: 700; }
+
+/* ── List view card ─────────────────────────── */
+.product-card--list {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+  overflow: hidden;
+}
+.product-card--list .card-img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 0;
+}
+.product-card--list .card-img-placeholder {
+  width: 110px;
+  height: 110px;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
