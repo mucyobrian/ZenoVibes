@@ -5,8 +5,8 @@
 
 const CONFIG = {
   // ── SITE INFO ──────────────────────────────────
-  siteName: "SokoHub",
-  siteTagline: "Rwanda's Free Local Marketplace",
+  siteName: "StillWorks",
+  siteTagline: "Used. Cheap. Still Works.",
   currency: "RWF",
   currencySymbol: "RWF",
 

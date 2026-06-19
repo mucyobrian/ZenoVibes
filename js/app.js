@@ -123,7 +123,7 @@ function openContact(product) {
 
   if (wa) {
     const msg = encodeURIComponent(
-      `Hi ${product.sellerName}, I saw your listing on SokoHub and I'm interested in "${product.productName}" (${formatPrice(product.price)}). Is it still available?`
+      `Hi ${product.sellerName}, I saw your post on StillWorks and I'm interested in "${product.productName}" (${formatPrice(product.price)}). Is it still available?`
     );
     waBtn.href = `https://wa.me/${wa}?text=${msg}`;
     waBtn.style.display = 'flex';
