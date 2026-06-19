@@ -42,7 +42,7 @@ function getCatLabel(catId) {
 }
 
 // ── Build a product card HTML ────────────────────
-function buildProductCard(product, userLat, userLng) {
+function buildProductCard(product, userLat, userLng, listView) {
   const dist = (userLat && product.sellerLat)
     ? DB.getDistanceKm(userLat, userLng, product.sellerLat, product.sellerLng)
     : null;
@@ -59,6 +59,30 @@ function buildProductCard(product, userLat, userLng) {
   const multiImgBadge = imgCount > 1
     ? `<div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:white;font-size:0.7rem;font-weight:600;padding:3px 8px;border-radius:100px">📷 ${imgCount}</div>`
     : '';
+
+  if (listView) {
+    return `
+  <div class="product-card product-card--list" onclick="goToProduct('${product.id}')">
+    <div style="position:relative;flex-shrink:0;width:110px;height:110px">
+      ${imgHtml}
+      ${multiImgBadge}
+    </div>
+    <div class="card-body" style="flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between">
+      <div>
+        <div style="font-size:0.7rem;font-weight:600;color:var(--primary);margin-bottom:4px">${getCatEmoji(product.category)} ${getCatLabel(product.category)}</div>
+        <div class="card-title" style="font-size:0.95rem;margin-bottom:4px">${escHtml(product.productName)}</div>
+        <div class="card-desc" style="font-size:0.8rem;-webkit-line-clamp:2">${escHtml(product.description || '')}</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+        <span class="card-price" style="font-size:1rem">${formatPrice(product.price)}</span>
+        <span class="card-location" style="font-size:0.75rem">
+          📍 ${escHtml(product.sellerCity || '')}
+          ${dist !== null ? `<span style="color:var(--success);margin-left:4px">${formatDist(dist)}</span>` : ''}
+        </span>
+      </div>
+    </div>
+  </div>`;
+  }
 
   return `
   <div class="product-card" onclick="goToProduct('${product.id}')">
@@ -79,9 +103,6 @@ function buildProductCard(product, userLat, userLng) {
           ${dist !== null ? `<span style="color:var(--success);margin-left:4px">${formatDist(dist)}</span>` : ''}
         </span>
       </div>
-      <button class="btn-contact" onclick="event.stopPropagation();goToProduct('${product.id}')">
-        View Details
-      </button>
     </div>
   </div>`;
 }
@@ -204,7 +225,9 @@ function getUserLocation() { return userLocation; }
 function handleSearch() {
   const q = (document.getElementById('globalSearch')?.value || '').trim();
   if (!q) return;
-  window.location.href = `pages/shop.html?q=${encodeURIComponent(q)}`;
+  const isInPages = window.location.pathname.includes('/pages/');
+  const base = isInPages ? 'shop.html' : 'pages/shop.html';
+  window.location.href = `${base}?q=${encodeURIComponent(q)}`;
 }
 
 document.getElementById('globalSearch')?.addEventListener('keydown', e => {
