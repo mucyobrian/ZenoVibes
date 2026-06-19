@@ -176,7 +176,7 @@ async function initShop() {
   if (stillLocalOnly.length) {
     allProducts = [...stillLocalOnly, ...allProducts];
   }
-  applyFilters(q);
+  applyFilters(q.toLowerCase());
   setView(currentView);
 }
 
@@ -314,6 +314,14 @@ function clearFilters() {
 }
 
 document.addEventListener('DOMContentLoaded', initShop);
+
+// Live search as user types on shop page
+document.addEventListener('DOMContentLoaded', () => {
+  const gs = document.getElementById('globalSearch');
+  if (gs) {
+    gs.addEventListener('input', () => applyFilters());
+  }
+});
 </script>
 </body>
 </html>
