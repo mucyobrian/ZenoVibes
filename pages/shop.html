@@ -103,9 +103,19 @@
 </div>
 
 <main class="container shop-page">
-  <div class="shop-header">
-    <h1 id="shopTitle">All Products</h1>
-    <span class="result-count" id="resultCount"></span>
+  <div class="shop-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+      <h1 id="shopTitle" style="margin:0">All Products</h1>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button id="btnGrid" onclick="setView('grid')" title="Grid view" style="padding:7px 10px;border:1.5px solid var(--primary);border-radius:var(--radius-sm);background:var(--primary);color:white;cursor:pointer;display:flex;align-items:center">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </button>
+      <button id="btnList" onclick="setView('list')" title="List view" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:white;color:var(--text-muted);cursor:pointer;display:flex;align-items:center">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
   </div>
   <div class="products-grid" id="productsGrid">
     <div class="skeleton-card"></div><div class="skeleton-card"></div>
@@ -146,6 +156,7 @@
 <script>
 let allProducts = [], filteredProducts = [], activeCat = 'all', nearMeActive = false;
 let pageSize = 12, currentPage = 1;
+let currentView = localStorage.getItem('sw_view') || 'grid';
 
 async function initShop() {
   buildCategoryPills();
@@ -166,6 +177,7 @@ async function initShop() {
     allProducts = [...stillLocalOnly, ...allProducts];
   }
   applyFilters(q);
+  setView(currentView);
 }
 
 function buildCategoryPills() {
@@ -240,6 +252,34 @@ function applyFilters(searchQ) {
   if (count) count.textContent = `${filteredProducts.length} product${filteredProducts.length!==1?'s':''}`;
 }
 
+function setView(v) {
+  currentView = v;
+  localStorage.setItem('sw_view', v);
+  const grid = document.getElementById('productsGrid');
+  const btnGrid = document.getElementById('btnGrid');
+  const btnList = document.getElementById('btnList');
+  if (v === 'list') {
+    grid.style.gridTemplateColumns = '1fr';
+    grid.style.gap = '10px';
+    btnList.style.background = 'var(--primary)';
+    btnList.style.color = 'white';
+    btnList.style.borderColor = 'var(--primary)';
+    btnGrid.style.background = 'white';
+    btnGrid.style.color = 'var(--text-muted)';
+    btnGrid.style.borderColor = 'var(--border)';
+  } else {
+    grid.style.gridTemplateColumns = '';
+    grid.style.gap = '';
+    btnGrid.style.background = 'var(--primary)';
+    btnGrid.style.color = 'white';
+    btnGrid.style.borderColor = 'var(--primary)';
+    btnList.style.background = 'white';
+    btnList.style.color = 'var(--text-muted)';
+    btnList.style.borderColor = 'var(--border)';
+  }
+  renderProducts();
+}
+
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
   const noRes= document.getElementById('noResults');
@@ -254,7 +294,8 @@ function renderProducts() {
     return;
   }
   if(noRes) noRes.classList.add('hidden');
-  grid.innerHTML = toShow.map(p=>buildProductCard(p,loc?.lat,loc?.lng)).join('');
+  const isListView = currentView === 'list';
+  grid.innerHTML = toShow.map(p=>buildProductCard(p,loc?.lat,loc?.lng,isListView)).join('');
   if(loadMore) loadMore.style.display = toShow.length < filteredProducts.length ? 'inline-block' : 'none';
 }
 
