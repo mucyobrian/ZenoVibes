@@ -23,8 +23,8 @@ const CONFIG = {
   // STEP 3: For the FORM, create a Google Form linked to this sheet
   //   Copy the Form URL below as FORM_URL
 
-  SHEET_ID: "1YVGwMNkJNbtJI8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo",
-  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/1YVGwMNkJNbtJI8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo/gviz/tq?tqx=out:json&sheet=Sheet1",
+  SHEET_ID: "1YVGwMNkJNbtJl8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo",
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/1YVGwMNkJNbtJl8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo/gviz/tq?tqx=out:json&sheet=Sheet1",
   FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/viewform",
 
   // Apps Script Web App — handles editing/deleting listings directly in the Sheet
