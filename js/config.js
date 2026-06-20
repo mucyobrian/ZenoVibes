@@ -43,22 +43,26 @@ const CONFIG = {
   NEAR_RADIUS_KM: 20,       // km for "Near Me" filter
 
   // ── CATEGORIES ────────────────────────────────
+  // image: path to your category thumbnail.
+  // Put your photos in /images/categories/ in your GitHub repo,
+  // named exactly as shown below (e.g. electronics.jpg).
+  // Or replace any path with a full URL (Hugging Face, Cloudinary, etc.)
   CATEGORIES: [
-    { id: "all",          label: "All",           emoji: "🛍️" },
-    { id: "electronics",  label: "Electronics",   emoji: "📱" },
-    { id: "fashion",      label: "Fashion",       emoji: "👗" },
-    { id: "accessories",  label: "Accessories",   emoji: "💍" },
-    { id: "food",         label: "Food & Drinks", emoji: "🍔" },
-    { id: "furniture",    label: "Furniture",     emoji: "🛋️" },
-    { id: "vehicles",     label: "Vehicles",      emoji: "🚗" },
-    { id: "health",       label: "Health & Beauty", emoji: "💄" },
-    { id: "sports",       label: "Sports",        emoji: "⚽" },
-    { id: "books",        label: "Books & Stationery", emoji: "📚" },
-    { id: "agriculture",  label: "Agriculture",   emoji: "🌾" },
-    { id: "services",     label: "Services",      emoji: "🔧" },
-    { id: "property",     label: "Property",      emoji: "🏠" },
-    { id: "babies",       label: "Baby & Kids",   emoji: "🍼" },
-    { id: "other",        label: "Other",         emoji: "📦" },
+    { id: "all",          label: "All",             image: "../images/categories/all.jpg" },
+    { id: "electronics",  label: "Electronics",     image: "../images/categories/electronics.jpg" },
+    { id: "fashion",      label: "Fashion",         image: "../images/categories/fashion.jpg" },
+    { id: "accessories",  label: "Accessories",     image: "../images/categories/accessories.jpg" },
+    { id: "food",         label: "Food & Drinks",   image: "../images/categories/food.jpg" },
+    { id: "furniture",    label: "Furniture",       image: "../images/categories/furniture.jpg" },
+    { id: "vehicles",     label: "Vehicles",        image: "../images/categories/vehicles.jpg" },
+    { id: "health",       label: "Health & Beauty", image: "../images/categories/health.jpg" },
+    { id: "sports",       label: "Sports",          image: "../images/categories/sports.jpg" },
+    { id: "books",        label: "Books & Stationery", image: "../images/categories/books.jpg" },
+    { id: "agriculture",  label: "Agriculture",     image: "../images/categories/agriculture.jpg" },
+    { id: "services",     label: "Services",        image: "../images/categories/services.jpg" },
+    { id: "property",     label: "Property",        image: "../images/categories/property.jpg" },
+    { id: "babies",       label: "Baby & Kids",     image: "../images/categories/babies.jpg" },
+    { id: "other",        label: "Other",           image: "../images/categories/other.jpg" },
   ],
 
   // ── SUBCATEGORIES ─────────────────────────────

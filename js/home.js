@@ -37,7 +37,7 @@ function buildCategoryPills() {
   container.innerHTML = CONFIG.CATEGORIES.map(cat => `
     <button class="cat-pill ${cat.id === 'all' ? 'active' : ''}"
       onclick="selectCategory('${cat.id}', this)">
-      <span class="pill-emoji">${cat.emoji}</span>
+      <img class="pill-img" src="${cat.image}" alt="${cat.label}" onerror="this.style.display='none'" />
       ${cat.label}
     </button>
   `).join('');
@@ -50,7 +50,7 @@ function populateCategoryFilter() {
   CONFIG.CATEGORIES.filter(c => c.id !== 'all').forEach(cat => {
     const opt = document.createElement('option');
     opt.value = cat.id;
-    opt.textContent = `${cat.emoji} ${cat.label}`;
+    opt.textContent = cat.label;
     sel.appendChild(opt);
   });
 }
@@ -157,7 +157,7 @@ function buildCategorySections() {
     <section class="cat-section">
       <div class="cat-section-head">
         <div class="cat-section-title">
-          <span class="emoji">${cat.emoji}</span> ${cat.label}
+          <img class="cat-section-img" src="${cat.image}" alt="${cat.label}" onerror="this.style.display='none'" /> ${cat.label}
           <span class="cat-section-count">(${productsForThisCat.length})</span>
         </div>
         <a href="pages/categories.html?cat=${cat.id}" class="see-all">See all →</a>
