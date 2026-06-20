@@ -286,7 +286,7 @@ function renderDetail() {
   track.addEventListener('scroll', onCarouselScroll);
 
   // Title / category
-  document.getElementById('detailCategory').textContent = `${getCatEmoji(product.category)} ${getCatLabel(product.category)}`;
+  document.getElementById('detailCategory').innerHTML = `${getCatEmoji(product.category)} ${getCatLabel(product.category)}`;
   document.getElementById('detailTitle').textContent = product.productName;
   document.getElementById('detailDesc').textContent = product.description || 'No description provided.';
 
