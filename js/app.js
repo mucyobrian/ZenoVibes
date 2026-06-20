@@ -30,10 +30,13 @@ function formatDist(km) {
   return km.toFixed(1) + 'km away';
 }
 
-// ── Get category emoji ──────────────────────────
+// ── Get category image (replaces emoji) ─────────
 function getCatEmoji(catId) {
   const cat = CONFIG.CATEGORIES.find(c => c.id === catId);
-  return cat ? cat.emoji : '📦';
+  if (!cat) return '';
+  return cat.image
+    ? `<img src="${cat.image}" alt="${cat.label}" style="width:20px;height:20px;object-fit:cover;border-radius:4px;vertical-align:middle" onerror="this.style.display='none'" />`
+    : '';
 }
 
 function getCatLabel(catId) {

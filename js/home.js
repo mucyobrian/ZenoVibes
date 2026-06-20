@@ -38,7 +38,7 @@ function buildCategoryPills() {
     <button class="cat-pill ${cat.id === 'all' ? 'active' : ''}"
       onclick="selectCategory('${cat.id}', this)">
       <img class="pill-img" src="${cat.image}" alt="${cat.label}" onerror="this.style.display='none'" />
-      ${cat.label}
+      <span>${cat.label}</span>
     </button>
   `).join('');
 }
