@@ -154,7 +154,11 @@ function buildCategorySections() {
 
     const subcatCirclesHtml = subcatsWithProducts.map(sc => `
       <div class="subcat-item ${activeSubcat[cat.id] === sc ? 'active' : ''}" onclick="selectSubcat('${cat.id}','${escAttr(sc)}')">
-        <div class="subcat-circle">${getSubcatEmoji(cat.id, sc)}</div>
+        <div class="subcat-circle">
+          <img class="subcat-img" src="${cat.image}" alt="${escHtml(sc)}"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+          <span class="subcat-fallback" style="display:none">${getSubcatEmoji(cat.id, sc)}</span>
+        </div>
         <div class="subcat-label">${escHtml(sc)}</div>
       </div>`).join('');
 
