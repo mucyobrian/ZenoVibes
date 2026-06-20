@@ -100,6 +100,22 @@ const DB = (() => {
   }
 
   // ── Shared normalizer (sheet row -> app product shape) ──
+  // Map whatever the sheet stored (label OR id, any case) → config id
+  function resolveCategoryId(raw) {
+    if (!raw) return 'other';
+    const val = String(raw).trim().toLowerCase();
+    // 1. Direct id match (e.g. "telecom", "electronics")
+    const byId = CONFIG.CATEGORIES.find(c => c.id === val);
+    if (byId) return byId.id;
+    // 2. Label match (e.g. "Phones & Telecom" → "telecom")
+    const byLabel = CONFIG.CATEGORIES.find(c => c.label.toLowerCase() === val);
+    if (byLabel) return byLabel.id;
+    // 3. Partial label match as fallback (e.g. "phones" → "telecom")
+    const partial = CONFIG.CATEGORIES.find(c => val.includes(c.id) || c.label.toLowerCase().includes(val));
+    if (partial) return partial.id;
+    return val; // keep as-is if nothing matches
+  }
+
   function normalizeProduct(p) {
     let images = [];
     const rawImages = p.imagesjson || p.images_json || p.images;
@@ -125,7 +141,7 @@ const DB = (() => {
       productName: p.productname || p.product || 'Product',
       description: p.description || '',
       price: parseFloat(String(p.price || '0').replace(/[^0-9.]/g, '')),
-      category: (p.category || 'other').toLowerCase(),
+      category: resolveCategoryId(p.category),
       subcategory: p.subcategory || '',
       images,
       timestamp: p.timestamp || new Date().toISOString(),
