@@ -268,13 +268,12 @@ function removeImageSlot(slotId) {
   document.getElementById('addImageBtn').style.display = 'block';
 }
 
-// Your Cloudflare Worker URL — proxies uploads to Hugging Face
-const UPLOAD_WORKER_URL = 'https://zenovibes-uploads.mucyobrian2.workers.dev';
-
-// Max width/height for compressed images (keeps file size small, plenty for product photos)
+// Max width/height for compressed product photos (keeps file size small, plenty of detail)
 const MAX_IMAGE_DIMENSION = 1200;
 // JPEG quality for compression (0–1)
 const IMAGE_QUALITY = 0.75;
+
+// compressImage() and uploadToWorker() are shared with account.html — defined in js/app.js
 
 async function handleImageFile(slotId, file) {
   if (!file) return;
@@ -292,11 +291,11 @@ async function handleImageFile(slotId, file) {
   if (status)  { status.textContent = 'Compressing…'; status.className = 'image-slot-status'; }
 
   try {
-    const compressedBlob = await compressImage(file);
+    const compressedBlob = await compressImage(file, { maxDimension: MAX_IMAGE_DIMENSION, quality: IMAGE_QUALITY });
 
     if (status) status.textContent = `Uploading… (${(compressedBlob.size/1024).toFixed(0)} KB)`;
 
-    const url = await uploadToWorker(compressedBlob, file.name);
+    const url = await uploadToWorker(compressedBlob, file.name, 'products');
 
     slot.dataset.uploadedUrl = url;
     if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = `<img src="${url}"/>`; }
@@ -308,59 +307,6 @@ async function handleImageFile(slotId, file) {
     if (status)  { status.textContent = 'Upload failed — try again'; status.className = 'image-slot-status err'; }
     console.error('Image upload failed:', err);
   }
-}
-
-// Resizes + compresses an image file in the browser using Canvas, returns a Blob (JPEG)
-function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const reader = new FileReader();
-
-    reader.onload = (e) => { img.src = e.target.result; };
-    reader.onerror = () => reject(new Error('Could not read file'));
-    img.onerror = () => reject(new Error('Could not load image'));
-
-    img.onload = () => {
-      let { width, height } = img;
-
-      // Scale down if larger than MAX_IMAGE_DIMENSION on the longest side
-      if (width > height && width > MAX_IMAGE_DIMENSION) {
-        height = Math.round(height * (MAX_IMAGE_DIMENSION / width));
-        width = MAX_IMAGE_DIMENSION;
-      } else if (height > MAX_IMAGE_DIMENSION) {
-        width = Math.round(width * (MAX_IMAGE_DIMENSION / height));
-        height = MAX_IMAGE_DIMENSION;
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Compression failed'));
-      }, 'image/jpeg', IMAGE_QUALITY);
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
-
-// Sends a compressed image blob to the Cloudflare Worker, returns the public Hugging Face URL
-async function uploadToWorker(blob, originalName) {
-  const formData = new FormData();
-  const safeName = (originalName || 'photo.jpg').replace(/[^a-zA-Z0-9.\-_]/g, '_');
-  formData.append('file', blob, safeName.replace(/\.\w+$/, '') + '.jpg');
-
-  const res = await fetch(UPLOAD_WORKER_URL, { method: 'POST', body: formData });
-  const data = await res.json();
-
-  if (!res.ok || !data.url) {
-    throw new Error(data.error || 'Upload failed');
-  }
-  return data.url;
 }
 
 function collectImages() {

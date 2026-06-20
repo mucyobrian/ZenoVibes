@@ -87,7 +87,9 @@
 
     <!-- Profile Header -->
     <div class="profile-header">
-      <div class="profile-avatar" id="dashAvatar">👤</div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="dashAvatar">👤</div>
+      </div>
       <div class="profile-info">
         <h2 id="dashName">Seller</h2>
         <p id="dashEmail"></p>
@@ -204,6 +206,17 @@
     <div class="back-btn" onclick="hideEditProfile()">← Back to Account</div>
     <h1>Edit Profile</h1>
     <div class="form-card">
+
+      <div class="field" style="text-align:center;margin-bottom:6px">
+        <label style="display:block;margin-bottom:10px">Profile Picture</label>
+        <div class="avatar-edit-wrap" onclick="document.getElementById('avatarFileInput').click()">
+          <div class="profile-avatar avatar-edit-preview" id="avatarEditPreview">👤</div>
+          <div class="avatar-edit-badge">📷</div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(event)"/>
+        <div class="field-hint" id="avatarStatus" style="margin-top:8px">Tap the photo to choose or change it</div>
+      </div>
+
       <div class="field-row">
         <div class="field"><label>Full Name</label><input type="text" id="editName"/></div>
         <div class="field"><label>City / District</label><input type="text" id="editCity"/></div>
@@ -211,6 +224,21 @@
       <div class="field"><label>Phone Number</label><input type="tel" id="editPhone"/></div>
       <div class="field"><label>WhatsApp Number</label><input type="tel" id="editWhatsApp"/></div>
       <button class="btn-submit" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- AVATAR CROPPER MODAL -->
+<div id="avatarCropperModal" class="cropper-modal" style="display:none">
+  <div class="cropper-card">
+    <h2 style="margin:0 0 4px">Position your photo</h2>
+    <p class="field-hint" style="margin-bottom:14px">Drag to move • Scroll or pinch to zoom</p>
+    <div class="cropper-frame" id="cropperFrame">
+      <canvas id="cropperCanvas"></canvas>
+    </div>
+    <div class="cropper-actions">
+      <button class="btn-secondary" onclick="cancelAvatarCrop()">Cancel</button>
+      <button class="btn-submit" style="flex:1" onclick="confirmAvatarCrop()">Use This Photo</button>
     </div>
   </div>
 </div>
@@ -238,7 +266,10 @@ async function showDashboard(user) {
   const elp = document.getElementById('editListingPanel');
   if (elp) elp.style.display='none';
 
-  document.getElementById('dashAvatar').textContent = user.name?.charAt(0).toUpperCase()||'👤';
+  const dashAvatarEl = document.getElementById('dashAvatar');
+  dashAvatarEl.innerHTML = user.avatarUrl
+    ? `<img src="${user.avatarUrl}" alt="${(user.name||'').replace(/"/g,'')}"/>`
+    : (user.name?.charAt(0).toUpperCase()||'👤');
   document.getElementById('dashName').textContent   = user.name||'Seller';
   document.getElementById('dashEmail').textContent  = user.email||'';
   document.getElementById('dashPhone').textContent  = user.phone||'';
@@ -406,6 +437,10 @@ function showEditProfile() {
   document.getElementById('editCity').value=user.city||'';
   document.getElementById('editPhone').value=user.phone||'';
   document.getElementById('editWhatsApp').value=user.whatsapp||'';
+  const preview = document.getElementById('avatarEditPreview');
+  pendingAvatarUrl = user.avatarUrl || null;
+  preview.innerHTML = user.avatarUrl ? `<img src="${user.avatarUrl}"/>` : (user.name?.charAt(0).toUpperCase()||'👤');
+  document.getElementById('avatarStatus').textContent = 'Tap the photo to choose or change it';
   document.getElementById('dashSection').style.display='none';
   document.getElementById('editProfilePanel').style.display='block';
 }
@@ -421,12 +456,203 @@ function saveProfile() {
     city:     document.getElementById('editCity').value.trim(),
     phone:    document.getElementById('editPhone').value.trim(),
     whatsapp: document.getElementById('editWhatsApp').value.trim(),
+    avatarUrl: pendingAvatarUrl || '',
   };
   if(!updates.name||!updates.phone){ showToast('Name and phone are required','error'); return; }
   const user=DB.updateUser(updates);
   showToast('Profile updated!','success');
   hideEditProfile();
   showDashboard(user);
+}
+
+// ================================================
+// AVATAR PICKER + CROPPER
+// Lets the seller pick a photo, then drag/zoom it inside
+// a circular frame before it's cropped, compressed, and
+// uploaded to the "avatars" folder.
+// ================================================
+
+let pendingAvatarUrl = null;   // the saved/uploaded avatar URL once confirmed
+let cropperImg = null;         // the Image() object being cropped
+let cropperState = { scale: 1, minScale: 1, offsetX: 0, offsetY: 0 };
+let cropperDrag = null;        // { startX, startY, startOffsetX, startOffsetY } while dragging
+
+const AVATAR_MAX_DIMENSION = 800; // output size in px (square)
+const AVATAR_QUALITY = 0.8;
+const CROPPER_DISPLAY_SIZE = 260; // matches .cropper-frame CSS width/height
+
+function onAvatarFileChosen(event) {
+  const file = event.target.files[0];
+  event.target.value = ''; // allow re-choosing the same file later
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Please choose an image file', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => openAvatarCropper(img);
+    img.onerror = () => showToast('Could not load that image', 'error');
+    img.src = e.target.result;
+  };
+  reader.onerror = () => showToast('Could not read that file', 'error');
+  reader.readAsDataURL(file);
+}
+
+function openAvatarCropper(img) {
+  cropperImg = img;
+
+  // Scale so the image's shorter side exactly fills the circular frame —
+  // this is the minimum zoom; the seller can zoom in further from there.
+  const minScale = CROPPER_DISPLAY_SIZE / Math.min(img.width, img.height);
+  cropperState = { scale: minScale, minScale, offsetX: 0, offsetY: 0 };
+
+  const canvas = document.getElementById('cropperCanvas');
+  canvas.width = CROPPER_DISPLAY_SIZE;
+  canvas.height = CROPPER_DISPLAY_SIZE;
+
+  document.getElementById('avatarCropperModal').style.display = 'flex';
+  drawCropperCanvas();
+  attachCropperInteractions();
+}
+
+function drawCropperCanvas() {
+  const canvas = document.getElementById('cropperCanvas');
+  const ctx = canvas.getContext('2d');
+  const { scale, offsetX, offsetY } = cropperState;
+  const w = cropperImg.width * scale;
+  const h = cropperImg.height * scale;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(CROPPER_DISPLAY_SIZE / 2 + offsetX, CROPPER_DISPLAY_SIZE / 2 + offsetY);
+  ctx.drawImage(cropperImg, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+// Clamp the pan offset so the image can never be dragged past the edge of the circular frame
+function clampCropperOffsets() {
+  const { scale } = cropperState;
+  const w = cropperImg.width * scale;
+  const h = cropperImg.height * scale;
+  const maxOffsetX = Math.max(0, (w - CROPPER_DISPLAY_SIZE) / 2);
+  const maxOffsetY = Math.max(0, (h - CROPPER_DISPLAY_SIZE) / 2);
+  cropperState.offsetX = Math.min(maxOffsetX, Math.max(-maxOffsetX, cropperState.offsetX));
+  cropperState.offsetY = Math.min(maxOffsetY, Math.max(-maxOffsetY, cropperState.offsetY));
+}
+
+function attachCropperInteractions() {
+  const frame = document.getElementById('cropperFrame');
+
+  // Drag to pan (mouse + touch via Pointer Events)
+  frame.onpointerdown = (e) => {
+    cropperDrag = { startX: e.clientX, startY: e.clientY, startOffsetX: cropperState.offsetX, startOffsetY: cropperState.offsetY };
+    frame.setPointerCapture(e.pointerId);
+  };
+  frame.onpointermove = (e) => {
+    if (!cropperDrag) return;
+    cropperState.offsetX = cropperDrag.startOffsetX + (e.clientX - cropperDrag.startX);
+    cropperState.offsetY = cropperDrag.startOffsetY + (e.clientY - cropperDrag.startY);
+    clampCropperOffsets();
+    drawCropperCanvas();
+  };
+  frame.onpointerup = () => { cropperDrag = null; };
+  frame.onpointercancel = () => { cropperDrag = null; };
+
+  // Scroll to zoom (desktop)
+  frame.onwheel = (e) => {
+    e.preventDefault();
+    zoomCropper(e.deltaY < 0 ? 1.08 : 0.92);
+  };
+
+  // Pinch to zoom (touch) — tracked via two-finger distance
+  let pinchStartDist = null;
+  let pinchStartScale = null;
+  frame.ontouchstart = (e) => {
+    if (e.touches.length === 2) {
+      pinchStartDist = touchDistance(e.touches);
+      pinchStartScale = cropperState.scale;
+    }
+  };
+  frame.ontouchmove = (e) => {
+    if (e.touches.length === 2 && pinchStartDist) {
+      e.preventDefault();
+      const dist = touchDistance(e.touches);
+      const factor = dist / pinchStartDist;
+      setCropperScale(pinchStartScale * factor);
+    }
+  };
+  frame.ontouchend = () => { pinchStartDist = null; };
+}
+
+function touchDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function zoomCropper(factor) {
+  setCropperScale(cropperState.scale * factor);
+}
+
+function setCropperScale(newScale) {
+  const maxScale = cropperState.minScale * 4; // allow zooming in up to 4x past the "fill frame" minimum
+  cropperState.scale = Math.min(maxScale, Math.max(cropperState.minScale, newScale));
+  clampCropperOffsets();
+  drawCropperCanvas();
+}
+
+function cancelAvatarCrop() {
+  document.getElementById('avatarCropperModal').style.display = 'none';
+  cropperImg = null;
+}
+
+async function confirmAvatarCrop() {
+  if (!cropperImg) return;
+
+  document.getElementById('avatarCropperModal').style.display = 'none';
+  document.getElementById('avatarStatus').textContent = 'Compressing…';
+
+  try {
+    // Work out which square region of the ORIGINAL image corresponds to
+    // what's currently visible inside the circular frame, accounting for
+    // the user's pan + zoom.
+    const { scale, offsetX, offsetY } = cropperState;
+    const sSize = CROPPER_DISPLAY_SIZE / scale;
+    const sx = (cropperImg.width / 2) - (offsetX / scale) - (sSize / 2);
+    const sy = (cropperImg.height / 2) - (offsetY / scale) - (sSize / 2);
+
+    // Re-use the original File via a temporary canvas->blob round trip,
+    // since compressImage() expects a File/Blob with onload-friendly data.
+    const sourceCanvas = document.createElement('canvas');
+    sourceCanvas.width = cropperImg.width;
+    sourceCanvas.height = cropperImg.height;
+    sourceCanvas.getContext('2d').drawImage(cropperImg, 0, 0);
+    const sourceBlob = await new Promise(resolve => sourceCanvas.toBlob(resolve, 'image/jpeg', 0.95));
+
+    const compressedBlob = await compressImage(sourceBlob, {
+      maxDimension: AVATAR_MAX_DIMENSION,
+      quality: AVATAR_QUALITY,
+      cropToSquare: true,
+      cropRect: { sx, sy, sSize },
+    });
+
+    document.getElementById('avatarStatus').textContent = `Uploading… (${(compressedBlob.size/1024).toFixed(0)} KB)`;
+
+    const url = await uploadToWorker(compressedBlob, 'avatar.jpg', 'avatars');
+
+    pendingAvatarUrl = url;
+    document.getElementById('avatarEditPreview').innerHTML = `<img src="${url}"/>`;
+    document.getElementById('avatarStatus').textContent = '✓ Photo ready — tap Save Changes to apply';
+
+  } catch (err) {
+    document.getElementById('avatarStatus').textContent = 'Upload failed — try again';
+    console.error('Avatar upload failed:', err);
+  } finally {
+    cropperImg = null;
+  }
 }
 
 function showUpgradeModal() {
