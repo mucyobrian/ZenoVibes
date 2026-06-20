@@ -49,7 +49,7 @@ const CONFIG = {
   // Or replace any path with a full URL (Hugging Face, Cloudinary, etc.)
   CATEGORIES: [
     { id: "all",          label: "All",               image: "../images/categories/all.jpg" },
-    { id: "clothing",     label: "Clothing",          image: "../images/categories/clothing.jpg" },
+    { id: "clothing",     label: "Clothing",          image: "../images/categories/Clothing.jpg" },
     { id: "shoes",        label: "Shoes",             image: "../images/categories/shoes.jpg" },
     { id: "jewelry",      label: "Watches & Jewelry", image: "../images/categories/jewelry.jpg" },
     { id: "accessories",  label: "Accessories & Bags", image: "../images/categories/Accessories.jpg" },
