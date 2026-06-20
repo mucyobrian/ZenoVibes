@@ -289,7 +289,7 @@ function initSellPage() {
   // Populate categories
   const catSel = document.getElementById('category');
   CONFIG.CATEGORIES.filter(c=>c.id!=='all').forEach(cat=>{
-    const o=document.createElement('option'); o.value=cat.id; o.textContent=`${cat.emoji} ${cat.label}`; catSel.appendChild(o);
+    const o=document.createElement('option'); o.value=cat.id; o.textContent=cat.label; catSel.appendChild(o);
   });
 
   // Init country pickers
