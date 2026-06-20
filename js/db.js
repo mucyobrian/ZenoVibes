@@ -207,6 +207,7 @@ const DB = (() => {
     const user = {
       ...data,
       id: 'user_' + Date.now(),
+      avatarUrl: data.avatarUrl || '',
       joinedAt: new Date().toISOString(),
       plan: 'free',
       monthlyCount: 0,

@@ -234,6 +234,95 @@ document.getElementById('globalSearch')?.addEventListener('keydown', e => {
   const user = DB.getCurrentUser();
   const btn = document.getElementById('accountBtn');
   if (user && btn) {
-    btn.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.9rem">${user.name.charAt(0).toUpperCase()}</div>`;
+    btn.innerHTML = user.avatarUrl
+      ? `<img src="${escHtml(user.avatarUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block" />`
+      : `<div style="width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.9rem">${user.name.charAt(0).toUpperCase()}</div>`;
   }
 })();
+
+// ================================================
+// SHARED IMAGE UPLOAD PIPELINE
+// Used by both pages/sell.html (product photos) and
+// pages/account.html (profile pictures). Compresses an
+// image in-browser via Canvas, then uploads it through
+// the Cloudflare Worker proxy to Hugging Face.
+// ================================================
+
+// Your Cloudflare Worker URL — proxies uploads to Hugging Face
+const UPLOAD_WORKER_URL = 'https://zenovibes-uploads.mucyobrian2.workers.dev';
+
+/**
+ * Resizes + compresses an image file in the browser using Canvas, returns a Blob (JPEG).
+ * @param {File} file - the source image file
+ * @param {object} opts
+ * @param {number} opts.maxDimension - max width/height in px (image is scaled down to fit, preserving aspect ratio, unless cropToSquare is used)
+ * @param {number} opts.quality - JPEG quality 0–1
+ * @param {boolean} opts.cropToSquare - if true, crops to a square first using opts.cropRect (from the avatar cropper), instead of preserving aspect ratio
+ * @param {object} [opts.cropRect] - { sx, sy, sSize } source-pixel square region to crop from the original image (required if cropToSquare is true)
+ */
+function compressImage(file, opts = {}) {
+  const maxDimension = opts.maxDimension || 1200;
+  const quality = opts.quality != null ? opts.quality : 0.75;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => { img.src = e.target.result; };
+    reader.onerror = () => reject(new Error('Could not read file'));
+    img.onerror = () => reject(new Error('Could not load image'));
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (opts.cropToSquare && opts.cropRect) {
+        // Draw only the cropped square region, scaled to maxDimension x maxDimension
+        const { sx, sy, sSize } = opts.cropRect;
+        canvas.width = maxDimension;
+        canvas.height = maxDimension;
+        ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, maxDimension, maxDimension);
+      } else {
+        let { width, height } = img;
+        if (width > height && width > maxDimension) {
+          height = Math.round(height * (maxDimension / width));
+          width = maxDimension;
+        } else if (height > maxDimension) {
+          width = Math.round(width * (maxDimension / height));
+          height = maxDimension;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+      }
+
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Compression failed'));
+      }, 'image/jpeg', quality);
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Sends a compressed image blob to the Cloudflare Worker, returns the public Hugging Face URL.
+ * @param {Blob} blob - compressed image blob
+ * @param {string} originalName - original filename (used only to preserve the extension)
+ * @param {string} folder - which folder to store this in: 'products', 'avatars', or 'ui'
+ */
+async function uploadToWorker(blob, originalName, folder = 'products') {
+  const formData = new FormData();
+  const safeName = (originalName || 'photo.jpg').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  formData.append('file', blob, safeName.replace(/\.\w+$/, '') + '.jpg');
+  formData.append('folder', folder);
+
+  const res = await fetch(UPLOAD_WORKER_URL, { method: 'POST', body: formData });
+  const data = await res.json();
+
+  if (!res.ok || !data.url) {
+    throw new Error(data.error || 'Upload failed');
+  }
+  return data.url;
+}
