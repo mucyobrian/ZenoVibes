@@ -103,6 +103,10 @@
 </div>
 
 <main class="container shop-page">
+  <div id="sellerFilterBanner" style="display:none;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:0.85rem">
+    <span>👤 Viewing one seller's listings</span>
+    <button onclick="clearSellerFilter()" style="margin-left:auto;background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:0.85rem">Show All Products ✕</button>
+  </div>
   <div class="shop-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <div>
       <h1 id="shopTitle" style="margin:0">All Products</h1>
@@ -155,6 +159,7 @@
 <script src="../js/app.js"></script>
 <script>
 let allProducts = [], filteredProducts = [], activeCat = 'all', nearMeActive = false;
+let activeSellerPhone = '', activeSellerName = '';
 let pageSize = 12, currentPage = 1;
 let currentView = localStorage.getItem('sw_view') || 'grid';
 
@@ -166,8 +171,11 @@ async function initShop() {
   const params = new URLSearchParams(window.location.search);
   const q   = params.get('q')   || '';
   const cat = params.get('cat') || '';
+  const sellerPhone = params.get('seller')     || '';
+  const sellerName  = params.get('sellerName') || '';
   if (q) { const gs = document.getElementById('globalSearch'); if(gs) gs.value = q; }
   if (cat) { activeCat = cat; document.getElementById('filterCat').value = cat; }
+  if (sellerPhone) { activeSellerPhone = sellerPhone; activeSellerName = sellerName; }
 
   allProducts = await DB.getProducts();
   const liveNames = new Set(allProducts.map(p => p.productName));
@@ -222,6 +230,7 @@ function applyFilters(searchQ) {
   if (cat) activeCat = cat;
 
   filteredProducts = allProducts.filter(p=>{
+    if (activeSellerPhone && p.sellerPhone !== activeSellerPhone) return false;
     if (activeCat && activeCat!=='all' && p.category!==activeCat) return false;
     if (p.price < minP) return false;
     if (maxP!==Infinity && p.price>maxP) return false;
@@ -247,9 +256,26 @@ function applyFilters(searchQ) {
   renderProducts();
 
   const title = document.getElementById('shopTitle');
-  if (title) title.textContent = activeCat!=='all' ? getCatLabel(activeCat) : (q ? `Results for "${q}"` : 'All Products');
+  if (title) {
+    if (activeSellerPhone) title.textContent = `${activeSellerName}'s Listings`;
+    else title.textContent = activeCat!=='all' ? getCatLabel(activeCat) : (q ? `Results for "${q}"` : 'All Products');
+  }
   const count = document.getElementById('resultCount');
   if (count) count.textContent = `${filteredProducts.length} product${filteredProducts.length!==1?'s':''}`;
+
+  const sellerBanner = document.getElementById('sellerFilterBanner');
+  if (sellerBanner) sellerBanner.style.display = activeSellerPhone ? 'flex' : 'none';
+}
+
+// Removes the seller filter and returns to the normal shop view
+function clearSellerFilter() {
+  activeSellerPhone = '';
+  activeSellerName = '';
+  const url = new URL(window.location.href);
+  url.searchParams.delete('seller');
+  url.searchParams.delete('sellerName');
+  history.replaceState(null, '', url.toString());
+  applyFilters();
 }
 
 function setView(v) {

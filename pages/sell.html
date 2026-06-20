@@ -418,6 +418,8 @@ async function submitListing() {
   const btn = document.getElementById('submitBtn');
   btn.disabled=true; btn.textContent='Posting…';
 
+  const currentUser = DB.getCurrentUser();
+
   const product = {
     productName:   document.getElementById('productName').value.trim(),
     description:   document.getElementById('description').value.trim(),
@@ -432,6 +434,7 @@ async function submitListing() {
     sellerCity:    document.getElementById('sellerCity').value.trim(),
     sellerLat:     parseFloat(document.getElementById('sellerLat').value)||null,
     sellerLng:     parseFloat(document.getElementById('sellerLng').value)||null,
+    sellerAvatarUrl: currentUser?.avatarUrl || '',
   };
 
   try {
@@ -476,6 +479,9 @@ function sendToGoogleForm(product) {
   params.set('entry.1750631076', product.category);
   params.set('entry.1493886285', product.subcategory);
   params.set('entry.928448056',  JSON.stringify(product.images||[]));
+  // ⚠️ REPLACE 'entry.REPLACE_ME' with the real entry ID for your new
+  // "Seller Avatar URL" form question — see setup instructions for this field.
+  params.set('entry.REPLACE_ME', product.sellerAvatarUrl || '');
 
   const iframe = document.createElement('iframe');
   iframe.style.display = 'none';
