@@ -92,8 +92,23 @@ const DB = (() => {
     // Always fetch fresh (not the 5-min product cache) so deletes/edits show immediately
     const live = await fetchFromSheets();
     if (!live) return [];
+
+    // Match by email when the user has one (most reliable, since two people
+    // could in theory share a phone format quirk). If the user registered
+    // phone-only (no email), match by phone instead — never match on a
+    // blank-to-blank email, which could wrongly group different sellers together.
+    const userEmail = String(user.email || '').trim().toLowerCase();
+    const userPhone = String(user.phone || '').replace(/[^\d+]/g, '');
+
     const liveMine = live
-      .filter(p => p.status === 'active' && String(p.selleremail || '').toLowerCase() === user.email.toLowerCase())
+      .filter(p => {
+        if (p.status !== 'active') return false;
+        if (userEmail) {
+          return String(p.selleremail || '').trim().toLowerCase() === userEmail;
+        }
+        const rowPhone = String(p.sellerphone || '').replace(/[^\d+]/g, '');
+        return userPhone && rowPhone && (rowPhone === userPhone || rowPhone.endsWith(userPhone) || userPhone.endsWith(rowPhone));
+      })
       .map(p => normalizeProduct(p));
 
     // Clean up any local-only stub whose product has now synced to the Sheet
@@ -189,7 +204,7 @@ const DB = (() => {
     const res = await fetch(CONFIG.LISTINGS_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight on Apps Script
-      body: JSON.stringify({ action: 'delete', id, sellerEmail: user.email }),
+      body: JSON.stringify({ action: 'delete', id, sellerEmail: user.email, sellerPhone: user.phone }),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Delete failed');
@@ -211,7 +226,7 @@ const DB = (() => {
     const res = await fetch(CONFIG.LISTINGS_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'update', id, sellerEmail: user.email, updates }),
+      body: JSON.stringify({ action: 'update', id, sellerEmail: user.email, sellerPhone: user.phone, updates }),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Update failed');
@@ -259,15 +274,15 @@ const DB = (() => {
     return result.user;
   }
 
-  async function login(email, password) {
+  async function login(identifier, password) {
     const passwordHash = await hashPassword(password);
     const res = await fetch(CONFIG.LISTINGS_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'login', email, passwordHash }),
+      body: JSON.stringify({ action: 'login', identifier, passwordHash }),
     });
     const result = await res.json();
-    if (!result.success) throw new Error(result.error || 'Invalid email or password.');
+    if (!result.success) throw new Error(result.error || 'Invalid email/phone or password.');
     cacheCurrentUser(result.user);
     return result.user;
   }
