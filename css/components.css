@@ -421,6 +421,47 @@
 }
 .cropper-actions .btn-secondary { width: auto; padding: 16px 18px; }
 
+/* Generic confirm modal (e.g. "Sign out?") */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,16,60,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.confirm-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+.confirm-card h2 { margin: 0 0 8px; }
+.confirm-card p { color: var(--text-muted); margin: 0; }
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.confirm-actions .btn-secondary { width: auto; flex: 1; padding: 16px 18px; }
+.btn-danger {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-sm, 10px);
+  padding: 16px 18px;
+  background: var(--danger);
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.btn-danger:hover { background: #dc2626; transform: translateY(-1px); }
+
 .profile-info h2 {
   font-family: var(--font-display);
   font-size: 1.3rem;
