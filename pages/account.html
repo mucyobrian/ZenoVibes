@@ -105,6 +105,15 @@
 
       <!-- Register Form -->
       <div id="registerForm" style="display:none">
+        <div class="field" style="text-align:center;margin-bottom:6px">
+          <label style="display:block;margin-bottom:10px">Profile Picture (optional)</label>
+          <div class="avatar-edit-wrap" onclick="document.getElementById('regAvatarFileInput').click()">
+            <div class="profile-avatar avatar-edit-preview" id="regAvatarPreview">👤</div>
+            <div class="avatar-edit-badge">📷</div>
+          </div>
+          <input type="file" id="regAvatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(event, 'reg')"/>
+          <div class="field-hint" id="regAvatarStatus" style="margin-top:8px">Tap to add a profile photo</div>
+        </div>
         <div class="field-row">
           <div class="field">
             <label>Full Name <span class="required">*</span></label>
@@ -554,6 +563,10 @@ function showRegister() {
   document.getElementById('registerForm').style.display='block';
   document.getElementById('authTitle').textContent='Create free account';
   document.getElementById('authSubtitle').textContent='Start selling in minutes';
+  // Reset any leftover avatar state from a previous (abandoned) registration attempt
+  pendingRegAvatarUrl = null;
+  document.getElementById('regAvatarPreview').innerHTML = '👤';
+  document.getElementById('regAvatarStatus').textContent = 'Tap to add a profile photo';
 }
 
 async function doLogin() {
@@ -577,7 +590,8 @@ async function doRegister() {
   if(!name||!email||!phone||!pass||!city){ showToast('Please fill all required fields','error'); return; }
   if(pass.length<6){ showToast('Password must be at least 6 characters','error'); return; }
   try {
-    const user = await DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass});
+    const user = await DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass,avatarUrl:pendingRegAvatarUrl||''});
+    pendingRegAvatarUrl = null;
     showToast('Account created! Welcome to StillWorks 🎉','success');
     showDashboard(user);
   } catch(e) { showToast(e.message,'error'); }
@@ -734,7 +748,9 @@ async function saveProfile() {
 // uploaded to the "avatars" folder.
 // ================================================
 
-let pendingAvatarUrl = null;   // the saved/uploaded avatar URL once confirmed
+let pendingAvatarUrl = null;   // the saved/uploaded avatar URL once confirmed (edit-profile form)
+let pendingRegAvatarUrl = null; // same, but for the register form (account doesn't exist yet)
+let avatarCropperTarget = 'edit'; // 'edit' or 'reg' — which form's preview/status to update
 let cropperImg = null;         // the Image() object being cropped
 let cropperState = { scale: 1, minScale: 1, offsetX: 0, offsetY: 0 };
 let cropperDrag = null;        // { startX, startY, startOffsetX, startOffsetY } while dragging
@@ -743,7 +759,16 @@ const AVATAR_MAX_DIMENSION = 800; // output size in px (square)
 const AVATAR_QUALITY = 0.8;
 const CROPPER_DISPLAY_SIZE = 260; // matches .cropper-frame CSS width/height
 
-function onAvatarFileChosen(event) {
+// IDs for the preview circle / status text / pending-url variable, per target form.
+function avatarTargetEls(target) {
+  if (target === 'reg') {
+    return { previewId: 'regAvatarPreview', statusId: 'regAvatarStatus' };
+  }
+  return { previewId: 'avatarEditPreview', statusId: 'avatarStatus' };
+}
+
+function onAvatarFileChosen(event, target = 'edit') {
+  avatarCropperTarget = target;
   const file = event.target.files[0];
   event.target.value = ''; // allow re-choosing the same file later
   if (!file) return;
@@ -874,8 +899,9 @@ function cancelAvatarCrop() {
 async function confirmAvatarCrop() {
   if (!cropperImg) return;
 
+  const { previewId, statusId } = avatarTargetEls(avatarCropperTarget);
   document.getElementById('avatarCropperModal').style.display = 'none';
-  document.getElementById('avatarStatus').textContent = 'Compressing…';
+  document.getElementById(statusId).textContent = 'Compressing…';
 
   try {
     // Work out which square region of the ORIGINAL image corresponds to
@@ -901,16 +927,21 @@ async function confirmAvatarCrop() {
       cropRect: { sx, sy, sSize },
     });
 
-    document.getElementById('avatarStatus').textContent = `Uploading… (${(compressedBlob.size/1024).toFixed(0)} KB)`;
+    document.getElementById(statusId).textContent = `Uploading… (${(compressedBlob.size/1024).toFixed(0)} KB)`;
 
     const url = await uploadToWorker(compressedBlob, 'avatar.jpg', 'avatars');
 
-    pendingAvatarUrl = url;
-    document.getElementById('avatarEditPreview').innerHTML = `<img src="${url}"/>`;
-    document.getElementById('avatarStatus').textContent = '✓ Photo ready — tap Save Changes to apply';
+    if (avatarCropperTarget === 'reg') {
+      pendingRegAvatarUrl = url;
+    } else {
+      pendingAvatarUrl = url;
+    }
+    document.getElementById(previewId).innerHTML = `<img src="${url}"/>`;
+    document.getElementById(statusId).textContent = '✓ Photo ready';
 
   } catch (err) {
-    document.getElementById('avatarStatus').textContent = 'Upload failed — try again';
+    const { statusId: sId } = avatarTargetEls(avatarCropperTarget);
+    document.getElementById(sId).textContent = 'Upload failed — try again';
     console.error('Avatar upload failed:', err);
   } finally {
     cropperImg = null;
