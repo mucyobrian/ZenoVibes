@@ -44,11 +44,11 @@ function buildCategoryPills() {
   container.innerHTML = CONFIG.CATEGORIES.map(cat => `
     <button class="cat-pill ${cat.id === 'all' ? 'active' : ''}"
       onclick="selectCategory('${cat.id}', this)">
-      <span class="pill-thumb">
+      <div class="pill-thumb">
         <img class="pill-img" src="${cat.image}" alt="${cat.label}"
           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
-        <span class="pill-fallback" style="display:none">${TOPCAT_EMOJI[cat.id] || '📦'}</span>
-      </span>
+        <span class="pill-fallback">${TOPCAT_EMOJI[cat.id] || '📦'}</span>
+      </div>
       <span>${cat.label}</span>
     </button>
   `).join('');
