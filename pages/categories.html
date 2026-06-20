@@ -174,7 +174,7 @@
       <h2 id="subcatTitle"></h2>
       <span class="count-badge" id="subcatTotalCount"></span>
     </div>
-    <a class="view-all-btn" onclick="showCatProducts(currentCatId, null)" href="#">
+    <a class="view-all-btn" onclick="showCatProducts(currentCatId, '')" href="#">
       🛍️ View all <span id="viewAllLabel"></span> products
     </a>
     <div class="subcat-grid" id="subcatGrid"></div>
@@ -217,9 +217,12 @@ let allProducts = [];
 let currentCatId = null;
 
 // ── Helpers ──────────────────────────────────────
+// store subcat list outside the DOM so it survives innerHTML rewrites
+let _subcatList = [];
+
 function showView(name) {
   ['viewAllCats','viewSubcats','viewProducts'].forEach(id => {
-    document.getElementById(id).style.display = id === name ? '' : 'none';
+    document.getElementById(id).style.display = id === name ? 'block' : 'none';
   });
 }
 
@@ -310,15 +313,15 @@ function showSubcats(catId) {
       </a>`;
   }).join('');
 
-  // store subcat names on the grid element so we can look them up by index
-  subcatGridEl._subcats = toShow;
+  // store subcat names at module level so they survive innerHTML rewrites
+  _subcatList = toShow;
 
   subcatGridEl.onclick = function(e) {
     const card = e.target.closest('.subcat-card');
     if (!card) return;
     e.preventDefault();
     const idx = parseInt(card.dataset.subcatIndex, 10);
-    const sub = subcatGridEl._subcats[idx];
+    const sub = _subcatList[idx];
     showCatProducts(card.dataset.catid, sub);
   };
 
@@ -334,6 +337,7 @@ function showCatProducts(catId, subcatName) {
   const filtered = subcatName
     ? allProducts.filter(p => p.category === catId && (p.subcategory || 'Other') === subcatName)
     : allProducts.filter(p => p.category === catId);
+  // ^ subcatName falsy (null/'') means show all in category
 
   const title = subcatName ? `${subcatName}` : catLbl;
 
