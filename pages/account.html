@@ -5,6 +5,24 @@
   <title>My Account — StillWorks</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <link rel="stylesheet" href="../css/components.css"/>
+  <style>
+    .phone-wrap { display: flex; gap: 8px; }
+    .country-select {
+      flex: 0 0 auto;
+      padding: 0 10px;
+      height: 46px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: white;
+      font-size: 0.88rem;
+      cursor: pointer;
+      color: var(--text);
+      min-width: 105px;
+      max-width: 125px;
+    }
+    .country-select:focus { outline: none; border-color: var(--primary); }
+    .phone-wrap input[type="tel"] { flex: 1; min-width: 0; }
+  </style>
 </head>
 <body>
 <header class="topbar">
@@ -64,11 +82,17 @@
         </div>
         <div class="field">
           <label>Phone Number <span class="required">*</span></label>
-          <input type="tel" id="regPhone" placeholder="+250 7XX XXX XXX"/>
+          <div class="phone-wrap">
+            <select class="country-select" id="regPhoneCode" onchange="syncWaCode('regPhoneCode','regWaCode')"></select>
+            <input type="tel" id="regPhone" placeholder="7XX XXX XXX"/>
+          </div>
         </div>
         <div class="field">
           <label>WhatsApp Number</label>
-          <input type="tel" id="regWhatsApp" placeholder="Same as phone if same"/>
+          <div class="phone-wrap">
+            <select class="country-select" id="regWaCode"></select>
+            <input type="tel" id="regWhatsApp" placeholder="Same as phone if same"/>
+          </div>
         </div>
         <div class="field">
           <label>Password <span class="required">*</span></label>
@@ -221,8 +245,20 @@
         <div class="field"><label>Full Name</label><input type="text" id="editName"/></div>
         <div class="field"><label>City / District</label><input type="text" id="editCity"/></div>
       </div>
-      <div class="field"><label>Phone Number</label><input type="tel" id="editPhone"/></div>
-      <div class="field"><label>WhatsApp Number</label><input type="tel" id="editWhatsApp"/></div>
+      <div class="field">
+        <label>Phone Number</label>
+        <div class="phone-wrap">
+          <select class="country-select" id="editPhoneCode" onchange="syncWaCode('editPhoneCode','editWaCode')"></select>
+          <input type="tel" id="editPhone"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>WhatsApp Number</label>
+        <div class="phone-wrap">
+          <select class="country-select" id="editWaCode"></select>
+          <input type="tel" id="editWhatsApp"/>
+        </div>
+      </div>
       <button class="btn-submit" onclick="saveProfile()">Save Changes</button>
     </div>
   </div>
@@ -247,7 +283,85 @@
 <script src="../js/db.js"></script>
 <script src="../js/app.js"></script>
 <script>
+
+// ── Country code picker ────────────────────────
+const COUNTRY_CODES = [
+  { code: '+250', flag: '🇷🇼', name: 'Rwanda' },
+  { code: '+254', flag: '🇰🇪', name: 'Kenya' },
+  { code: '+255', flag: '🇹🇿', name: 'Tanzania' },
+  { code: '+256', flag: '🇺🇬', name: 'Uganda' },
+  { code: '+257', flag: '🇧🇮', name: 'Burundi' },
+  { code: '+243', flag: '🇨🇩', name: 'DR Congo' },
+  { code: '+242', flag: '🇨🇬', name: 'Congo' },
+  { code: '+251', flag: '🇪🇹', name: 'Ethiopia' },
+  { code: '+233', flag: '🇬🇭', name: 'Ghana' },
+  { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
+  { code: '+27',  flag: '🇿🇦', name: 'South Africa' },
+  { code: '+20',  flag: '🇪🇬', name: 'Egypt' },
+  { code: '+212', flag: '🇲🇦', name: 'Morocco' },
+  { code: '+1',   flag: '🇺🇸', name: 'USA / Canada' },
+  { code: '+44',  flag: '🇬🇧', name: 'UK' },
+  { code: '+33',  flag: '🇫🇷', name: 'France' },
+  { code: '+49',  flag: '🇩🇪', name: 'Germany' },
+  { code: '+31',  flag: '🇳🇱', name: 'Netherlands' },
+  { code: '+32',  flag: '🇧🇪', name: 'Belgium' },
+  { code: '+41',  flag: '🇨🇭', name: 'Switzerland' },
+  { code: '+91',  flag: '🇮🇳', name: 'India' },
+  { code: '+86',  flag: '🇨🇳', name: 'China' },
+  { code: '+81',  flag: '🇯🇵', name: 'Japan' },
+  { code: '+971', flag: '🇦🇪', name: 'UAE' },
+  { code: '+966', flag: '🇸🇦', name: 'Saudi Arabia' },
+  { code: '+55',  flag: '🇧🇷', name: 'Brazil' },
+  { code: '+61',  flag: '🇦🇺', name: 'Australia' },
+];
+
+function populateCountrySelect(selId, defaultCode) {
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  sel.innerHTML = COUNTRY_CODES.map(c =>
+    `<option value="${c.code}" ${c.code === defaultCode ? 'selected' : ''}>${c.flag} ${c.code}</option>`
+  ).join('');
+}
+
+function initPhonePickers() {
+  ['regPhoneCode','regWaCode','editPhoneCode','editWaCode'].forEach(id => {
+    populateCountrySelect(id, '+250'); // default Rwanda
+  });
+}
+
+// When phone country changes, auto-sync WhatsApp country
+function syncWaCode(phoneSelId, waSelId) {
+  const phoneSel = document.getElementById(phoneSelId);
+  const waSel = document.getElementById(waSelId);
+  if (phoneSel && waSel) waSel.value = phoneSel.value;
+}
+
+// Build full number: strip any leading 0 from local number, prepend code
+function buildPhone(codeSelId, inputId) {
+  const code = document.getElementById(codeSelId)?.value || '+250';
+  const local = (document.getElementById(inputId)?.value || '').trim().replace(/^0+/, '');
+  return local ? code + local : '';
+}
+
+// Parse existing stored number (+250783015788 or 250783015788) back into code + local
+function parseStoredPhone(full, codeSelId, inputId) {
+  if (!full) return;
+  let normalized = full.startsWith('+') ? full : '+' + full;
+  const match = COUNTRY_CODES.find(c => normalized.startsWith(c.code));
+  if (match) {
+    const sel = document.getElementById(codeSelId);
+    if (sel) sel.value = match.code;
+    const local = normalized.slice(match.code.length);
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = local;
+  } else {
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = full;
+  }
+}
+
 function initAccount() {
+  initPhonePickers();
   const user = DB.getCurrentUser();
   if (user) showDashboard(user);
   else showAuth();
@@ -317,8 +431,8 @@ function doRegister() {
   const name  = document.getElementById('regName').value.trim();
   const city  = document.getElementById('regCity').value.trim();
   const email = document.getElementById('regEmail').value.trim();
-  const phone = document.getElementById('regPhone').value.trim();
-  const wa    = document.getElementById('regWhatsApp').value.trim();
+  const phone = buildPhone('regPhoneCode', 'regPhone');
+  const wa    = buildPhone('regWaCode', 'regWhatsApp');
   const pass  = document.getElementById('regPassword').value;
   if(!name||!email||!phone||!pass||!city){ showToast('Please fill all required fields','error'); return; }
   if(pass.length<6){ showToast('Password must be at least 6 characters','error'); return; }
@@ -435,8 +549,8 @@ function showEditProfile() {
   if(!user) return;
   document.getElementById('editName').value=user.name||'';
   document.getElementById('editCity').value=user.city||'';
-  document.getElementById('editPhone').value=user.phone||'';
-  document.getElementById('editWhatsApp').value=user.whatsapp||'';
+  parseStoredPhone(user.phone||'', 'editPhoneCode', 'editPhone');
+  parseStoredPhone(user.whatsapp||user.phone||'', 'editWaCode', 'editWhatsApp');
   const preview = document.getElementById('avatarEditPreview');
   pendingAvatarUrl = user.avatarUrl || null;
   preview.innerHTML = user.avatarUrl ? `<img src="${user.avatarUrl}"/>` : (user.name?.charAt(0).toUpperCase()||'👤');
@@ -454,8 +568,8 @@ function saveProfile() {
   const updates={
     name:     document.getElementById('editName').value.trim(),
     city:     document.getElementById('editCity').value.trim(),
-    phone:    document.getElementById('editPhone').value.trim(),
-    whatsapp: document.getElementById('editWhatsApp').value.trim(),
+    phone:    buildPhone('editPhoneCode', 'editPhone'),
+    whatsapp: buildPhone('editWaCode', 'editWhatsApp'),
     avatarUrl: pendingAvatarUrl || '',
   };
   if(!updates.name||!updates.phone){ showToast('Name and phone are required','error'); return; }

@@ -5,6 +5,24 @@
   <title>Post on StillWorks</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <link rel="stylesheet" href="../css/components.css"/>
+  <style>
+    .phone-wrap { display: flex; gap: 8px; }
+    .country-select {
+      flex: 0 0 auto;
+      padding: 0 10px;
+      height: 46px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: white;
+      font-size: 0.88rem;
+      cursor: pointer;
+      color: var(--text);
+      min-width: 105px;
+      max-width: 125px;
+    }
+    .country-select:focus { outline: none; border-color: var(--primary); }
+    .phone-wrap input[type="tel"] { flex: 1; min-width: 0; }
+  </style>
 </head>
 <body>
 <header class="topbar">
@@ -137,12 +155,18 @@
         <div class="field-row">
           <div class="field">
             <label>Phone Number <span class="required">*</span></label>
-            <input type="tel" id="sellerPhone" placeholder="+250 7XX XXX XXX"/>
+            <div class="phone-wrap">
+              <select class="country-select" id="sellerPhoneCode" onchange="syncWaCode('sellerPhoneCode','sellerWaCode')"></select>
+              <input type="tel" id="sellerPhone" placeholder="7XX XXX XXX"/>
+            </div>
             <span class="field-error" id="err_sellerPhone">Please enter a valid phone number</span>
           </div>
           <div class="field">
             <label>WhatsApp Number</label>
-            <input type="tel" id="sellerWhatsApp" placeholder="Same as phone if same"/>
+            <div class="phone-wrap">
+              <select class="country-select" id="sellerWaCode"></select>
+              <input type="tel" id="sellerWhatsApp" placeholder="Same as phone if same"/>
+            </div>
             <div class="field-hint">Leave empty to use same as phone</div>
           </div>
         </div>
@@ -194,6 +218,73 @@
 <script src="../js/db.js"></script>
 <script src="../js/app.js"></script>
 <script>
+
+const COUNTRY_CODES = [
+  { code: '+250', flag: '🇷🇼', name: 'Rwanda' },
+  { code: '+254', flag: '🇰🇪', name: 'Kenya' },
+  { code: '+255', flag: '🇹🇿', name: 'Tanzania' },
+  { code: '+256', flag: '🇺🇬', name: 'Uganda' },
+  { code: '+257', flag: '🇧🇮', name: 'Burundi' },
+  { code: '+243', flag: '🇨🇩', name: 'DR Congo' },
+  { code: '+242', flag: '🇨🇬', name: 'Congo' },
+  { code: '+251', flag: '🇪🇹', name: 'Ethiopia' },
+  { code: '+233', flag: '🇬🇭', name: 'Ghana' },
+  { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
+  { code: '+27',  flag: '🇿🇦', name: 'South Africa' },
+  { code: '+20',  flag: '🇪🇬', name: 'Egypt' },
+  { code: '+212', flag: '🇲🇦', name: 'Morocco' },
+  { code: '+1',   flag: '🇺🇸', name: 'USA / Canada' },
+  { code: '+44',  flag: '🇬🇧', name: 'UK' },
+  { code: '+33',  flag: '🇫🇷', name: 'France' },
+  { code: '+49',  flag: '🇩🇪', name: 'Germany' },
+  { code: '+31',  flag: '🇳🇱', name: 'Netherlands' },
+  { code: '+32',  flag: '🇧🇪', name: 'Belgium' },
+  { code: '+41',  flag: '🇨🇭', name: 'Switzerland' },
+  { code: '+91',  flag: '🇮🇳', name: 'India' },
+  { code: '+86',  flag: '🇨🇳', name: 'China' },
+  { code: '+81',  flag: '🇯🇵', name: 'Japan' },
+  { code: '+971', flag: '🇦🇪', name: 'UAE' },
+  { code: '+966', flag: '🇸🇦', name: 'Saudi Arabia' },
+  { code: '+55',  flag: '🇧🇷', name: 'Brazil' },
+  { code: '+61',  flag: '🇦🇺', name: 'Australia' },
+];
+
+function populateCountrySelect(selId, defaultCode) {
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  sel.innerHTML = COUNTRY_CODES.map(c =>
+    `<option value="${c.code}" ${c.code === defaultCode ? 'selected' : ''}>${c.flag} ${c.code}</option>`
+  ).join('');
+}
+
+function syncWaCode(phoneSelId, waSelId) {
+  const phoneSel = document.getElementById(phoneSelId);
+  const waSel = document.getElementById(waSelId);
+  if (phoneSel && waSel) waSel.value = phoneSel.value;
+}
+
+function buildPhone(codeSelId, inputId) {
+  const code = document.getElementById(codeSelId)?.value || '+250';
+  const local = (document.getElementById(inputId)?.value || '').trim().replace(/^0+/, '');
+  return local ? code + local : '';
+}
+
+function parseStoredPhone(full, codeSelId, inputId) {
+  if (!full) return;
+  let normalized = full.startsWith('+') ? full : '+' + full;
+  const match = COUNTRY_CODES.find(c => normalized.startsWith(c.code));
+  if (match) {
+    const sel = document.getElementById(codeSelId);
+    if (sel) sel.value = match.code;
+    const local = normalized.slice(match.code.length);
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = local;
+  } else {
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = full;
+  }
+}
+
 function initSellPage() {
   // Populate categories
   const catSel = document.getElementById('category');
@@ -201,12 +292,16 @@ function initSellPage() {
     const o=document.createElement('option'); o.value=cat.id; o.textContent=`${cat.emoji} ${cat.label}`; catSel.appendChild(o);
   });
 
+  // Init country pickers
+  populateCountrySelect('sellerPhoneCode', '+250');
+  populateCountrySelect('sellerWaCode', '+250');
+
   // Pre-fill from logged-in user
   const user = DB.getCurrentUser();
   if (user) {
     if(document.getElementById('sellerName')) document.getElementById('sellerName').value=user.name||'';
-    if(document.getElementById('sellerPhone')) document.getElementById('sellerPhone').value=user.phone||'';
-    if(document.getElementById('sellerWhatsApp')) document.getElementById('sellerWhatsApp').value=user.whatsapp||'';
+    parseStoredPhone(user.phone||'', 'sellerPhoneCode', 'sellerPhone');
+    parseStoredPhone(user.whatsapp||user.phone||'', 'sellerWaCode', 'sellerWhatsApp');
     if(document.getElementById('sellerEmail')) document.getElementById('sellerEmail').value=user.email||'';
     if(document.getElementById('sellerCity')) document.getElementById('sellerCity').value=user.city||'';
     updateLimitBar();
@@ -428,8 +523,8 @@ async function submitListing() {
     price:         parseFloat(document.getElementById('price').value),
     images:        collectImages(),
     sellerName:    document.getElementById('sellerName').value.trim(),
-    sellerPhone:   document.getElementById('sellerPhone').value.trim(),
-    sellerWhatsApp:document.getElementById('sellerWhatsApp').value.trim() || document.getElementById('sellerPhone').value.trim(),
+    sellerPhone:   buildPhone('sellerPhoneCode', 'sellerPhone'),
+    sellerWhatsApp:buildPhone('sellerWaCode', 'sellerWhatsApp') || buildPhone('sellerPhoneCode', 'sellerPhone'),
     sellerEmail:   document.getElementById('sellerEmail').value.trim(),
     sellerCity:    document.getElementById('sellerCity').value.trim(),
     sellerLat:     parseFloat(document.getElementById('sellerLat').value)||null,
@@ -481,7 +576,7 @@ function sendToGoogleForm(product) {
   params.set('entry.928448056',  JSON.stringify(product.images||[]));
   // ⚠️ REPLACE 'entry.REPLACE_ME' with the real entry ID for your new
   // "Seller Avatar URL" form question — see setup instructions for this field.
-  params.set('entry.230500811', product.sellerAvatarUrl || '');
+  params.set('entry.REPLACE_ME', product.sellerAvatarUrl || '');
 
   const iframe = document.createElement('iframe');
   iframe.style.display = 'none';
