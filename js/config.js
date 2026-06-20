@@ -3,6 +3,14 @@
 // your Google Sheets database
 // ================================================
 
+// Pages at the site root (index.html) need "images/categories/..."
+// Pages one level down (pages/*.html) need "../images/categories/..."
+// This figures out which one to use automatically, so the same
+// CATEGORIES array below works correctly on every page.
+const IMG_BASE = location.pathname.includes('/pages/')
+  ? '../images/categories/'
+  : 'images/categories/';
+
 const CONFIG = {
   // ── SITE INFO ──────────────────────────────────
   siteName: "StillWorks",
@@ -48,28 +56,28 @@ const CONFIG = {
   // named exactly as shown below (e.g. electronics.jpg).
   // Or replace any path with a full URL (Hugging Face, Cloudinary, etc.)
   CATEGORIES: [
-    { id: "all",          label: "All",               image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400" },
-    { id: "clothing",     label: "Clothing",          image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400" },
-    { id: "shoes",        label: "Shoes",             image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400" },
-    { id: "jewelry",      label: "Watches & Jewelry", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400" },
-    { id: "accessories",  label: "Accessories & Bags", image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400" },
-    { id: "kids",         label: "Kids & Toys",       image: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=400" },
-    { id: "home",         label: "Home & Appliances", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400" },
-    { id: "beauty",       label: "Beauty & Health",   image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400" },
-    { id: "telecom",      label: "Phones & Telecom",  image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400" },
-    { id: "electronics",  label: "Electronics",       image: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=400" },
-    { id: "hair",         label: "Hair",              image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400" },
-    { id: "computer",     label: "Computer & Office", image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400" },
-    { id: "automobile",   label: "Automobile & Tools", image: "https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?w=400" },
-    { id: "sports",       label: "Sports & Entertainment", image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400" },
-    { id: "furniture",    label: "Furniture",         image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400" },
-    { id: "vehicles",     label: "Vehicles",          image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=400" },
-    { id: "food",         label: "Food & Drinks",     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400" },
-    { id: "books",        label: "Books & Stationery", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400" },
-    { id: "agriculture",  label: "Agriculture",       image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400" },
-    { id: "services",     label: "Services",          image: "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400" },
-    { id: "property",     label: "Property",          image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400" },
-    { id: "other",        label: "Other",             image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400" },
+    { id: "all",          label: "All",               image: `${IMG_BASE}All.jpg` },
+    { id: "clothing",     label: "Clothing",          image: `${IMG_BASE}Clothing.jpg` },
+    { id: "shoes",        label: "Shoes",             image: `${IMG_BASE}Shoes.jpg` },
+    { id: "jewelry",      label: "Watches & Jewelry", image: `${IMG_BASE}Jewelry.jpg` },
+    { id: "accessories",  label: "Accessories & Bags", image: `${IMG_BASE}Accessories.jpg` },
+    { id: "kids",         label: "Kids & Toys",       image: `${IMG_BASE}Kids.jpg` },
+    { id: "home",         label: "Home & Appliances", image: `${IMG_BASE}Home.jpg` },
+    { id: "beauty",       label: "Beauty & Health",   image: `${IMG_BASE}Beauty.jpg` },
+    { id: "telecom",      label: "Phones & Telecom",  image: `${IMG_BASE}Telecom.jpg` },
+    { id: "electronics",  label: "Electronics",       image: `${IMG_BASE}Electronics.jpg` },
+    { id: "hair",         label: "Hair",              image: `${IMG_BASE}Hair.jpg` },
+    { id: "computer",     label: "Computer & Office", image: `${IMG_BASE}Computer.jpg` },
+    { id: "automobile",   label: "Automobile & Tools", image: `${IMG_BASE}Automobile.jpg` },
+    { id: "sports",       label: "Sports & Entertainment", image: `${IMG_BASE}Sports.jpg` },
+    { id: "furniture",    label: "Furniture",         image: `${IMG_BASE}Furniture.jpg` },
+    { id: "vehicles",     label: "Vehicles",          image: `${IMG_BASE}Vehicles.jpg` },
+    { id: "food",         label: "Food & Drinks",     image: `${IMG_BASE}Food.jpg` },
+    { id: "books",        label: "Books & Stationery", image: `${IMG_BASE}Books.jpg` },
+    { id: "agriculture",  label: "Agriculture",       image: `${IMG_BASE}Agriculture.jpg` },
+    { id: "services",     label: "Services",          image: `${IMG_BASE}Services.jpg` },
+    { id: "property",     label: "Property",          image: `${IMG_BASE}Property.jpg` },
+    { id: "other",        label: "Other",             image: `${IMG_BASE}Other.jpg` },
   ],
 
   // ── SUBCATEGORIES ─────────────────────────────
