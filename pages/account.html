@@ -556,18 +556,18 @@ function showRegister() {
   document.getElementById('authSubtitle').textContent='Start selling in minutes';
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPassword').value;
   if(!email||!pass){ showToast('Please enter email and password','error'); return; }
   try {
-    const user = DB.login(email, pass);
+    const user = await DB.login(email, pass);
     showToast('Welcome back, '+user.name+'!','success');
     showDashboard(user);
   } catch(e) { showToast(e.message,'error'); }
 }
 
-function doRegister() {
+async function doRegister() {
   const name  = document.getElementById('regName').value.trim();
   const city  = document.getElementById('regCity').value.trim();
   const email = document.getElementById('regEmail').value.trim();
@@ -577,7 +577,7 @@ function doRegister() {
   if(!name||!email||!phone||!pass||!city){ showToast('Please fill all required fields','error'); return; }
   if(pass.length<6){ showToast('Password must be at least 6 characters','error'); return; }
   try {
-    const user = DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass});
+    const user = await DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass});
     showToast('Account created! Welcome to StillWorks 🎉','success');
     showDashboard(user);
   } catch(e) { showToast(e.message,'error'); }
@@ -712,7 +712,7 @@ function hideEditProfile() {
   document.getElementById('dashSection').style.display='block';
 }
 
-function saveProfile() {
+async function saveProfile() {
   const updates={
     name:     document.getElementById('editName').value.trim(),
     city:     document.getElementById('editCity').value.trim(),
@@ -721,7 +721,7 @@ function saveProfile() {
     avatarUrl: pendingAvatarUrl || '',
   };
   if(!updates.name||!updates.phone){ showToast('Name and phone are required','error'); return; }
-  const user=DB.updateUser(updates);
+  const user = await DB.updateUser(updates);
   showToast('Profile updated!','success');
   hideEditProfile();
   showDashboard(user);
