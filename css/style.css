@@ -912,19 +912,19 @@ input, select, textarea { font-family: inherit; }
   gap: 10px;
   flex-shrink: 0;
   cursor: pointer;
-  width: 80px;
+  width: 120px;
 }
 
 .subcat-circle {
-  width: 72px;
-  height: 72px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   background: var(--bg);
   border: 2.5px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2.6rem;
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   overflow: hidden;
@@ -936,7 +936,7 @@ input, select, textarea { font-family: inherit; }
   display: block;
 }
 .subcat-fallback {
-  font-size: 2rem;
+  font-size: 2.6rem;
   line-height: 1;
 }
 
@@ -944,12 +944,12 @@ input, select, textarea { font-family: inherit; }
 .subcat-item.active .subcat-circle { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 4px 16px rgba(0,0,0,0.13); }
 
 .subcat-label {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-muted);
   text-align: center;
   line-height: 1.3;
-  width: 80px;
+  width: 120px;
 }
 .subcat-item.active .subcat-label { color: var(--primary); font-weight: 700; }
 
@@ -996,9 +996,10 @@ input, select, textarea { font-family: inherit; }
   .filter-inner { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
   .filter-group { flex-shrink: 0; }
   .cat-products-row .product-card { flex: 0 0 165px; width: 165px; }
-  .subcat-circle { width: 60px; height: 60px; font-size: 1.7rem; }
-  .subcat-item { width: 68px; }
-  .subcat-label { font-size: 0.72rem; width: 68px; }
+  .subcat-circle { width: 90px; height: 90px; font-size: 2.2rem; }
+  .subcat-fallback { font-size: 2.2rem; }
+  .subcat-item { width: 100px; }
+  .subcat-label { font-size: 0.78rem; width: 100px; }
   .cat-pill { flex: 0 0 110px; }
   .cat-pill .pill-thumb { height: 80px; }
   .cat-pill .pill-fallback { font-size: 2.5rem; }
