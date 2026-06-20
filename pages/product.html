@@ -378,7 +378,7 @@ function onCarouselScroll(e) {
 function goToSellerShop() {
   if (!product || !product.sellerPhone) return;
   const params = new URLSearchParams({
-    seller: product.sellerPhone,
+    seller: product.sellerPhone.replace(/^\+/, ''),
     sellerName: product.sellerName || 'Seller',
   });
   window.location.href = `shop.html?${params.toString()}`;

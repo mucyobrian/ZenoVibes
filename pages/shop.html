@@ -175,7 +175,7 @@ async function initShop() {
   const sellerName  = params.get('sellerName') || '';
   if (q) { const gs = document.getElementById('globalSearch'); if(gs) gs.value = q; }
   if (cat) { activeCat = cat; document.getElementById('filterCat').value = cat; }
-  if (sellerPhone) { activeSellerPhone = sellerPhone; activeSellerName = sellerName; }
+  if (sellerPhone) { activeSellerPhone = sellerPhone.replace(/^\+/, ''); activeSellerName = sellerName; }
 
   allProducts = await DB.getProducts();
   const liveNames = new Set(allProducts.map(p => p.productName));
@@ -230,7 +230,7 @@ function applyFilters(searchQ) {
   if (cat) activeCat = cat;
 
   filteredProducts = allProducts.filter(p=>{
-    if (activeSellerPhone && p.sellerPhone !== activeSellerPhone) return false;
+    if (activeSellerPhone && p.sellerPhone.replace(/^\+/, '') !== activeSellerPhone) return false;
     if (activeCat && activeCat!=='all' && p.category!==activeCat) return false;
     if (p.price < minP) return false;
     if (maxP!==Infinity && p.price>maxP) return false;
