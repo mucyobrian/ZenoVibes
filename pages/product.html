@@ -376,9 +376,11 @@ function onCarouselScroll(e) {
 // Filtered by phone number (a reliable unique key) rather than name, since two
 // different sellers could share the same display name.
 function goToSellerShop() {
-  if (!product || !product.sellerPhone) return;
+  if (!product) return;
+  const phone = (product.sellerPhone || product.sellerWhatsApp || '').replace(/^\+/, '');
+  if (!phone) return;
   const params = new URLSearchParams({
-    seller: product.sellerPhone.replace(/^\+/, ''),
+    seller: phone,
     sellerName: product.sellerName || 'Seller',
   });
   window.location.href = `shop.html?${params.toString()}`;

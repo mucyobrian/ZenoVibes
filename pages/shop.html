@@ -230,7 +230,11 @@ function applyFilters(searchQ) {
   if (cat) activeCat = cat;
 
   filteredProducts = allProducts.filter(p=>{
-    if (activeSellerPhone && p.sellerPhone.replace(/^\+/, '') !== activeSellerPhone) return false;
+    if (activeSellerPhone) {
+      const pPhone = (p.sellerPhone || '').replace(/^\+/, '');
+      const pWa = (p.sellerWhatsApp || '').replace(/^\+/, '');
+      if (pPhone !== activeSellerPhone && pWa !== activeSellerPhone) return false;
+    }
     if (activeCat && activeCat!=='all' && p.category!==activeCat) return false;
     if (p.price < minP) return false;
     if (maxP!==Infinity && p.price>maxP) return false;
