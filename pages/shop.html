@@ -231,8 +231,8 @@ function applyFilters(searchQ) {
 
   filteredProducts = allProducts.filter(p=>{
     if (activeSellerPhone) {
-      const pPhone = (p.sellerPhone || '').replace(/^\+/, '');
-      const pWa = (p.sellerWhatsApp || '').replace(/^\+/, '');
+      const pPhone = String(p.sellerPhone || '').replace(/^\+/, '');
+      const pWa = String(p.sellerWhatsApp || '').replace(/^\+/, '');
       if (pPhone !== activeSellerPhone && pWa !== activeSellerPhone) return false;
     }
     if (activeCat && activeCat!=='all' && p.category!==activeCat) return false;
