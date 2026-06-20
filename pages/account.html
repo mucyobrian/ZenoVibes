@@ -92,12 +92,14 @@
       <!-- Login Form -->
       <div id="loginForm">
         <div class="field">
-          <label>Email Address</label>
-          <input type="email" id="loginEmail" placeholder="your@email.com"/>
+          <label>Email or Phone Number</label>
+          <input type="text" id="loginEmail" placeholder="your@email.com or 7XX XXX XXX"/>
+          <div class="field-error" id="err_loginEmail"></div>
         </div>
         <div class="field">
           <label>Password</label>
           <input type="password" id="loginPassword" placeholder="••••••••"/>
+          <div class="field-error" id="err_loginPassword"></div>
         </div>
         <button class="btn-submit" onclick="doLogin()" style="margin-top:4px">Sign In</button>
         <div class="auth-switch">Don't have an account? <a href="#" onclick="showRegister()">Create one free</a></div>
@@ -118,16 +120,15 @@
           <div class="field">
             <label>Full Name <span class="required">*</span></label>
             <input type="text" id="regName" placeholder="Your name"/>
+            <div class="field-error" id="err_regName"></div>
           </div>
           <div class="field">
             <label>City / District <span class="required">*</span></label>
             <input type="text" id="regCity" placeholder="Kigali"/>
+            <div class="field-error" id="err_regCity"></div>
           </div>
         </div>
-        <div class="field">
-          <label>Email Address <span class="required">*</span></label>
-          <input type="email" id="regEmail" placeholder="your@email.com"/>
-        </div>
+
         <div class="field">
           <label>Phone Number <span class="required">*</span></label>
           <div class="phone-wrap">
@@ -142,9 +143,11 @@
             <select class="country-select country-select-hidden" id="regPhoneCode" onchange="syncWaCode('regPhoneCode','regWaCode')"></select>
             <input type="tel" id="regPhone" placeholder="7XX XXX XXX"/>
           </div>
+          <div class="field-error" id="err_regPhone"></div>
         </div>
+
         <div class="field">
-          <label>WhatsApp Number</label>
+          <label>WhatsApp Number <span class="field-hint" style="display:inline;text-transform:none;font-weight:400">(optional — leave blank if same as phone)</span></label>
           <div class="phone-wrap">
             <div class="country-picker" data-target="regWaCode">
               <button type="button" class="country-picker-btn" onclick="toggleCountryPicker(this)">
@@ -158,9 +161,21 @@
             <input type="tel" id="regWhatsApp" placeholder="Same as phone if same"/>
           </div>
         </div>
+
+        <!-- Email is optional — toggle lets people skip it entirely -->
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleRegEmail()">
+            <span>Email Address <span class="field-hint" style="display:inline;text-transform:none;font-weight:400">(optional)</span></span>
+            <span id="regEmailToggleLabel" style="color:var(--primary);font-size:0.78rem;text-transform:none;font-weight:600">+ Add email</span>
+          </label>
+          <input type="email" id="regEmail" placeholder="your@email.com" style="display:none"/>
+          <div class="field-error" id="err_regEmail"></div>
+        </div>
+
         <div class="field">
           <label>Password <span class="required">*</span></label>
-          <input type="password" id="regPassword" placeholder="At least 6 characters"/>
+          <input type="password" id="regPassword" placeholder="Choose any password (6+ characters)"/>
+          <div class="field-error" id="err_regPassword"></div>
         </div>
         <button class="btn-submit" onclick="doRegister()" style="margin-top:4px">Create Free Account</button>
         <div class="auth-switch">Already have an account? <a href="#" onclick="showLogin()">Sign in</a></div>
@@ -567,28 +582,91 @@ function showRegister() {
   pendingRegAvatarUrl = null;
   document.getElementById('regAvatarPreview').innerHTML = '👤';
   document.getElementById('regAvatarStatus').textContent = 'Tap to add a profile photo';
+  // Reset email toggle + clear any leftover field errors from a previous attempt
+  document.getElementById('regEmail').style.display = 'none';
+  document.getElementById('regEmail').value = '';
+  document.getElementById('regEmailToggleLabel').textContent = '+ Add email';
+  clearAllFieldErrors();
+}
+
+function toggleRegEmail() {
+  const input = document.getElementById('regEmail');
+  const label = document.getElementById('regEmailToggleLabel');
+  const showing = input.style.display !== 'none';
+  if (showing) {
+    input.style.display = 'none';
+    input.value = '';
+    label.textContent = '+ Add email';
+    clearFieldError('regEmail');
+  } else {
+    input.style.display = 'block';
+    label.textContent = '− Skip email';
+    input.focus();
+  }
+}
+
+// ── Lightweight per-field validation ────────────
+// Shows a short message under a field and reddens its border;
+// clearFieldError removes both. No password complexity rules —
+// just "did you fill in what's required".
+function setFieldError(fieldId, message) {
+  const input = document.getElementById(fieldId);
+  const err = document.getElementById('err_' + fieldId);
+  if (input) input.classList.add('error');
+  if (err) { err.textContent = message; err.classList.add('show'); }
+}
+
+function clearFieldError(fieldId) {
+  const input = document.getElementById(fieldId);
+  const err = document.getElementById('err_' + fieldId);
+  if (input) input.classList.remove('error');
+  if (err) { err.textContent = ''; err.classList.remove('show'); }
+}
+
+function clearAllFieldErrors() {
+  ['regName','regCity','regPhone','regEmail','regPassword','loginEmail','loginPassword'].forEach(clearFieldError);
 }
 
 async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPassword').value;
-  if(!email||!pass){ showToast('Please enter email and password','error'); return; }
+  clearFieldError('loginEmail');
+  clearFieldError('loginPassword');
+  const identifier = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+
+  let hasError = false;
+  if (!identifier) { setFieldError('loginEmail', 'Enter your email or phone number'); hasError = true; }
+  if (!pass)       { setFieldError('loginPassword', 'Enter your password'); hasError = true; }
+  if (hasError) return;
+
   try {
-    const user = await DB.login(email, pass);
+    const user = await DB.login(identifier, pass);
     showToast('Welcome back, '+user.name+'!','success');
     showDashboard(user);
   } catch(e) { showToast(e.message,'error'); }
 }
 
 async function doRegister() {
+  clearAllFieldErrors();
+
   const name  = document.getElementById('regName').value.trim();
   const city  = document.getElementById('regCity').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
+  const emailVisible = document.getElementById('regEmail').style.display !== 'none';
+  const email = emailVisible ? document.getElementById('regEmail').value.trim() : '';
   const phone = buildPhone('regPhoneCode', 'regPhone');
   const wa    = buildPhone('regWaCode', 'regWhatsApp');
   const pass  = document.getElementById('regPassword').value;
-  if(!name||!email||!phone||!pass||!city){ showToast('Please fill all required fields','error'); return; }
-  if(pass.length<6){ showToast('Password must be at least 6 characters','error'); return; }
+
+  let hasError = false;
+  if (!name)  { setFieldError('regName', 'Please enter your name'); hasError = true; }
+  if (!city)  { setFieldError('regCity', 'Please enter your city or district'); hasError = true; }
+  if (!phone) { setFieldError('regPhone', 'Please enter your phone number'); hasError = true; }
+  if (emailVisible && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setFieldError('regEmail', 'That email doesn\'t look right'); hasError = true;
+  }
+  if (!pass) { setFieldError('regPassword', 'Please choose a password'); hasError = true; }
+  else if (pass.length < 6) { setFieldError('regPassword', 'At least 6 characters'); hasError = true; }
+  if (hasError) return;
+
   try {
     const user = await DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass,avatarUrl:pendingRegAvatarUrl||''});
     pendingRegAvatarUrl = null;
