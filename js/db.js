@@ -14,6 +14,17 @@ const DB = (() => {
 
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+  // ── Hash a password in the browser before it ever leaves the device ──
+  // The server (Apps Script) only ever sees/stores this hash, never the
+  // real password. Uses the browser's built-in Web Crypto API.
+  async function hashPassword(password) {
+    const enc = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
   // ── Parse Google Sheets JSON response ──────────
   function parseGoogleSheetsJSON(raw) {
     // Google Sheets returns JSONP-like: /*O_o*/\ngoogle.visualization.Query.setResponse({...})
@@ -209,59 +220,87 @@ const DB = (() => {
     return data;
   }
 
-  // ── USER AUTH (localStorage-based) ─────────────
+  // ── USER AUTH ───────────────────────────────────
+  // Source of truth is the "Users" tab in the Sheet, reached via
+  // CONFIG.LISTINGS_API_URL (same Apps Script as listings).
+  // localStorage is only a CACHE of "who is logged in on this device",
+  // refreshed every time we talk to the server — never the source of truth.
+  // This is what makes login work the same on every device.
+
   function getCurrentUser() {
     const raw = localStorage.getItem(STORAGE_KEYS.USER);
     return raw ? JSON.parse(raw) : null;
   }
 
-  function register(data) {
-    // Check if email exists
-    const users = JSON.parse(localStorage.getItem('sokohub_users') || '[]');
-    if (users.find(u => u.email === data.email)) {
-      throw new Error('An account with this email already exists.');
-    }
-    const user = {
-      ...data,
-      id: 'user_' + Date.now(),
-      avatarUrl: data.avatarUrl || '',
-      joinedAt: new Date().toISOString(),
-      plan: 'free',
-      monthlyCount: 0,
-      monthKey: getCurrentMonthKey(),
-    };
-    users.push(user);
-    localStorage.setItem('sokohub_users', JSON.stringify(users));
+  function cacheCurrentUser(user) {
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-    return user;
   }
 
-  function login(email, password) {
-    const users = JSON.parse(localStorage.getItem('sokohub_users') || '[]');
-    const user = users.find(u => u.email === email && u.password === password);
-    if (!user) throw new Error('Invalid email or password.');
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-    return user;
+  async function register(data) {
+    const passwordHash = await hashPassword(data.password);
+    const res = await fetch(CONFIG.LISTINGS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight on Apps Script
+      body: JSON.stringify({
+        action: 'register',
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        whatsapp: data.whatsapp || data.phone,
+        city: data.city,
+        avatarUrl: data.avatarUrl || '',
+        passwordHash,
+        monthKey: getCurrentMonthKey(),
+      }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error || 'Could not create account.');
+    cacheCurrentUser(result.user);
+    return result.user;
+  }
+
+  async function login(email, password) {
+    const passwordHash = await hashPassword(password);
+    const res = await fetch(CONFIG.LISTINGS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'login', email, passwordHash }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error || 'Invalid email or password.');
+    cacheCurrentUser(result.user);
+    return result.user;
   }
 
   function logout() {
     localStorage.removeItem(STORAGE_KEYS.USER);
   }
 
-  function updateUser(updates) {
+  // Updates the user's profile/plan/monthlyCount on the server, then
+  // refreshes the local cache so synchronous getters stay accurate.
+  async function updateUser(updates) {
     const user = getCurrentUser();
     if (!user) return null;
-    const updated = { ...user, ...updates };
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated));
 
-    // Also update in users array
-    const users = JSON.parse(localStorage.getItem('sokohub_users') || '[]');
-    const idx = users.findIndex(u => u.id === user.id);
-    if (idx !== -1) {
-      users[idx] = updated;
-      localStorage.setItem('sokohub_users', JSON.stringify(users));
+    // Update local cache immediately for a responsive UI...
+    const optimistic = { ...user, ...updates };
+    cacheCurrentUser(optimistic);
+
+    try {
+      const res = await fetch(CONFIG.LISTINGS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'update', target: 'user', id: user.id, updates }),
+      });
+      const result = await res.json();
+      if (result.success && result.user) {
+        cacheCurrentUser(result.user);
+        return result.user;
+      }
+    } catch (e) {
+      console.warn('updateUser: server sync failed, kept local cache', e);
     }
-    return updated;
+    return optimistic;
   }
 
   // ── Monthly count tracking ──────────────────────
