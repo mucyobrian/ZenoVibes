@@ -119,6 +119,7 @@ const DB = (() => {
       sellerWhatsApp: p.sellerwhatsapp || p.whatsapp || p.sellerphone || '',
       sellerEmail: p.selleremail || p.email || '',
       sellerCity: p.sellercity || p.city || '',
+      sellerAvatarUrl: p.selleravatarurl || p.avatarurl || '',
       sellerLat: parseFloat(p.sellerlat || p.lat || 0),
       sellerLng: parseFloat(p.sellerlng || p.lng || 0),
       productName: p.productname || p.product || 'Product',
