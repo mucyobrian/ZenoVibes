@@ -300,14 +300,27 @@ function showSubcats(catId) {
     ? subcats
     : [...new Set(products.map(p => p.subcategory || 'Other'))];
 
-  document.getElementById('subcatGrid').innerHTML = toShow.map(sub => {
+  const subcatGridEl = document.getElementById('subcatGrid');
+  subcatGridEl.innerHTML = toShow.map((sub, i) => {
     const n = counts[sub] || 0;
     return `
-      <a class="subcat-card" onclick="showCatProducts('${catId}', ${JSON.stringify(sub)})" href="#">
+      <a class="subcat-card" href="#" data-catid="${catId}" data-subcat-index="${i}">
         <div class="subcat-name">${sub}</div>
         <div class="subcat-count">${n} item${n !== 1 ? 's' : ''}</div>
       </a>`;
   }).join('');
+
+  // store subcat names on the grid element so we can look them up by index
+  subcatGridEl._subcats = toShow;
+
+  subcatGridEl.onclick = function(e) {
+    const card = e.target.closest('.subcat-card');
+    if (!card) return;
+    e.preventDefault();
+    const idx = parseInt(card.dataset.subcatIndex, 10);
+    const sub = subcatGridEl._subcats[idx];
+    showCatProducts(card.dataset.catid, sub);
+  };
 
   setHero(`${label}`, 'Choose a subcategory');
   showView('viewSubcats');
