@@ -115,8 +115,8 @@ const DB = (() => {
     return {
       id: p.id,
       sellerName: p.sellername || p.name || 'Seller',
-      sellerPhone: p.sellerphone || p.phone || '',
-      sellerWhatsApp: p.sellerwhatsapp || p.whatsapp || p.sellerphone || '',
+      sellerPhone: String(p.sellerphone || p.phone || ''),
+      sellerWhatsApp: String(p.sellerwhatsapp || p.whatsapp || p.sellerphone || ''),
       sellerEmail: p.selleremail || p.email || '',
       sellerCity: p.sellercity || p.city || '',
       sellerAvatarUrl: p.selleravatarurl || p.avatarurl || '',
