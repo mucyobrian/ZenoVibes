@@ -366,7 +366,21 @@ input, select, textarea { font-family: inherit; }
 }
 .cat-pill:hover { border-color: var(--primary); color: var(--primary); }
 .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-.cat-pill .pill-emoji { font-size: 1rem; }
+.cat-pill .pill-img {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.cat-section-img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
 
 /* ===== FILTER BAR ===== */
 .filter-bar {
