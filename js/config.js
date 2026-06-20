@@ -49,11 +49,11 @@ const CONFIG = {
   // Or replace any path with a full URL (Hugging Face, Cloudinary, etc.)
   CATEGORIES: [
     { id: "all",          label: "All",             image: "../images/categories/all.jpg" },
-    { id: "electronics",  label: "Electronics",     image: "../images/categories/electronics.jpg" },
-    { id: "fashion",      label: "Fashion",         image: "../images/categories/fashion.jpg" },
-    { id: "accessories",  label: "Accessories",     image: "../images/categories/accessories.jpg" },
+    { id: "electronics",  label: "Electronics",     image: "../images/categories/Electronics.jpg" },
+    { id: "fashion",      label: "Fashion",         image: "../images/categories/Fashion.jpg" },
+    { id: "accessories",  label: "Accessories",     image: "../images/categories/Accessories.jpg" },
     { id: "food",         label: "Food & Drinks",   image: "../images/categories/food.jpg" },
-    { id: "furniture",    label: "Furniture",       image: "../images/categories/furniture.jpg" },
+    { id: "furniture",    label: "Furniture",       image: "../images/categories/Furniture.jpg" },
     { id: "vehicles",     label: "Vehicles",        image: "../images/categories/vehicles.jpg" },
     { id: "health",       label: "Health & Beauty", image: "../images/categories/health.jpg" },
     { id: "sports",       label: "Sports",          image: "../images/categories/sports.jpg" },
