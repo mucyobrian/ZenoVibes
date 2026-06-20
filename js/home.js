@@ -47,7 +47,7 @@ function buildCategoryPills() {
       <div class="pill-thumb">
         <img class="pill-img" src="${cat.image}" alt="${cat.label}"
           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
-        <span class="pill-fallback">${TOPCAT_EMOJI[cat.id] || '📦'}</span>
+        <span class="pill-fallback" style="display:none">${TOPCAT_EMOJI[cat.id] || '📦'}</span>
       </div>
       <span>${cat.label}</span>
     </button>
