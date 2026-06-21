@@ -923,7 +923,20 @@ function editBuildCatDropdown() {
   const dd = document.getElementById('editCatPickerDropdown');
   if (!dd) return;
   dd.innerHTML = '';
+
+  // Populate the REAL hidden <select> with actual <option> elements too —
+  // without this, sel.value = id silently fails (a <select> can't hold a
+  // value that has no matching <option>), which is why category was always
+  // being saved as empty (and showing up as "Other") after an edit.
+  const sel = document.getElementById('editCategory');
+  if (sel) sel.innerHTML = '<option value="">Select category…</option>';
+
   (CONFIG.CATEGORIES || []).filter(c => c.id !== 'all').forEach(cat => {
+    if (sel) {
+      const o = document.createElement('option');
+      o.value = cat.id; o.textContent = cat.label;
+      sel.appendChild(o);
+    }
     const item = document.createElement('div');
     item.className = 'cat-picker-item';
     item.dataset.value = cat.id;
@@ -937,6 +950,8 @@ function editBuildSubDropdown(catId) {
   const dd = document.getElementById('editSubPickerDropdown');
   if (!dd) return;
   dd.innerHTML = '';
+  const sel = document.getElementById('editSubcategory');
+  if (sel) sel.innerHTML = '<option value="">Select subcategory…</option>';
   const subs = (CONFIG.SUBCATEGORIES || {})[catId] || [];
   if (!subs.length) {
     document.getElementById('editSubPickerWrap').style.opacity = '0.4';
@@ -946,6 +961,11 @@ function editBuildSubDropdown(catId) {
   document.getElementById('editSubPickerWrap').style.opacity = '1';
   document.getElementById('editSubPickerTrigger').style.pointerEvents = '';
   subs.forEach(s => {
+    if (sel) {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    }
     const item = document.createElement('div');
     item.className = 'cat-picker-item';
     const emoji = EDIT_CAT_EMOJI_MAP[s] || EDIT_CAT_EMOJI_MAP['default'];
@@ -1063,7 +1083,7 @@ function editCollectImages() {
     const url   = slot.dataset.uploadedUrl;
     const tag   = slot.querySelector('.img-tag-input')?.value.trim();
     const price = slot.querySelector('.img-price-input')?.value;
-    if (url) images.push({ url, tag: tag || '', variantPrice: price ? parseFloat(price) : basePrice });
+    if (url) images.push({ url, tag: tag || '', price: price ? parseFloat(price) : basePrice });
   });
   return images;
 }
@@ -1107,7 +1127,7 @@ function openEditListing(p) {
     imgs.forEach(img => {
       const url   = typeof img === 'string' ? img : img.url;
       const tag   = typeof img === 'object' ? (img.tag || '') : '';
-      const price = typeof img === 'object' ? (img.variantPrice || '') : '';
+      const price = typeof img === 'object' ? (img.price || '') : '';
       editAddImageSlot(url, tag, price);
     });
   } else {
@@ -1145,7 +1165,7 @@ async function saveEditListing() {
       price:        price,
       category:     document.getElementById('editCategory').value || '',
       subcategory:  document.getElementById('editSubcategory').value || '',
-      images:       images,
+      imagesJson:   JSON.stringify(images),
     });
     showToast('Post updated!', 'success');
     hideEditListing();
