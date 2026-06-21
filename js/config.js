@@ -77,6 +77,7 @@ const CONFIG = {
     { id: "agriculture",  label: "Agriculture",       image: `${IMG_BASE}Agriculture.jpg` },
     { id: "services",     label: "Services",          image: `${IMG_BASE}Services.jpg` },
     { id: "property",     label: "Property",          image: `${IMG_BASE}Property.jpg` },
+    { id: "free",          label: "Free Stuff",        image: `${IMG_BASE}Free.jpg` },
     { id: "other",        label: "Other",             image: `${IMG_BASE}Other.jpg` },
   ],
 
@@ -126,7 +127,7 @@ const CONFIG = {
       "Memory Cards", "Other Phone Accessories",
     ],
     electronics: [
-      "Laptops", "Tablets", "TVs", "Cameras", "Audio Equipment", "Smart Home",
+      "Tablets", "TVs", "Cameras", "Audio Equipment", "Smart Home",
       "Wearable Devices", "Camera Accessories", "Digital Cables", "Selfie Sticks",
     ],
     hair: [
@@ -134,7 +135,7 @@ const CONFIG = {
       "Hair Care Tools & Accessories",
     ],
     computer: [
-      "Keyboards & Mice", "External Storage", "Networking", "Tablets & Accessories",
+      "Laptops", "Keyboards & Mice", "External Storage", "Networking", "Tablets & Accessories",
       "Office Electronics", "Other Computer",
     ],
     automobile: [
@@ -185,6 +186,11 @@ const CONFIG = {
     other: [
       "Miscellaneous", "Collectibles", "Pet Supplies", "Gift Items",
       "Lost & Found", "Event Tickets", "Other",
+    ],
+    free: [
+      "Still Works", "Slightly Damaged", "Heavily Damaged", "Dead / Not Working",
+      "Spare Parts / Junk", "Missing Parts", "Expired (Food/Cosmetics)",
+      "Mystery Bundle", "Other",
     ],
   },
 

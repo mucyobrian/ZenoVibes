@@ -37,7 +37,7 @@ function getCatEmoji(catId) {
     home:'🏠', beauty:'💄', telecom:'📱', electronics:'💻', hair:'💇',
     computer:'🖥️', automobile:'🚗', sports:'⚽', furniture:'🛋️', vehicles:'🚙',
     food:'🍔', books:'📚', agriculture:'🌱', services:'🔧', property:'🏡',
-    other:'📦', all:'🛍️'
+    other:'📦', all:'🛍️', free:'🎁'
   };
   return emojis[catId] || '📦';
 }
