@@ -205,6 +205,54 @@ input, select, textarea { font-family: inherit; }
 .tab.active { color: var(--primary); }
 .tab.active::after { width: 32px; }
 
+/* ===== SELL + BUTTON ===== */
+.tab-sell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+}
+
+.tab-sell-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(80,60,220,0.35);
+  position: relative;
+  top: -10px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  text-decoration: none;
+}
+
+.tab-sell-btn:hover,
+.tab-sell-btn:active {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(80,60,220,0.5);
+}
+
+.tab-sell-btn svg {
+  display: block;
+}
+
+.tab-sell-btn.tab-sell-active {
+  box-shadow: 0 6px 24px rgba(80,60,220,0.55);
+  transform: scale(1.05);
+}
+
+.tab-sell span {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-light);
+  margin-top: -6px;
+}
+
 /* ===== HERO ===== */
 .hero {
   background-image: linear-gradient(120deg, rgba(15,14,26,0.05) 0%, rgba(15,14,26,0.05) 5%, rgba(15,14,26,0.05) 10%), url('../images/banners/Hero.jpg');
