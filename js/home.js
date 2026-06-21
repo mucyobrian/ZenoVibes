@@ -311,6 +311,10 @@ function clearFilters() {
   if (maxPrice)   maxPrice.value = '';
   if (sortBy)     sortBy.value = 'newest';
   if (nearToggle) nearToggle.checked = false;
+  const label = document.getElementById('catPickerLabel');
+  const thumb = document.getElementById('catPickerThumb');
+  if (label) label.textContent = 'All Categories';
+  if (thumb) thumb.style.display = 'none';
   applyFilters();
 }
 
