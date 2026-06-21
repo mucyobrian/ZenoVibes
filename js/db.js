@@ -489,11 +489,9 @@ const DB = (() => {
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'update', target: 'user', id: user.id, updates }),
       });
-      const result = await res.json();
-      if (result.success && result.user) {
-        cacheCurrentUser(result.user);
-        return result.user;
-      }
+      // We already saved the optimistic update to localStorage above.
+      // Do NOT overwrite it with the server response — the sheet can return
+      // stale or numeric-typed values that clobber what we just wrote.
     } catch (e) {
       console.warn('updateUser: server sync failed, kept local cache', e);
     }
