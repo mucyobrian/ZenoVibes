@@ -6,6 +6,48 @@
   <link rel="stylesheet" href="../css/style.css"/>
   <link rel="stylesheet" href="../css/components.css"/>
   <style>
+    /* ── Visual Category / Subcategory Picker ── */
+    .cat-picker-wrap { position: relative; }
+    .cat-picker-trigger {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; height: 46px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: white; cursor: pointer; font-size: 0.9rem; color: var(--text);
+      width: 100%; box-sizing: border-box; transition: border-color .15s;
+      user-select: none;
+    }
+    .cat-picker-trigger:hover, .cat-picker-trigger.open { border-color: var(--primary); }
+    .cat-picker-trigger img {
+      width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0;
+    }
+    .cat-picker-trigger .trigger-placeholder { color: var(--text-muted); }
+    .cat-picker-trigger .trigger-arrow {
+      margin-left: auto; font-size: 0.7rem; color: var(--text-muted); transition: transform .15s;
+    }
+    .cat-picker-trigger.open .trigger-arrow { transform: rotate(180deg); }
+    .cat-picker-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 200; max-height: 300px; overflow-y: auto;
+    }
+    .cat-picker-dropdown.open { display: block; }
+    .cat-picker-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; cursor: pointer; transition: background .1s;
+    }
+    .cat-picker-item:hover { background: var(--bg, #f5f5f5); }
+    .cat-picker-item.selected { background: color-mix(in srgb, var(--primary) 10%, white); }
+    .cat-picker-item img {
+      width: 36px; height: 36px; object-fit: cover; border-radius: 6px; flex-shrink: 0;
+    }
+    .cat-picker-item .cat-emoji {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; background: #f0f0f0; border-radius: 6px; flex-shrink: 0;
+    }
+    .cat-picker-item span { font-size: 0.9rem; font-weight: 500; }
+    /* hidden real selects (still used for form value reading) */
+    .cat-real-select { display: none !important; }
+
     .phone-wrap { display: flex; gap: 8px; }
     .country-select {
       flex: 0 0 auto;
@@ -109,16 +151,30 @@
         <div class="field-row">
           <div class="field">
             <label>Category <span class="required">*</span></label>
-            <select id="category" onchange="updateSubcategories()">
-              <option value="">Select category…</option>
-            </select>
+            <!-- hidden real select for form reading -->
+            <select id="category" class="cat-real-select"></select>
+            <!-- visual picker -->
+            <div class="cat-picker-wrap" id="catPickerWrap">
+              <div class="cat-picker-trigger" id="catPickerTrigger" onclick="toggleCatPicker('cat')">
+                <span class="trigger-placeholder" id="catPickerLabel">Select category…</span>
+                <span class="trigger-arrow">▼</span>
+              </div>
+              <div class="cat-picker-dropdown" id="catPickerDropdown"></div>
+            </div>
             <span class="field-error" id="err_category">Please select a category</span>
           </div>
           <div class="field">
             <label>Subcategory</label>
-            <select id="subcategory">
-              <option value="">Select subcategory…</option>
-            </select>
+            <!-- hidden real select -->
+            <select id="subcategory" class="cat-real-select"></select>
+            <!-- visual picker -->
+            <div class="cat-picker-wrap" id="subPickerWrap">
+              <div class="cat-picker-trigger" id="subPickerTrigger" onclick="toggleCatPicker('sub')">
+                <span class="trigger-placeholder" id="subPickerLabel">Select subcategory…</span>
+                <span class="trigger-arrow">▼</span>
+              </div>
+              <div class="cat-picker-dropdown" id="subPickerDropdown"></div>
+            </div>
           </div>
         </div>
         <div class="field">
@@ -285,12 +341,159 @@ function parseStoredPhone(full, codeSelId, inputId) {
   }
 }
 
+// ── Visual Category Picker ──────────────────────────────────────
+// Sub-category emoji fallbacks (used when no image exists for a subcategory)
+const SUB_EMOJI = {
+  // telecom
+  'Phones':'📱','Headphones & Earphones':'🎧','Bluetooth Headsets':'🎧','Phone Cases & Bags':'📱',
+  'Chargers & Cables':'🔌','Screen Protectors':'📱','Memory Cards':'💾',
+  // electronics
+  'Laptops':'💻','Tablets':'📱','TVs':'📺','Cameras':'📷','Audio Equipment':'🔊',
+  'Smart Home':'🏠','Wearable Devices':'⌚',
+  // clothing
+  'Dresses':'👗','Tops & Tees':'👕','Shirts & Blouses':'👔','Pants & Jeans':'👖',
+  'Suits & Blazers':'🤵','Coats & Jackets':'🧥','Hoodies & Sweatshirts':'🧥',
+  'Swimwear':'👙','Africa Wear':'🌍','Wedding Dresses':'👰',
+  // shoes
+  'Sneakers':'👟','Sandals & Flip Flops':'🩴','Boots':'👢','Slippers':'🥿',
+  // food
+  'Fresh Produce':'🥦','Meat & Poultry':'🍗','Fish & Seafood':'🐟','Dairy & Eggs':'🥚',
+  'Packaged Snacks':'🍿','Beverages':'🥤','Bakery & Bread':'🍞','Homemade Meals':'🍛',
+  // furniture
+  'Sofas & Couches':'🛋️','Beds & Bed Frames':'🛏️','Mattresses':'🛏️',
+  'Dining Tables & Chairs':'🍽️','Office Desks':'🖥️','Wardrobes & Closets':'🚪',
+  // vehicles
+  'Cars':'🚗','SUVs & Trucks':'🚙','Motorcycles':'🏍️','Bicycles':'🚲',
+  'Boats & Watercraft':'⛵','Heavy Machinery':'🚜',
+  // beauty
+  'Makeup':'💄','Skin Care':'🧴','Hair Care':'💇','Nail Art':'💅','Bath & Shower':'🛁',
+  // kids
+  "Kids' Clothing":'👶',"Baby Clothing & Sets":'👶','Strollers & Gear':'🍼',
+  'Learning Toys':'🧩','Dolls':'🪆','Outdoor Play':'🛝',
+  // sports
+  'Fitness Equipment':'🏋️','Yoga':'🧘','Camping & Hiking Gear':'⛺',
+  'Cycling':'🚴','Water Sports':'🏄','Ball Sports':'⚽','Musical Instruments':'🎸',
+  // agriculture
+  'Seeds & Seedlings':'🌱','Farm Tools':'🌾','Livestock':'🐄','Poultry':'🐓',
+  'Fresh Farm Produce':'🌽','Farm Machinery':'🚜','Beekeeping Supplies':'🍯',
+  // services
+  'Plumbing':'🔧','Electrical Work':'⚡','Cleaning Services':'🧹','Photography & Videography':'📸',
+  'Catering':'🍽️','Hair & Beauty Services':'💇','Transport & Moving':'🚛',
+  // property
+  'For Rent — Houses':'🏠','For Rent — Apartments':'🏢','For Sale — Houses':'🏡',
+  'Land for Sale':'🌍','Office Space':'🏢','Short-Term Stays':'🏨',
+  // books
+  'Textbooks':'📚','Novels & Fiction':'📖','Notebooks & Pads':'📓','Art Supplies':'🎨',
+  // default
+  'default':'📦'
+};
+
+function buildCatDropdown() {
+  const dd = document.getElementById('catPickerDropdown');
+  dd.innerHTML = '';
+  CONFIG.CATEGORIES.filter(c=>c.id!=='all').forEach(cat=>{
+    const item = document.createElement('div');
+    item.className = 'cat-picker-item';
+    item.dataset.value = cat.id;
+    item.dataset.label = cat.label;
+    item.innerHTML = `<img src="${cat.image}" alt="" onerror="this.style.display='none'"><span>${cat.label}</span>`;
+    item.onclick = () => selectCat(cat.id, cat.label, cat.image);
+    dd.appendChild(item);
+  });
+}
+
+function buildSubDropdown(catId) {
+  const dd = document.getElementById('subPickerDropdown');
+  dd.innerHTML = '';
+  const subs = CONFIG.SUBCATEGORIES[catId] || [];
+  // reset hidden select
+  const sel = document.getElementById('subcategory');
+  sel.innerHTML = '<option value="">Select subcategory…</option>';
+  // reset visual trigger
+  const trigger = document.getElementById('subPickerTrigger');
+  trigger.innerHTML = '<span class="trigger-placeholder" id="subPickerLabel">Select subcategory…</span><span class="trigger-arrow">▼</span>';
+  if (!subs.length) return;
+  subs.forEach(s=>{
+    // option in hidden select
+    const o = document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
+    // visual item
+    const emoji = SUB_EMOJI[s] || SUB_EMOJI['default'];
+    const item = document.createElement('div');
+    item.className = 'cat-picker-item';
+    item.dataset.value = s;
+    item.innerHTML = `<div class="cat-emoji">${emoji}</div><span>${s}</span>`;
+    item.onclick = () => selectSub(s);
+    dd.appendChild(item);
+  });
+}
+
+function toggleCatPicker(which) {
+  const triggerId = which==='cat' ? 'catPickerTrigger' : 'subPickerTrigger';
+  const ddId      = which==='cat' ? 'catPickerDropdown' : 'subPickerDropdown';
+  // close the other
+  const otherId   = which==='cat' ? 'subPickerDropdown' : 'catPickerDropdown';
+  const otherTrig = which==='cat' ? 'subPickerTrigger'  : 'catPickerTrigger';
+  document.getElementById(otherId).classList.remove('open');
+  document.getElementById(otherTrig).classList.remove('open');
+  // toggle this one
+  const dd = document.getElementById(ddId);
+  const tr = document.getElementById(triggerId);
+  const isOpen = dd.classList.toggle('open');
+  tr.classList.toggle('open', isOpen);
+}
+
+function selectCat(id, label, imgSrc) {
+  // update hidden select
+  const sel = document.getElementById('category');
+  sel.value = id;
+  // update trigger UI
+  const trigger = document.getElementById('catPickerTrigger');
+  trigger.innerHTML = `<img src="${imgSrc}" alt="" onerror="this.style.display='none'"><span>${label}</span><span class="trigger-arrow">▼</span>`;
+  trigger.classList.remove('open');
+  // mark selected item
+  document.querySelectorAll('#catPickerDropdown .cat-picker-item').forEach(el=>{
+    el.classList.toggle('selected', el.dataset.value===id);
+  });
+  document.getElementById('catPickerDropdown').classList.remove('open');
+  // rebuild sub dropdown
+  buildSubDropdown(id);
+}
+
+function selectSub(name) {
+  // update hidden select
+  const sel = document.getElementById('subcategory');
+  sel.value = name;
+  // update trigger UI
+  const emoji = SUB_EMOJI[name] || SUB_EMOJI['default'];
+  const trigger = document.getElementById('subPickerTrigger');
+  trigger.innerHTML = `<span style="font-size:1.2rem">${emoji}</span><span>${name}</span><span class="trigger-arrow">▼</span>`;
+  trigger.classList.remove('open');
+  document.querySelectorAll('#subPickerDropdown .cat-picker-item').forEach(el=>{
+    el.classList.toggle('selected', el.dataset.value===name);
+  });
+  document.getElementById('subPickerDropdown').classList.remove('open');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e=>{
+  if (!e.target.closest('#catPickerWrap')) {
+    document.getElementById('catPickerDropdown')?.classList.remove('open');
+    document.getElementById('catPickerTrigger')?.classList.remove('open');
+  }
+  if (!e.target.closest('#subPickerWrap')) {
+    document.getElementById('subPickerDropdown')?.classList.remove('open');
+    document.getElementById('subPickerTrigger')?.classList.remove('open');
+  }
+});
+// ────────────────────────────────────────────────────────────────
+
 function initSellPage() {
-  // Populate categories
+  // Populate categories (hidden select + visual picker)
   const catSel = document.getElementById('category');
   CONFIG.CATEGORIES.filter(c=>c.id!=='all').forEach(cat=>{
     const o=document.createElement('option'); o.value=cat.id; o.textContent=cat.label; catSel.appendChild(o);
   });
+  buildCatDropdown();
 
   // Init country pickers
   populateCountrySelect('sellerPhoneCode', '+250');
@@ -453,11 +656,7 @@ function updateLimitBar() {
 }
 
 function updateSubcategories() {
-  const cat = document.getElementById('category')?.value;
-  const subSel = document.getElementById('subcategory');
-  subSel.innerHTML='<option value="">Select subcategory…</option>';
-  const subs = CONFIG.SUBCATEGORIES[cat]||[];
-  subs.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; subSel.appendChild(o); });
+  // now handled by buildSubDropdown() called from selectCat()
 }
 
 function detectLocation() {
@@ -593,6 +792,12 @@ function resetForm() {
   });
   document.getElementById('category').value='';
   document.getElementById('subcategory').innerHTML='<option value="">Select subcategory…</option>';
+  // reset visual pickers
+  const cTrig = document.getElementById('catPickerTrigger');
+  if(cTrig) cTrig.innerHTML='<span class="trigger-placeholder">Select category…</span><span class="trigger-arrow">▼</span>';
+  const sTrig = document.getElementById('subPickerTrigger');
+  if(sTrig) sTrig.innerHTML='<span class="trigger-placeholder">Select subcategory…</span><span class="trigger-arrow">▼</span>';
+  document.querySelectorAll('.cat-picker-item').forEach(el=>el.classList.remove('selected'));
   // Reset image slots back to one empty slot
   document.getElementById('imageSlots').innerHTML = '';
   imageSlotCount = 0;
