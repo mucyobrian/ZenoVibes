@@ -61,6 +61,71 @@
     .cp-code-sm { color: var(--text-muted); font-size: 0.82rem; }
 
     .phone-wrap input[type="tel"] { flex: 1; min-width: 0; }
+
+    /* ── Edit listing: category picker ── */
+    .cat-picker-wrap { position: relative; }
+    .cat-picker-trigger {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; height: 46px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: white; cursor: pointer; font-size: 0.9rem; color: var(--text);
+      width: 100%; box-sizing: border-box; transition: border-color .15s;
+      user-select: none;
+    }
+    .cat-picker-trigger:hover, .cat-picker-trigger.open { border-color: var(--primary); }
+    .cat-picker-trigger.error { border-color: var(--danger); }
+    .cat-picker-trigger img { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+    .cat-picker-trigger .trigger-placeholder { color: var(--text-muted); }
+    .cat-picker-trigger .trigger-arrow { margin-left: auto; font-size: 0.7rem; color: var(--text-muted); transition: transform .15s; }
+    .cat-picker-trigger.open .trigger-arrow { transform: rotate(180deg); }
+    .cat-picker-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 200; max-height: 260px; overflow-y: auto;
+    }
+    .cat-picker-dropdown.open { display: block; }
+    .cat-picker-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; cursor: pointer; transition: background .1s;
+    }
+    .cat-picker-item:hover { background: var(--bg, #f5f5f5); }
+    .cat-picker-item.selected { background: color-mix(in srgb, var(--primary) 10%, white); }
+    .cat-picker-item img { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    .cat-picker-item .cat-emoji {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; background: #f0f0f0; border-radius: 6px; flex-shrink: 0;
+    }
+    .cat-picker-item span { font-size: 0.9rem; font-weight: 500; }
+    .cat-real-select { display: none !important; }
+
+    /* ── Edit listing: image slots ── */
+    .image-slot {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: #f9f9f9; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px;
+    }
+    .image-slot-preview {
+      width: 72px; height: 72px; flex-shrink: 0;
+      border-radius: 6px; background: #eee;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; overflow: hidden;
+    }
+    .image-slot-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .image-slot-preview.uploading { background: #eee; }
+    .image-slot-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .image-slot-status { font-size: 0.75rem; color: var(--text-muted); }
+    .image-slot-status.ok  { color: var(--success, #2e7d32); }
+    .image-slot-status.err { color: var(--danger); }
+    .image-slot-row { display: flex; gap: 6px; }
+    .img-tag-input   { flex: 2; min-width: 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem; }
+    .img-price-input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem; }
+    .img-file-input  { font-size: 0.8rem; }
+    .image-slot-remove {
+      background: none; border: none; cursor: pointer; font-size: 1rem;
+      color: var(--text-muted); padding: 2px 4px; align-self: flex-start;
+    }
+    .image-slot-remove:hover { color: var(--danger); }
+
   </style>
 </head>
 <body>
@@ -286,20 +351,57 @@
     <div class="back-btn" onclick="hideEditListing()">← Back to My Posts</div>
     <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">Edit Post</h2>
     <input type="hidden" id="editListingId"/>
+
     <div class="field">
       <label>Product Name <span class="required">*</span></label>
       <input type="text" id="editListingName" placeholder="Product name"/>
     </div>
+
     <div class="field">
       <label>Description</label>
       <textarea id="editListingDesc" rows="4" placeholder="Describe your product"></textarea>
     </div>
+
     <div class="field">
       <label>Price (RWF) <span class="required">*</span></label>
       <input type="number" id="editListingPrice" min="0" placeholder="Price"/>
     </div>
+
+    <div class="field-row" style="display:flex;gap:12px">
+      <div class="field" style="flex:1;min-width:0">
+        <label>Category</label>
+        <select id="editCategory" class="cat-real-select"></select>
+        <div class="cat-picker-wrap" id="editCatPickerWrap">
+          <div class="cat-picker-trigger" id="editCatPickerTrigger" onclick="editToggleCatPicker('cat')">
+            <span class="trigger-placeholder" id="editCatPickerLabel">Select category…</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="cat-picker-dropdown" id="editCatPickerDropdown"></div>
+        </div>
+      </div>
+      <div class="field" style="flex:1;min-width:0">
+        <label>Subcategory</label>
+        <select id="editSubcategory" class="cat-real-select"></select>
+        <div class="cat-picker-wrap" id="editSubPickerWrap">
+          <div class="cat-picker-trigger" id="editSubPickerTrigger" onclick="editToggleCatPicker('sub')">
+            <span class="trigger-placeholder" id="editSubPickerLabel">Select subcategory…</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="cat-picker-dropdown" id="editSubPickerDropdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Photos</label>
+      <div id="editImageSlots"></div>
+      <button type="button" id="editAddImageBtn" onclick="editAddImageSlot()"
+        style="margin-top:8px;padding:10px 16px;border:1.5px dashed var(--primary);background:transparent;color:var(--primary);border-radius:var(--radius-sm);font-weight:600;font-size:0.85rem;cursor:pointer;width:100%">
+        + Add Photo
+      </button>
+    </div>
+
     <button class="btn-submit" onclick="saveEditListing()">Save Changes</button>
-    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:10px">Note: to change photos, please delete this post and create a new one.</p>
   </div>
 </div>
 
@@ -747,18 +849,224 @@ async function deleteListingConfirm(id) {
   }
 }
 
+// ── Edit listing: category picker ────────────────────────────────
+const EDIT_CAT_EMOJI_MAP = {
+  'Smartphones':'📱','Tablets':'📟','Laptops':'💻','Desktops':'🖥️',
+  'TVs':'📺','Audio':'🎧','Cameras':'📷','Gaming':'🎮','Accessories':'🔌',
+  'Sofas & Chairs':'🛋️','Beds & Mattresses':'🛏️','Tables & Desks':'🪑',
+  'Wardrobes':'🚪','Kitchen Furniture':'🍳','Office Furniture':'🗄️',
+  'Cars':'🚗','Motorcycles':'🏍️','Bicycles':'🚲','Spare Parts':'🔧',
+  'Clothes':'👗','Shoes':'👟','Bags & Purses':'👜','Jewellery':'💍',
+  'Watches':'⌚','Sunglasses':'🕶️',
+  'Fridges':'❄️','Washing Machines':'🫧','Cookers & Ovens':'🍳','Microwaves':'📡',
+  'Air Conditioners':'💨','Small Appliances':'🔌',
+  'Phones & Tablets':'📱','Electronics':'💻','Furniture':'🛋️',
+  'Vehicles':'🚗','Fashion':'👗','Appliances':'🏠',
+  'default':'📦'
+};
+
+function editBuildCatDropdown() {
+  const dd = document.getElementById('editCatPickerDropdown');
+  if (!dd) return;
+  dd.innerHTML = '';
+  (CONFIG.CATEGORIES || []).filter(c => c.id !== 'all').forEach(cat => {
+    const item = document.createElement('div');
+    item.className = 'cat-picker-item';
+    item.dataset.value = cat.id;
+    item.innerHTML = `<img src="${cat.image}" alt="" onerror="this.style.display='none'"><span>${cat.label}</span>`;
+    item.onclick = () => editSelectCat(cat.id, cat.label, cat.image);
+    dd.appendChild(item);
+  });
+}
+
+function editBuildSubDropdown(catId) {
+  const dd = document.getElementById('editSubPickerDropdown');
+  if (!dd) return;
+  dd.innerHTML = '';
+  const subs = (CONFIG.SUBCATEGORIES || {})[catId] || [];
+  if (!subs.length) {
+    document.getElementById('editSubPickerWrap').style.opacity = '0.4';
+    document.getElementById('editSubPickerTrigger').style.pointerEvents = 'none';
+    return;
+  }
+  document.getElementById('editSubPickerWrap').style.opacity = '1';
+  document.getElementById('editSubPickerTrigger').style.pointerEvents = '';
+  subs.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'cat-picker-item';
+    const emoji = EDIT_CAT_EMOJI_MAP[s] || EDIT_CAT_EMOJI_MAP['default'];
+    item.innerHTML = `<div class="cat-emoji">${emoji}</div><span>${s}</span>`;
+    item.onclick = () => editSelectSub(s);
+    dd.appendChild(item);
+  });
+}
+
+function editToggleCatPicker(which) {
+  const triggerId = which === 'cat' ? 'editCatPickerTrigger' : 'editSubPickerTrigger';
+  const ddId      = which === 'cat' ? 'editCatPickerDropdown' : 'editSubPickerDropdown';
+  const otherId   = which === 'cat' ? 'editSubPickerDropdown' : 'editCatPickerDropdown';
+  const otherTrig = which === 'cat' ? 'editSubPickerTrigger'  : 'editCatPickerTrigger';
+  document.getElementById(otherId)?.classList.remove('open');
+  document.getElementById(otherTrig)?.classList.remove('open');
+  const dd = document.getElementById(ddId);
+  const tr = document.getElementById(triggerId);
+  dd.classList.toggle('open');
+  tr.classList.toggle('open');
+}
+
+function editSelectCat(id, label, imgSrc) {
+  document.getElementById('editCategory').value = id;
+  const trigger = document.getElementById('editCatPickerTrigger');
+  trigger.innerHTML = `<img src="${imgSrc}" alt="" onerror="this.style.display='none'"><span>${label}</span><span class="trigger-arrow">▼</span>`;
+  document.querySelectorAll('#editCatPickerDropdown .cat-picker-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.value === id);
+  });
+  document.getElementById('editCatPickerDropdown').classList.remove('open');
+  trigger.classList.remove('open');
+  // reset subcategory
+  document.getElementById('editSubcategory').value = '';
+  const subTrigger = document.getElementById('editSubPickerTrigger');
+  subTrigger.innerHTML = `<span class="trigger-placeholder" id="editSubPickerLabel">Select subcategory…</span><span class="trigger-arrow">▼</span>`;
+  editBuildSubDropdown(id);
+}
+
+function editSelectSub(name) {
+  document.getElementById('editSubcategory').value = name;
+  const trigger = document.getElementById('editSubPickerTrigger');
+  const emoji = EDIT_CAT_EMOJI_MAP[name] || EDIT_CAT_EMOJI_MAP['default'];
+  trigger.innerHTML = `<span style="font-size:1.2rem">${emoji}</span><span>${name}</span><span class="trigger-arrow">▼</span>`;
+  document.getElementById('editSubPickerDropdown').classList.remove('open');
+  trigger.classList.remove('open');
+}
+
+// ── Edit listing: image slots ─────────────────────────────────
+const EDIT_MAX_IMAGES = 5;
+let editImageSlotCount = 0;
+
+function editAddImageSlot(prefillUrl, prefillTag, prefillPrice) {
+  if (editImageSlotCount >= EDIT_MAX_IMAGES) return;
+  editImageSlotCount++;
+  const wrap = document.getElementById('editImageSlots');
+  const slotId = 'editImgSlot_' + editImageSlotCount;
+  const div = document.createElement('div');
+  div.className = 'image-slot';
+  div.id = slotId;
+  div.dataset.uploadedUrl = prefillUrl || '';
+  div.innerHTML = `
+    <div class="image-slot-preview" id="${slotId}_preview">${prefillUrl ? `<img src="${prefillUrl}"/>` : '🖼️'}</div>
+    <div class="image-slot-fields">
+      <input type="file" accept="image/*" class="img-file-input" id="${slotId}_file" onchange="editHandleImageFile('${slotId}', this.files[0])"/>
+      <div class="image-slot-status" id="${slotId}_status">${prefillUrl ? '✓ Current photo' : ''}</div>
+      <div class="image-slot-row">
+        <input type="text" placeholder="Tag — e.g. Red, Size M (optional)" class="img-tag-input" value="${prefillTag || ''}"/>
+        <input type="number" placeholder="Price (optional)" class="img-price-input" min="0" value="${prefillPrice || ''}"/>
+      </div>
+    </div>
+    <button type="button" class="image-slot-remove" onclick="editRemoveImageSlot('${slotId}')">✕</button>
+  `;
+  wrap.appendChild(div);
+  if (editImageSlotCount >= EDIT_MAX_IMAGES) {
+    document.getElementById('editAddImageBtn').style.display = 'none';
+  }
+}
+
+function editRemoveImageSlot(slotId) {
+  document.getElementById(slotId)?.remove();
+  editImageSlotCount--;
+  document.getElementById('editAddImageBtn').style.display = 'block';
+}
+
+async function editHandleImageFile(slotId, file) {
+  if (!file) return;
+  const preview = document.getElementById(slotId + '_preview');
+  const status  = document.getElementById(slotId + '_status');
+  const slot    = document.getElementById(slotId);
+  if (!file.type.startsWith('image/')) {
+    if (status) { status.textContent = 'Please choose an image file'; status.className = 'image-slot-status err'; }
+    return;
+  }
+  if (preview) { preview.className = 'image-slot-preview uploading'; preview.innerHTML = '<div class="spinner"></div>'; }
+  if (status)  { status.textContent = 'Compressing…'; status.className = 'image-slot-status'; }
+  try {
+    const blob = await compressImage(file, { maxDimension: 1200, quality: 0.75 });
+    if (status) status.textContent = `Uploading… (${(blob.size/1024).toFixed(0)} KB)`;
+    const url = await uploadToWorker(blob, file.name, 'products');
+    slot.dataset.uploadedUrl = url;
+    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = `<img src="${url}"/>`; }
+    if (status)  { status.textContent = '✓ Uploaded'; status.className = 'image-slot-status ok'; }
+  } catch (err) {
+    slot.dataset.uploadedUrl = '';
+    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = '⚠️'; }
+    if (status)  { status.textContent = 'Upload failed — try again'; status.className = 'image-slot-status err'; }
+  }
+}
+
+function editCollectImages() {
+  const slots = document.querySelectorAll('#editImageSlots .image-slot');
+  const basePrice = parseFloat(document.getElementById('editListingPrice').value) || 0;
+  const images = [];
+  slots.forEach(slot => {
+    const url   = slot.dataset.uploadedUrl;
+    const tag   = slot.querySelector('.img-tag-input')?.value.trim();
+    const price = slot.querySelector('.img-price-input')?.value;
+    if (url) images.push({ url, tag: tag || '', variantPrice: price ? parseFloat(price) : basePrice });
+  });
+  return images;
+}
+
+// Close edit pickers when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#editCatPickerWrap')) {
+    document.getElementById('editCatPickerDropdown')?.classList.remove('open');
+    document.getElementById('editCatPickerTrigger')?.classList.remove('open');
+  }
+  if (!e.target.closest('#editSubPickerWrap')) {
+    document.getElementById('editSubPickerDropdown')?.classList.remove('open');
+    document.getElementById('editSubPickerTrigger')?.classList.remove('open');
+  }
+});
+
+// ── openEditListing / save / hide ─────────────────────────────
 function openEditListing(p) {
-  document.getElementById('editListingId').value = p.id;
-  document.getElementById('editListingName').value = p.productName || '';
-  document.getElementById('editListingDesc').value = p.description || '';
+  document.getElementById('editListingId').value    = p.id;
+  document.getElementById('editListingName').value  = p.productName || '';
+  document.getElementById('editListingDesc').value  = p.description || '';
   document.getElementById('editListingPrice').value = p.price || '';
-  document.getElementById('myListingsPanel').style.display='none';
-  document.getElementById('editListingPanel').style.display='block';
+
+  // Build category dropdown and pre-select
+  editBuildCatDropdown();
+  if (p.category) {
+    const cat = (CONFIG.CATEGORIES || []).find(c => c.id === p.category);
+    if (cat) editSelectCat(cat.id, cat.label, cat.image);
+  }
+  // Pre-select subcategory after cat is set
+  if (p.subcategory) {
+    editSelectSub(p.subcategory);
+  }
+
+  // Reset and prefill image slots
+  editImageSlotCount = 0;
+  document.getElementById('editImageSlots').innerHTML = '';
+  document.getElementById('editAddImageBtn').style.display = 'block';
+  const imgs = Array.isArray(p.images) ? p.images : [];
+  if (imgs.length) {
+    imgs.forEach(img => {
+      const url   = typeof img === 'string' ? img : img.url;
+      const tag   = typeof img === 'object' ? (img.tag || '') : '';
+      const price = typeof img === 'object' ? (img.variantPrice || '') : '';
+      editAddImageSlot(url, tag, price);
+    });
+  } else {
+    editAddImageSlot(); // one empty slot
+  }
+
+  document.getElementById('myListingsPanel').style.display = 'none';
+  document.getElementById('editListingPanel').style.display = 'block';
 }
 
 function hideEditListing() {
-  document.getElementById('editListingPanel').style.display='none';
-  document.getElementById('myListingsPanel').style.display='block';
+  document.getElementById('editListingPanel').style.display = 'none';
+  document.getElementById('myListingsPanel').style.display  = 'block';
 }
 
 async function saveEditListing() {
@@ -767,20 +1075,29 @@ async function saveEditListing() {
   const desc  = document.getElementById('editListingDesc').value.trim();
   const price = document.getElementById('editListingPrice').value;
 
-  if(!name || !price){ showToast('Product name and price are required','error'); return; }
+  if (!name || !price) { showToast('Product name and price are required', 'error'); return; }
+  if (document.querySelector('#editImageSlots .image-slot-preview.uploading')) {
+    showToast('Please wait for photos to finish uploading', 'error'); return;
+  }
+
+  const images = editCollectImages();
+  if (!images.length) { showToast('Please add at least one product photo', 'error'); return; }
 
   showToast('Saving…');
   try {
     await DB.updateMyListing(id, {
-      productName: name,
-      description: desc,
-      price: price,
+      productName:  name,
+      description:  desc,
+      price:        price,
+      category:     document.getElementById('editCategory').value || '',
+      subcategory:  document.getElementById('editSubcategory').value || '',
+      images:       images,
     });
-    showToast('Post updated!','success');
+    showToast('Post updated!', 'success');
     hideEditListing();
     showMyListings();
   } catch(e) {
-    showToast(e.message || 'Could not update post','error');
+    showToast(e.message || 'Could not update post', 'error');
   }
 }
 
