@@ -932,7 +932,10 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   gap: 18px;
   overflow-x: auto;
-  padding: 4px 2px 16px;
+  padding: 14px 14px 18px;
+  margin: 0 -14px 14px;
+  background: rgba(245,166,35,0.07);
+  border-radius: 14px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
