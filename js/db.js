@@ -176,17 +176,39 @@ const DB = (() => {
     };
   }
 
-  // ── Save a new listing locally (instant UI feedback only) ──
-  function saveMyListing(product) {
-    const existing = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
+  // ── Save a new listing locally AND send to Google Sheet via Apps Script ──
+  async function saveMyListing(product) {
     const newProduct = {
       ...product,
       id: 'local_' + Date.now(),
       timestamp: new Date().toISOString(),
       status: 'active',
     };
+
+    // Save locally first so it appears instantly in the UI
+    const existing = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
     existing.push(newProduct);
     localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(existing));
+
+    // Send to Google Sheet via Apps Script (same approach as delete/update)
+    try {
+      const res = await fetch(CONFIG.LISTINGS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'addListing', product: newProduct }),
+      });
+      const data = await res.json();
+      if (data.success && data.id) {
+        // Replace the local_ id with the real Sheet row id
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
+        const idx = stored.findIndex(p => p.id === newProduct.id);
+        if (idx !== -1) { stored[idx].id = data.id; localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(stored)); }
+      }
+    } catch(e) {
+      console.error('Failed to sync listing to Sheet:', e);
+      // Local save already done — product shows for the user even if sync failed
+    }
+
     return newProduct;
   }
 
