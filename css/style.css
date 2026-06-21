@@ -255,7 +255,7 @@ input, select, textarea { font-family: inherit; }
 
 /* ===== HERO ===== */
 .hero {
-  background-image: linear-gradient(120deg, rgba(15,14,26,0.05) 0%, rgba(15,14,26,0.05) 5%, rgba(15,14,26,0.05) 10%), url('../images/banners/Hero.jpg');
+  background-image: url('../images/banners/Hero.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
