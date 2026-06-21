@@ -531,13 +531,18 @@ const DB = (() => {
   }
 
   async function incrementMonthlyCount() {
-    const count = getMonthlyCount();
     const user = getCurrentUser();
     const limit = user.plan === 'paid' ? CONFIG.FREE_LIMIT + CONFIG.PAID_EXTRA : CONFIG.FREE_LIMIT;
+    // Count from actual listings — no dependency on monthlyCount in localStorage/sheet
+    const myList = await getMyListings();
+    const now = new Date();
+    const count = myList.filter(p => {
+      const d = new Date(p.timestamp);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    }).length;
     if (count >= limit) {
       throw new Error('limit_reached');
     }
-    await updateUser({ monthlyCount: count + 1, monthKey: getCurrentMonthKey() });
     return count + 1;
   }
 
