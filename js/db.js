@@ -507,13 +507,17 @@ const DB = (() => {
   function getMonthlyCount() {
     const user = getCurrentUser();
     if (!user) return 0;
-    if (user.monthKey !== getCurrentMonthKey()) {
-      // Reset for new month (fire-and-forget is fine here — local cache is updated
-      // synchronously inside updateUser before the async fetch starts)
-      updateUser({ monthlyCount: 0, monthKey: getCurrentMonthKey() });
+    const currentKey = getCurrentMonthKey();
+    const storedKey = String(user.monthKey || '');
+    // storedKey might be a full ISO string or already "YYYY-M" — normalise it
+    const normalisedKey = storedKey.startsWith(currentKey)
+      ? currentKey
+      : storedKey;
+    if (normalisedKey !== currentKey) {
+      updateUser({ monthlyCount: 0, monthKey: currentKey });
       return 0;
     }
-    return user.monthlyCount || 0;
+    return Number(user.monthlyCount) || 0;
   }
 
   async function incrementMonthlyCount() {
