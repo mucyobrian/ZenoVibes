@@ -505,14 +505,19 @@ function initSellPage() {
   populateCountrySelect('sellerWaCode', '+250');
 
   // Pre-fill from logged-in user
+  function prefillContactFields(user) {
+    if (document.getElementById('sellerName')) document.getElementById('sellerName').value = user.name || '';
+    parseStoredPhone(user.phone || '', 'sellerPhoneCode', 'sellerPhone');
+    parseStoredPhone(user.whatsapp || user.phone || '', 'sellerWaCode', 'sellerWhatsApp');
+    if (document.getElementById('sellerEmail')) document.getElementById('sellerEmail').value = user.email || '';
+    if (document.getElementById('sellerCity')) document.getElementById('sellerCity').value = user.city || '';
+  }
+
   const user = DB.getCurrentUser();
   if (user) {
-    if(document.getElementById('sellerName')) document.getElementById('sellerName').value=user.name||'';
-    parseStoredPhone(user.phone||'', 'sellerPhoneCode', 'sellerPhone');
-    parseStoredPhone(user.whatsapp||user.phone||'', 'sellerWaCode', 'sellerWhatsApp');
-    if(document.getElementById('sellerEmail')) document.getElementById('sellerEmail').value=user.email||'';
-    if(document.getElementById('sellerCity')) document.getElementById('sellerCity').value=user.city||'';
+    prefillContactFields(user);
     updateLimitBar();
+    DB.refreshCurrentUser().then(freshUser => { if (freshUser) prefillContactFields(freshUser); });
   } else {
     document.getElementById('loginGate').style.display='block';
     document.getElementById('formContent').style.display='none';
