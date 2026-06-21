@@ -510,21 +510,22 @@ const DB = (() => {
     const user = getCurrentUser();
     if (!user) return 0;
     if (user.monthKey !== getCurrentMonthKey()) {
-      // Reset for new month
+      // Reset for new month (fire-and-forget is fine here — local cache is updated
+      // synchronously inside updateUser before the async fetch starts)
       updateUser({ monthlyCount: 0, monthKey: getCurrentMonthKey() });
       return 0;
     }
     return user.monthlyCount || 0;
   }
 
-  function incrementMonthlyCount() {
+  async function incrementMonthlyCount() {
     const count = getMonthlyCount();
     const user = getCurrentUser();
     const limit = user.plan === 'paid' ? CONFIG.FREE_LIMIT + CONFIG.PAID_EXTRA : CONFIG.FREE_LIMIT;
     if (count >= limit) {
       throw new Error('limit_reached');
     }
-    updateUser({ monthlyCount: count + 1, monthKey: getCurrentMonthKey() });
+    await updateUser({ monthlyCount: count + 1, monthKey: getCurrentMonthKey() });
     return count + 1;
   }
 
