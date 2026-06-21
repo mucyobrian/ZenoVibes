@@ -778,11 +778,8 @@ async function submitListing() {
   try {
     // Increment monthly count
     DB.incrementMonthlyCount();
-    // Save locally so it appears instantly
-    DB.saveMyListing(product);
-
-    // Send to Google Sheets via Form
-    await sendToGoogleForm(product);
+    // Save locally AND sync to Google Sheet via Apps Script
+    await DB.saveMyListing(product);
 
     // Show success
     document.getElementById('sellForm').style.display='none';
@@ -801,35 +798,6 @@ async function submitListing() {
   }
 }
 
-async function sendToGoogleForm(product) {
-  const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/formResponse';
-  const params = new URLSearchParams();
-  params.set('entry.862644534',  product.sellerName);
-  params.set('entry.1250576708', product.sellerPhone);
-  params.set('entry.1719434925', product.sellerWhatsApp);
-  params.set('entry.1358767187', product.sellerEmail);
-  params.set('entry.678321680',  product.sellerCity);
-  params.set('entry.1295880774', product.sellerLat||'');
-  params.set('entry.1205633446', product.sellerLng||'');
-  params.set('entry.235954322',  product.productName);
-  params.set('entry.1645371455', product.description);
-  params.set('entry.593771608',  product.price);
-  params.set('entry.1750631076', product.category);
-  params.set('entry.1493886285', product.subcategory);
-  params.set('entry.928448056',  JSON.stringify(product.images||[]));
-  params.set('entry.230500811',  product.sellerAvatarUrl || '');
-
-  try {
-    await fetch(formUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    });
-  } catch(e) {
-    console.error('Google Form submission failed:', e);
-  }
-}
 
 function resetForm() {
   document.getElementById('sellForm').style.display='block';
