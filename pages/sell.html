@@ -623,17 +623,19 @@ async function handleImageFile(slotId, file) {
 function collectImages() {
   const slots = document.querySelectorAll('.image-slot');
   const images = [];
-  const basePrice = parseFloat(document.getElementById('price').value) || 0;
   slots.forEach(slot => {
     const url   = slot.dataset.uploadedUrl;
     const tag   = slot.querySelector('.img-tag-input')?.value.trim();
     const price = slot.querySelector('.img-price-input')?.value;
     if (url) {
-      images.push({
-        url,
-        tag: tag || '',
-        price: price ? parseFloat(price) : basePrice
-      });
+      const img = { url, tag: tag || '' };
+      // Only attach a price if the seller actually typed a per-photo
+      // override. Otherwise leave it unset so the detail page always
+      // falls back to the listing's current base price — baking today's
+      // base price into every photo would freeze it there forever, even
+      // after the seller later changes the base price.
+      if (price) img.price = parseFloat(price);
+      images.push(img);
     }
   });
   return images;

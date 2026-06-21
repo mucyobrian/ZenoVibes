@@ -1077,13 +1077,16 @@ async function editHandleImageFile(slotId, file) {
 
 function editCollectImages() {
   const slots = document.querySelectorAll('#editImageSlots .image-slot');
-  const basePrice = parseFloat(document.getElementById('editListingPrice').value) || 0;
   const images = [];
   slots.forEach(slot => {
     const url   = slot.dataset.uploadedUrl;
     const tag   = slot.querySelector('.img-tag-input')?.value.trim();
     const price = slot.querySelector('.img-price-input')?.value;
-    if (url) images.push({ url, tag: tag || '', price: price ? parseFloat(price) : basePrice });
+    if (url) {
+      const img = { url, tag: tag || '' };
+      if (price) img.price = parseFloat(price);
+      images.push(img);
+    }
   });
   return images;
 }
