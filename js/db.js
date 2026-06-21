@@ -514,13 +514,16 @@ const DB = (() => {
   function getMonthlyCount() {
     const user = getCurrentUser();
     if (!user) return 0;
-    const currentKey = getCurrentMonthKey();
+    const currentKey = getCurrentMonthKey(); // e.g. "2026-6"
     const storedKey = String(user.monthKey || '');
-    // storedKey might be a full ISO string or already "YYYY-M" — normalise it
-    const normalisedKey = storedKey.startsWith(currentKey)
-      ? currentKey
-      : storedKey;
-    if (normalisedKey !== currentKey) {
+    // storedKey might be an ISO date like "2026-06-01T07:00:00.000Z"
+    // or already "YYYY-M" — extract year and month to compare
+    const keyToMonth = function(k) {
+      const d = new Date(k);
+      if (!isNaN(d)) return d.getFullYear() + '-' + (d.getMonth() + 1);
+      return k; // already in YYYY-M format
+    };
+    if (keyToMonth(storedKey) !== currentKey) {
       updateUser({ monthlyCount: 0, monthKey: currentKey });
       return 0;
     }
