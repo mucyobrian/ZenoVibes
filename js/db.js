@@ -416,6 +416,24 @@ const DB = (() => {
 
   // Updates the user's profile/plan/monthlyCount on the server, then
   // refreshes the local cache so synchronous getters stay accurate.
+  async function refreshCurrentUser() {
+    const user = getCurrentUser();
+    if (!user) return null;
+    try {
+      const res = await fetch(CONFIG.LISTINGS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'update', target: 'user', id: user.id, updates: {} }),
+      });
+      const result = await res.json();
+      if (result.success && result.user) {
+        cacheCurrentUser(result.user);
+        return result.user;
+      }
+    } catch (e) { /* fall back to cache silently */ }
+    return user;
+  }
+
   async function updateUser(updates) {
     const user = getCurrentUser();
     if (!user) return null;
@@ -514,6 +532,7 @@ const DB = (() => {
     register,
     login,
     logout,
+    refreshCurrentUser,
     updateUser,
     getMonthlyCount,
     incrementMonthlyCount,
