@@ -54,16 +54,58 @@ function buildCategoryPills() {
   `).join('');
 }
 
-// ── Populate category filter dropdown ───────────
+// ── Populate category image picker ───────────────
 function populateCategoryFilter() {
-  const sel = document.getElementById('filterCat');
-  if (!sel) return;
-  CONFIG.CATEGORIES.filter(c => c.id !== 'all').forEach(cat => {
-    const opt = document.createElement('option');
-    opt.value = cat.id;
-    opt.textContent = cat.label;
-    sel.appendChild(opt);
+  const dropdown = document.getElementById('catPickerDropdown');
+  if (!dropdown) return;
+  const allCats = CONFIG.CATEGORIES;
+  dropdown.innerHTML = allCats.map(cat => `
+    <button type="button" onclick="selectCatFromPicker('${cat.id}')" style="
+      display:flex;align-items:center;gap:10px;width:100%;
+      padding:9px 14px;border:none;background:none;cursor:pointer;
+      font-size:0.9rem;color:var(--text);text-align:left;font-family:inherit;
+      transition:background 0.12s;
+    " onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">
+      <img src="${cat.image}" alt="${cat.label}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0"
+        onerror="this.style.display='none'"/>
+      <span>${cat.label}</span>
+    </button>
+  `).join('');
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('catPickerWrap')?.contains(e.target)) {
+      document.getElementById('catPickerDropdown').style.display = 'none';
+    }
   });
+}
+
+function toggleCatPicker() {
+  const dd = document.getElementById('catPickerDropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function selectCatFromPicker(catId) {
+  const cat = CONFIG.CATEGORIES.find(c => c.id === catId);
+  const label = document.getElementById('catPickerLabel');
+  const thumb = document.getElementById('catPickerThumb');
+  const hidden = document.getElementById('filterCat');
+  if (catId === 'all' || !cat) {
+    label.textContent = 'All Categories';
+    thumb.style.display = 'none';
+    hidden.value = '';
+  } else {
+    label.textContent = cat.label;
+    thumb.src = cat.image;
+    thumb.style.display = 'block';
+    hidden.value = catId;
+  }
+  document.getElementById('catPickerDropdown').style.display = 'none';
+  // Sync category pills
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  const pill = [...document.querySelectorAll('.cat-pill')].find(p => p.getAttribute('onclick')?.includes(`'${catId}'`));
+  if (pill) pill.classList.add('active');
+  activeCat = catId === 'all' ? 'all' : catId;
+  buildCategorySections();
 }
 
 // ── Category pill click ──────────────────────────
@@ -71,8 +113,23 @@ function selectCategory(catId, el) {
   activeCat = catId;
   document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
   if (el) el.classList.add('active');
+  // Sync hidden input
   const filterCat = document.getElementById('filterCat');
   if (filterCat) filterCat.value = catId === 'all' ? '' : catId;
+  // Sync image picker display
+  const cat = CONFIG.CATEGORIES.find(c => c.id === catId);
+  const label = document.getElementById('catPickerLabel');
+  const thumb = document.getElementById('catPickerThumb');
+  if (label && thumb) {
+    if (!cat || catId === 'all') {
+      label.textContent = 'All Categories';
+      thumb.style.display = 'none';
+    } else {
+      label.textContent = cat.label;
+      thumb.src = cat.image;
+      thumb.style.display = 'block';
+    }
+  }
   applyFilters();
 }
 
