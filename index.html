@@ -77,11 +77,26 @@
 <!-- ===== FILTER BAR ===== -->
 <section class="filter-bar">
   <div class="container filter-inner">
-    <div class="filter-group">
+    <div class="filter-group" style="position:relative">
       <label>Category</label>
-      <select id="filterCat" onchange="applyFilters()">
-        <option value="">All Categories</option>
-      </select>
+      <div id="catPickerWrap" style="position:relative">
+        <button id="catPickerTrigger" type="button" onclick="toggleCatPicker()" style="
+          width:100%;display:flex;align-items:center;gap:8px;
+          padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+          background:var(--surface);cursor:pointer;font-size:0.9rem;color:var(--text);
+          text-align:left;font-family:inherit;
+        ">
+          <img id="catPickerThumb" src="" alt="" style="width:24px;height:24px;border-radius:4px;object-fit:cover;display:none"/>
+          <span id="catPickerLabel">All Categories</span>
+          <svg style="margin-left:auto;flex-shrink:0" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div id="catPickerDropdown" style="
+          display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:200;
+          background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+          box-shadow:var(--shadow-lg);min-width:220px;max-height:320px;overflow-y:auto;
+        "></div>
+      </div>
+      <input type="hidden" id="filterCat" value=""/>
     </div>
     <div class="filter-group">
       <label>Price Range</label>
