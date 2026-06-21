@@ -685,16 +685,28 @@ async function showDashboard(user) {
   document.getElementById('dashPhone').textContent  = user.phone||'';
   document.getElementById('dashPlan').textContent   = user.plan==='paid'?'⭐ Paid Plan':'Free Plan';
 
-  const used   = DB.getMonthlyCount();
   const limit  = DB.getProductLimit();
 
-  document.getElementById('statUsed').textContent   = used;
-  document.getElementById('statRemain').textContent = Math.max(0,limit-used);
+  document.getElementById('statUsed').textContent   = '…';
+  document.getElementById('statRemain').textContent = '…';
   document.getElementById('statTotal').textContent  = '…';
   document.getElementById('listingsBadge').textContent = '…';
   document.getElementById('favoritesBadge').textContent = '…';
 
   const myList = await DB.getMyListings();
+
+  // Count posts made this calendar month from actual listing timestamps
+  const now = new Date();
+  const currentYear  = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-indexed
+  const usedThisMonth = myList.filter(p => {
+    if (!p.timestamp) return false;
+    const d = new Date(p.timestamp);
+    return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+  }).length;
+
+  document.getElementById('statUsed').textContent   = usedThisMonth;
+  document.getElementById('statRemain').textContent = Math.max(0, limit - usedThisMonth);
   document.getElementById('statTotal').textContent  = myList.length;
   document.getElementById('listingsBadge').textContent = myList.length;
 
