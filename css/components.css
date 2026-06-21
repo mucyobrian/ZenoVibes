@@ -79,7 +79,8 @@
 
 .field input.error,
 .field select.error,
-.field textarea.error {
+.field textarea.error,
+#catPickerTrigger.error {
   border-color: var(--danger);
 }
 
