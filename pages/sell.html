@@ -781,8 +781,8 @@ async function submitListing() {
     // Save locally so it appears instantly
     DB.saveMyListing(product);
 
-    // Send to Google Sheets via Form (fires and forgets — no CORS issue)
-    sendToGoogleForm(product);
+    // Send to Google Sheets via Form
+    await sendToGoogleForm(product);
 
     // Show success
     document.getElementById('sellForm').style.display='none';
@@ -801,7 +801,7 @@ async function submitListing() {
   }
 }
 
-function sendToGoogleForm(product) {
+async function sendToGoogleForm(product) {
   const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/formResponse';
   const params = new URLSearchParams();
   params.set('entry.862644534',  product.sellerName);
@@ -817,13 +817,18 @@ function sendToGoogleForm(product) {
   params.set('entry.1750631076', product.category);
   params.set('entry.1493886285', product.subcategory);
   params.set('entry.928448056',  JSON.stringify(product.images||[]));
-  params.set('entry.230500811', product.sellerAvatarUrl || '');
+  params.set('entry.230500811',  product.sellerAvatarUrl || '');
 
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.src = `${formUrl}?${params.toString()}`;
-  document.body.appendChild(iframe);
-  setTimeout(() => iframe.remove(), 5000);
+  try {
+    await fetch(formUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+  } catch(e) {
+    console.error('Google Form submission failed:', e);
+  }
 }
 
 function resetForm() {
