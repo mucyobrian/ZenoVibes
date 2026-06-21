@@ -783,8 +783,8 @@ async function submitListing() {
   };
 
   try {
-    // Increment monthly count
-    DB.incrementMonthlyCount();
+    // Increment monthly count (await so the server write completes before we continue)
+    await DB.incrementMonthlyCount();
     // Save locally AND sync to Google Sheet via Apps Script
     await DB.saveMyListing(product);
 
