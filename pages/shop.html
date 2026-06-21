@@ -153,8 +153,8 @@
     <div class="skeleton-card"></div><div class="skeleton-card"></div>
   </div>
   <p class="no-results hidden" id="noResults">No products match your filters. <a href="#" onclick="clearFilters()">Clear filters</a></p>
-  <div style="text-align:center;margin-top:32px">
-    <button id="loadMoreBtn" class="btn-primary" onclick="loadMore()" style="display:none">Load More</button>
+  <div id="scrollSentinel" style="text-align:center;margin-top:32px;padding:20px 0">
+    <div id="loadMoreSpinner" class="spinner" style="display:none;margin:0 auto"></div>
   </div>
 </main>
 
@@ -396,23 +396,44 @@ function setView(v) {
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
   const noRes= document.getElementById('noResults');
-  const loadMore = document.getElementById('loadMoreBtn');
+  const spinner = document.getElementById('loadMoreSpinner');
   if (!grid) return;
   const loc = getUserLocation();
   const toShow = filteredProducts.slice(0, pageSize * currentPage);
   if (toShow.length===0) {
     grid.innerHTML='';
     if(noRes) noRes.classList.remove('hidden');
-    if(loadMore) loadMore.style.display='none';
+    if(spinner) spinner.style.display='none';
     return;
   }
   if(noRes) noRes.classList.add('hidden');
   const isListView = currentView === 'list';
   grid.innerHTML = toShow.map(p=>buildProductCard(p,loc?.lat,loc?.lng,isListView)).join('');
-  if(loadMore) loadMore.style.display = toShow.length < filteredProducts.length ? 'inline-block' : 'none';
+  const hasMore = toShow.length < filteredProducts.length;
+  if(spinner) spinner.style.display = hasMore ? 'block' : 'none';
+  isLoadingMore = false;
 }
 
-function loadMore() { currentPage++; renderProducts(); }
+function loadMore() {
+  if (isLoadingMore) return;
+  const total = filteredProducts.length;
+  if (pageSize * currentPage >= total) return;
+  isLoadingMore = true;
+  currentPage++;
+  renderProducts();
+}
+
+// ── Infinite scroll ──────────────────────────────
+let isLoadingMore = false;
+const scrollSentinel = document.getElementById('scrollSentinel');
+if (scrollSentinel && 'IntersectionObserver' in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) loadMore();
+    });
+  }, { rootMargin: '300px' });
+  observer.observe(scrollSentinel);
+}
 
 function clearFilters() {
   activeCat='all';
