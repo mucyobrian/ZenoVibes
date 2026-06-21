@@ -934,7 +934,7 @@ input, select, textarea { font-family: inherit; }
   overflow-x: auto;
   padding: 14px 14px 18px;
   margin: 0 -14px 14px;
-  background: rgba(245,166,35,1.03);
+  background: rgba(245,166,35,0.3);
   border-radius: 14px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
