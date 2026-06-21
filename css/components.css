@@ -800,6 +800,37 @@
   background: var(--bg);
 }
 
+/* ── Favorite (heart) toggle button on product cards ── */
+.fav-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.92);
+  color: var(--text-muted, #6b7280);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  transition: transform 0.15s, color 0.15s;
+  z-index: 2;
+}
+.fav-btn:hover { transform: scale(1.1); }
+.fav-btn.is-fav { color: #e0245e; }
+.fav-btn:active { transform: scale(0.92); }
+
+.list-img-wrap .fav-btn {
+  width: 26px;
+  height: 26px;
+  top: 6px;
+  right: 6px;
+}
+.list-img-wrap .fav-btn svg { width: 14px; height: 14px; }
+
 .list-info {
   flex: 1;
   padding: 10px 14px;
