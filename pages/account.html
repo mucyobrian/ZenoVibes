@@ -296,6 +296,12 @@
         <span class="menu-badge" id="listingsBadge">0</span>
         <span class="menu-arrow">›</span>
       </div>
+      <div class="account-menu-item" onclick="showMyFavorites()">
+        <div class="menu-icon" style="background:#ffeaf1">❤️</div>
+        <div class="menu-text"><strong>My Favorites</strong><span>Products you've saved</span></div>
+        <span class="menu-badge" id="favoritesBadge">0</span>
+        <span class="menu-arrow">›</span>
+      </div>
       <a href="shop.html" class="account-menu-item" style="text-decoration:none;color:inherit">
         <div class="menu-icon" style="background:#fff3e0">🛍️</div>
         <div class="menu-text"><strong>Browse Shop</strong><span>Find products from other sellers</span></div>
@@ -341,6 +347,21 @@
       <h3>No posts yet</h3>
       <p>Start selling today — it's free for your first 30 products!</p>
       <a href="sell.html" class="btn-primary" style="display:inline-block;margin-top:8px">+ List a Product</a>
+    </div>
+  </div>
+</div>
+
+<!-- MY FAVORITES PANEL -->
+<div id="myFavoritesPanel" style="display:none">
+  <div class="container account-page">
+    <div class="back-btn" onclick="hideMyFavorites()">← Back to Account</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">My Favorites</h2>
+    <div id="myFavoritesGrid" class="products-grid"></div>
+    <div id="myFavoritesEmpty" class="empty-state" style="display:none">
+      <div class="empty-emoji">❤️</div>
+      <h3>No favorites yet</h3>
+      <p>Tap the heart on any product to save it here.</p>
+      <a href="shop.html" class="btn-primary" style="display:inline-block;margin-top:8px">Browse Shop</a>
     </div>
   </div>
 </div>
@@ -642,6 +663,7 @@ async function showDashboard(user) {
   document.getElementById('authSection').style.display='none';
   document.getElementById('dashSection').style.display='block';
   document.getElementById('myListingsPanel').style.display='none';
+  document.getElementById('myFavoritesPanel').style.display='none';
   document.getElementById('editProfilePanel').style.display='none';
   const elp = document.getElementById('editListingPanel');
   if (elp) elp.style.display='none';
@@ -662,10 +684,14 @@ async function showDashboard(user) {
   document.getElementById('statRemain').textContent = Math.max(0,limit-used);
   document.getElementById('statTotal').textContent  = '…';
   document.getElementById('listingsBadge').textContent = '…';
+  document.getElementById('favoritesBadge').textContent = '…';
 
   const myList = await DB.getMyListings();
   document.getElementById('statTotal').textContent  = myList.length;
   document.getElementById('listingsBadge').textContent = myList.length;
+
+  const favIds = await DB.getFavorites();
+  document.getElementById('favoritesBadge').textContent = favIds.length;
 }
 
 function showLogin() {
@@ -834,6 +860,44 @@ function hideMyListings() {
   document.getElementById('myListingsPanel').style.display='none';
   document.getElementById('dashSection').style.display='block';
 }
+
+async function showMyFavorites() {
+  document.getElementById('dashSection').style.display='none';
+  document.getElementById('myFavoritesPanel').style.display='block';
+  const grid  = document.getElementById('myFavoritesGrid');
+  const empty = document.getElementById('myFavoritesEmpty');
+  empty.style.display='none';
+  grid.innerHTML = '<p style="color:var(--text-muted);padding:20px 0">Loading your favorites…</p>';
+
+  const favorites = await DB.getFavoriteProducts();
+
+  if (favorites.length === 0) { grid.innerHTML=''; empty.style.display='block'; return; }
+  grid.innerHTML = favorites.map(p => buildProductCard(p)).join('');
+}
+
+function hideMyFavorites() {
+  document.getElementById('myFavoritesPanel').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+  // Badge may be stale if items were unfavorited from inside the panel
+  DB.getFavorites(true).then(ids => {
+    document.getElementById('favoritesBadge').textContent = ids.length;
+  });
+}
+
+// If a product gets unfavorited while the My Favorites panel is open,
+// drop its card immediately rather than leaving a "favorite" that
+// no longer is one sitting in the list until the next reload.
+document.addEventListener('favoritechange', (e) => {
+  const panel = document.getElementById('myFavoritesPanel');
+  if (!panel || panel.style.display === 'none') return;
+  if (e.detail.isFavorite) return; // only react to removals here
+  const grid = document.getElementById('myFavoritesGrid');
+  const card = grid.querySelector(`[data-product-id="${e.detail.productId}"]`)?.closest('.product-card, .product-card--list');
+  if (card) card.remove();
+  if (!grid.children.length) {
+    document.getElementById('myFavoritesEmpty').style.display = 'block';
+  }
+});
 
 // deleteListingConfirm is now handled by the modal at the bottom of the page
 

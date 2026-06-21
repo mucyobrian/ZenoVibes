@@ -164,7 +164,12 @@
 
     <!-- Title / Price -->
     <span class="detail-category" id="detailCategory"></span>
-    <h1 class="detail-title" id="detailTitle"></h1>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+      <h1 class="detail-title" id="detailTitle" style="margin-bottom:0"></h1>
+      <button id="detailFavBtn" class="fav-btn" style="position:static;flex-shrink:0;width:38px;height:38px;box-shadow:0 1px 4px rgba(0,0,0,0.15)" onclick="handleDetailFavClick()" aria-label="Add to favorites">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+    </div>
     <div class="detail-price" id="detailPrice"></div>
 
     <!-- Variant tags -->
@@ -223,6 +228,7 @@ async function initDetail() {
   if (!id) { showNotFound(); return; }
 
   let all = await DB.getProducts();
+  await DB.getFavorites();
 
   // If this id is a not-yet-synced local stub, pull it in directly
   if (String(id).startsWith('local_')) {
@@ -249,6 +255,31 @@ function normalizeImages(p) {
 function showNotFound() {
   document.getElementById('loadingState').innerHTML =
     '<div class="empty-state"><div class="empty-emoji">😕</div><h3>Product not found</h3><p>It may have been removed.</p><a href="shop.html" class="btn-primary" style="display:inline-block;margin-top:8px">Browse Shop</a></div>';
+}
+
+function setDetailFavUI(isFav) {
+  const btn = document.getElementById('detailFavBtn');
+  if (!btn) return;
+  btn.classList.toggle('is-fav', isFav);
+  const path = btn.querySelector('path');
+  if (path) path.setAttribute('fill', isFav ? 'currentColor' : 'none');
+  btn.setAttribute('aria-label', isFav ? 'Remove from favorites' : 'Add to favorites');
+}
+
+async function handleDetailFavClick() {
+  if (!DB.getCurrentUser()) {
+    showToast('Sign in to save favorites', 'error');
+    window.location.href = 'account.html';
+    return;
+  }
+  const willBeFav = !DB.isFavorite(product.id);
+  setDetailFavUI(willBeFav); // optimistic
+  try {
+    await DB.toggleFavorite(product.id);
+  } catch (e) {
+    setDetailFavUI(!willBeFav); // roll back
+    showToast(e.message || 'Could not update favorites', 'error');
+  }
 }
 
 function renderDetail() {
@@ -289,6 +320,9 @@ function renderDetail() {
   document.getElementById('detailCategory').innerHTML = `${getCatEmoji(product.category)} ${getCatLabel(product.category)}`;
   document.getElementById('detailTitle').textContent = product.productName;
   document.getElementById('detailDesc').textContent = product.description || 'No description provided.';
+
+  // Favorite heart state
+  setDetailFavUI(DB.isFavorite(product.id));
 
   // Variant tags (only show if any image has a non-empty tag)
   const hasTags = images.some(img => img.tag && img.tag.trim());
