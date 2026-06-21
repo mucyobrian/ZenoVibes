@@ -580,7 +580,7 @@
 .cat-card {
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 24px 16px;
+  padding: 0;
   text-align: center;
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -589,12 +589,14 @@
   text-decoration: none;
   color: inherit;
   display: block;
+  overflow: hidden;
 }
 .cat-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 
 .cat-card-emoji { font-size: 2.5rem; margin-bottom: 10px; display: block; }
 .cat-card h3 { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
-.cat-card span { font-size: 0.78rem; color: var(--text-muted); }
+.cat-card span:not(.cat-card-img):not(.cat-card-emoji-fallback) { font-size: 0.78rem; color: var(--text-muted); }
+.cat-card .cat-card-body { padding: 12px 14px 16px; }
 
 /* ===== AUTH FORMS ===== */
 .auth-page {
