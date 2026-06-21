@@ -835,19 +835,7 @@ function hideMyListings() {
   document.getElementById('dashSection').style.display='block';
 }
 
-async function deleteListingConfirm(id) {
-  if(!confirm('Delete this post permanently? This cannot be undone.')) return;
-  showToast('Deleting…');
-  try {
-    await DB.deleteMyListing(id);
-    showToast('Post deleted','success');
-    showMyListings();
-    const user=DB.getCurrentUser();
-    if(user) showDashboard(user);
-  } catch(e) {
-    showToast(e.message || 'Could not delete post','error');
-  }
-}
+// deleteListingConfirm is now handled by the modal at the bottom of the page
 
 // ── Edit listing: category picker ────────────────────────────────
 const EDIT_CAT_EMOJI_MAP = {
@@ -1350,5 +1338,93 @@ function showUpgradeModal() {
 
 document.addEventListener('DOMContentLoaded', initAccount);
 </script>
+<!-- ===== DELETE CONFIRMATION MODAL ===== -->
+<div id="deleteModal" style="
+  display:none;
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(15,14,26,0.55);
+  backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+  padding:16px;
+">
+  <div style="
+    background:#fff;
+    border-radius:20px;
+    padding:32px 24px 24px;
+    max-width:360px;width:100%;
+    box-shadow:0 16px 48px rgba(26,20,100,0.22);
+    text-align:center;
+    animation:popIn 0.18s ease;
+  ">
+    <div style="font-size:2.8rem;margin-bottom:12px">🗑️</div>
+    <h3 style="font-size:1.2rem;font-weight:700;color:#0f0e1a;margin-bottom:8px">Delete this post?</h3>
+    <p style="color:#6b7280;font-size:0.92rem;line-height:1.5;margin-bottom:28px">
+      This will permanently remove your listing. Buyers won't be able to find it anymore. This cannot be undone.
+    </p>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeDeleteModal()" style="
+        flex:1;padding:13px;
+        background:#f3f4f6;color:#374151;
+        border:none;border-radius:12px;
+        font-weight:600;font-size:0.95rem;cursor:pointer;
+        transition:background 0.15s;
+      " onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+        Cancel
+      </button>
+      <button onclick="confirmDeleteListing()" style="
+        flex:1;padding:13px;
+        background:#ef4444;color:#fff;
+        border:none;border-radius:12px;
+        font-weight:600;font-size:0.95rem;cursor:pointer;
+        transition:background 0.15s;
+      " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+        Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+</style>
+
+<script>
+let _pendingDeleteId = null;
+
+function deleteListingConfirm(id) {
+  _pendingDeleteId = id;
+  const modal = document.getElementById('deleteModal');
+  modal.style.display = 'flex';
+}
+
+function closeDeleteModal() {
+  _pendingDeleteId = null;
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+async function confirmDeleteListing() {
+  if (!_pendingDeleteId) return;
+  closeDeleteModal();
+  showToast('Deleting…');
+  try {
+    await DB.deleteMyListing(_pendingDeleteId);
+    showToast('Post deleted', 'success');
+    showMyListings();
+    const user = DB.getCurrentUser();
+    if (user) showDashboard(user);
+  } catch(e) {
+    showToast(e.message || 'Could not delete post', 'error');
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDeleteModal();
+});
+</script>
+
 </body>
 </html>
