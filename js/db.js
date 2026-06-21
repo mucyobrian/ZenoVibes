@@ -192,10 +192,27 @@ const DB = (() => {
 
     // Send to Google Sheet via Apps Script (same approach as delete/update)
     try {
+      // Send only the product fields — not the local id or timestamp (Apps Script generates those)
+      const payload = {
+        sellerName:     newProduct.sellerName,
+        sellerPhone:    newProduct.sellerPhone,
+        sellerWhatsApp: newProduct.sellerWhatsApp,
+        sellerEmail:    newProduct.sellerEmail,
+        sellerCity:     newProduct.sellerCity,
+        sellerLat:      newProduct.sellerLat,
+        sellerLng:      newProduct.sellerLng,
+        productName:    newProduct.productName,
+        description:    newProduct.description,
+        price:          newProduct.price,
+        category:       newProduct.category,
+        subcategory:    newProduct.subcategory,
+        images:         newProduct.images,
+        sellerAvatarUrl: newProduct.sellerAvatarUrl,
+      };
       const res = await fetch(CONFIG.LISTINGS_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'addListing', product: newProduct }),
+        body: JSON.stringify({ action: 'addListing', product: payload }),
       });
       const data = await res.json();
       if (data.success && data.id) {
@@ -203,6 +220,8 @@ const DB = (() => {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
         const idx = stored.findIndex(p => p.id === newProduct.id);
         if (idx !== -1) { stored[idx].id = data.id; localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(stored)); }
+        // Bust the product cache so the new listing shows in the shop immediately
+        localStorage.removeItem(STORAGE_KEYS.CACHE_TIME);
       }
     } catch(e) {
       console.error('Failed to sync listing to Sheet:', e);
