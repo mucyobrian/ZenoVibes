@@ -328,6 +328,8 @@ function buildPhone(codeSelId, inputId) {
 }
 
 function parseStoredPhone(full, codeSelId, inputId) {
+  if (!full && full !== 0) return;
+  full = String(full).trim();          // Google Sheets may return a number, not a string
   if (!full) return;
   let normalized = full.startsWith('+') ? full : '+' + full;
   const match = COUNTRY_CODES.find(c => normalized.startsWith(c.code));
