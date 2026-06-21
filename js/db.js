@@ -468,8 +468,15 @@ const DB = (() => {
       });
       const result = await res.json();
       if (result.success && result.user) {
-        cacheCurrentUser(result.user);
-        return result.user;
+        // Keep local monthlyCount and monthKey — the server value is stale
+        // because the sheet lags behind the optimistic local increment.
+        const merged = { ...result.user };
+        if (user.monthlyCount > (Number(result.user.monthlyCount) || 0)) {
+          merged.monthlyCount = user.monthlyCount;
+          merged.monthKey = user.monthKey;
+        }
+        cacheCurrentUser(merged);
+        return merged;
       }
     } catch (e) { /* fall back to cache silently */ }
     return user;
