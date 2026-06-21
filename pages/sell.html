@@ -140,8 +140,8 @@
         <h3>📦 Product Details</h3>
         <div class="field">
           <label>Product Name <span class="required">*</span></label>
-          <input type="text" id="productName" placeholder="e.g. Samsung Galaxy A54 — 128GB" maxlength="100"/>
-          <span class="field-error" id="err_productName">Please enter a product name</span>
+          <input type="text" id="productName" placeholder="e.g. Samsung Galaxy A54 — 128GB" maxlength="100" oninput="clearFieldError('productName')"/>
+          <div class="field-error" id="err_productName"></div>
         </div>
         <div class="field">
           <label>Description <span class="required">*</span></label>
@@ -161,7 +161,7 @@
               </div>
               <div class="cat-picker-dropdown" id="catPickerDropdown"></div>
             </div>
-            <span class="field-error" id="err_category">Please select a category</span>
+            <div class="field-error" id="err_category"></div>
           </div>
           <div class="field">
             <label>Subcategory</label>
@@ -179,8 +179,8 @@
         </div>
         <div class="field">
           <label>Price (RWF) <span class="required">*</span></label>
-          <input type="number" id="price" placeholder="e.g. 50000" min="0"/>
-          <span class="field-error" id="err_price">Please enter a valid price</span>
+          <input type="number" id="price" placeholder="e.g. 50000" min="0" oninput="clearFieldError('price')"/>
+          <div class="field-error" id="err_price"></div>
           <div class="field-hint">This is your default/starting price. You can set a different price per image below (e.g. different colors or sizes).</div>
         </div>
 
@@ -188,6 +188,7 @@
           <label>Product Photos <span class="required">*</span> (up to 5)</label>
           <div class="field-hint" style="margin-bottom:10px">📸 Choose photos straight from your phone or computer — they'll be compressed and uploaded automatically. Tag each photo with a color, size, or option, and give it its own price if it's different.</div>
           <div id="imageSlots"></div>
+          <div class="field-error" id="err_images"></div>
           <button type="button" id="addImageBtn" onclick="addImageSlot()" style="margin-top:8px;padding:10px 16px;border:1.5px dashed var(--primary);background:transparent;color:var(--primary);border-radius:var(--radius-sm);font-weight:600;font-size:0.85rem;cursor:pointer;width:100%">
             + Add Another Photo
           </button>
@@ -199,13 +200,13 @@
         <div class="field-row">
           <div class="field">
             <label>Your Name <span class="required">*</span></label>
-            <input type="text" id="sellerName" placeholder="Full name"/>
-            <span class="field-error" id="err_sellerName">Please enter your name</span>
+            <input type="text" id="sellerName" placeholder="Full name" oninput="clearFieldError('sellerName')"/>
+            <div class="field-error" id="err_sellerName"></div>
           </div>
           <div class="field">
             <label>City / District <span class="required">*</span></label>
-            <input type="text" id="sellerCity" placeholder="e.g. Kigali"/>
-            <span class="field-error" id="err_sellerCity">Please enter your city</span>
+            <input type="text" id="sellerCity" placeholder="e.g. Kigali" oninput="clearFieldError('sellerCity')"/>
+            <div class="field-error" id="err_sellerCity"></div>
           </div>
         </div>
         <div class="field-row">
@@ -213,9 +214,9 @@
             <label>Phone Number <span class="required">*</span></label>
             <div class="phone-wrap">
               <select class="country-select" id="sellerPhoneCode" onchange="syncWaCode('sellerPhoneCode','sellerWaCode')"></select>
-              <input type="tel" id="sellerPhone" placeholder="7XX XXX XXX"/>
+              <input type="tel" id="sellerPhone" placeholder="7XX XXX XXX" oninput="clearFieldError('sellerPhone')"/>
             </div>
-            <span class="field-error" id="err_sellerPhone">Please enter a valid phone number</span>
+            <div class="field-error" id="err_sellerPhone"></div>
           </div>
           <div class="field">
             <label>WhatsApp Number</label>
@@ -455,6 +456,9 @@ function selectCat(id, label, imgSrc) {
     el.classList.toggle('selected', el.dataset.value===id);
   });
   document.getElementById('catPickerDropdown').classList.remove('open');
+  // clear any validation error on the category field
+  clearFieldError('category');
+  document.getElementById('catPickerTrigger')?.classList.remove('error');
   // rebuild sub dropdown
   buildSubDropdown(id);
 }
@@ -598,6 +602,7 @@ async function handleImageFile(slotId, file) {
     slot.dataset.uploadedUrl = url;
     if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = `<img src="${url}"/>`; }
     if (status)  { status.textContent = '✓ Uploaded'; status.className = 'image-slot-status ok'; }
+    clearFieldError('images');
 
   } catch (err) {
     slot.dataset.uploadedUrl = '';
@@ -670,44 +675,70 @@ function detectLocation() {
   }, ()=>{ if(status) status.textContent=' ✗ Could not detect. Allow location access.'; });
 }
 
+// ── Per-field validation helpers (same pattern as account.html) ──
+function setFieldError(fieldId, message) {
+  const input = document.getElementById(fieldId);
+  const err   = document.getElementById('err_' + fieldId);
+  if (input) input.classList.add('error');
+  if (err)  { err.textContent = message; err.classList.add('show'); }
+}
+
+function clearFieldError(fieldId) {
+  const input = document.getElementById(fieldId);
+  const err   = document.getElementById('err_' + fieldId);
+  if (input) input.classList.remove('error');
+  if (err)  { err.textContent = ''; err.classList.remove('show'); }
+}
+
 function validate() {
-  let ok=true;
-  const required=[
-    {id:'productName', errId:'err_productName'},
-    {id:'description',  errId:null},
-    {id:'category',     errId:'err_category'},
-    {id:'price',        errId:'err_price'},
-    {id:'sellerName',   errId:'err_sellerName'},
-    {id:'sellerPhone',  errId:'err_sellerPhone'},
-    {id:'sellerCity',   errId:'err_sellerCity'},
+  let ok = true;
+
+  // Text / number fields
+  const fields = [
+    { id: 'productName', msg: 'Please enter a product name' },
+    { id: 'price',       msg: 'Please enter a price' },
+    { id: 'sellerName',  msg: 'Please enter your name' },
+    { id: 'sellerPhone', msg: 'Please enter your phone number' },
+    { id: 'sellerCity',  msg: 'Please enter your city or district' },
   ];
-  required.forEach(({id, errId})=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    const err=errId?document.getElementById(errId):null;
-    if(!el.value.trim()) {
-      el.classList.add('error');
-      if(err) err.classList.add('show');
-      ok=false;
+  fields.forEach(({ id, msg }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!el.value.trim() || (id === 'price' && parseFloat(el.value) < 0)) {
+      setFieldError(id, msg);
+      ok = false;
     } else {
-      el.classList.remove('error');
-      if(err) err.classList.remove('show');
+      clearFieldError(id);
     }
   });
-  if(parseFloat(document.getElementById('price')?.value)<0) ok=false;
-  if(document.querySelector('.image-slot-preview.uploading')) {
-    showToast('Please wait for photos to finish uploading','error');
-    ok=false;
+
+  // Category picker (hidden select)
+  if (!document.getElementById('category')?.value) {
+    setFieldError('category', 'Please select a category');
+    // Also highlight the visual trigger
+    document.getElementById('catPickerTrigger')?.classList.add('error');
+    ok = false;
+  } else {
+    clearFieldError('category');
+    document.getElementById('catPickerTrigger')?.classList.remove('error');
   }
-  if(collectImages().length === 0) {
-    showToast('Please add at least one product photo','error');
-    ok=false;
+
+  // Photos
+  if (document.querySelector('.image-slot-preview.uploading')) {
+    setFieldError('images', 'Please wait for photos to finish uploading');
+    ok = false;
+  } else if (collectImages().length === 0) {
+    setFieldError('images', 'Please add at least one product photo');
+    ok = false;
+  } else {
+    clearFieldError('images');
   }
+
   return ok;
 }
 
 async function submitListing() {
-  if(!validate()) { showToast('Please fill in all required fields','error'); return; }
+  if(!validate()) return;
 
   const btn = document.getElementById('submitBtn');
   btn.disabled=true; btn.textContent='Posting…';
