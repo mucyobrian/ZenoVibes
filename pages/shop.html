@@ -204,7 +204,10 @@ function buildCategoryPills() {
   if (!c) return;
   c.innerHTML = CONFIG.CATEGORIES.map(cat=>`
     <button class="cat-pill ${cat.id==='all'?'active':''}" onclick="selectCategory('${cat.id}',this)">
-      <span class="pill-emoji">${cat.emoji}</span>${cat.label}
+      <div class="pill-thumb">
+        <img class="pill-img" src="${cat.image}" alt="${cat.label}" onerror="this.style.display='none'"/>
+      </div>
+      ${cat.label}
     </button>`).join('');
 }
 
@@ -401,6 +404,8 @@ function clearFilters() {
   const s=document.getElementById('sortBy'); if(s) s.value='newest';
   const n=document.getElementById('nearMeToggle'); if(n) n.checked=false;
   const gs=document.getElementById('globalSearch'); if(gs) gs.value='';
+  const lbl=document.getElementById('catPickerLabel'); if(lbl) lbl.textContent='All Categories';
+  const thb=document.getElementById('catPickerThumb'); if(thb) thb.style.display='none';
   applyFilters();
 }
 
