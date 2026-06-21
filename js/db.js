@@ -10,6 +10,7 @@ const DB = (() => {
     PRODUCTS_CACHE: 'sokohub_products_cache',
     CACHE_TIME: 'sokohub_cache_time',
     MY_LISTINGS: 'sokohub_my_listings',
+    FAVORITES_CACHE: 'sokohub_favorites_cache',
   };
 
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -235,6 +236,127 @@ const DB = (() => {
     return data;
   }
 
+  // ── FAVORITES / WISHLIST ────────────────────────
+  // Source of truth is the "Favorites" tab in the Sheet, reached via
+  // CONFIG.LISTINGS_API_URL. localStorage is only a CACHE of "what's
+  // favorited on this device" for instant UI — refreshed from the server
+  // on load and after every change, so it follows the signed-in account
+  // across every device (not just this browser).
+
+  function getFavoritesCache_() {
+    const raw = localStorage.getItem(STORAGE_KEYS.FAVORITES_CACHE);
+    return raw === null ? null : JSON.parse(raw);
+  }
+
+  function setFavoritesCache_(ids) {
+    localStorage.setItem(STORAGE_KEYS.FAVORITES_CACHE, JSON.stringify(ids));
+  }
+
+  // Returns an array of favorited productIds. Signed-out users always get [].
+  // Pass forceRefresh=true to skip the local cache and hit the server
+  // (used right after add/remove so the cache can't drift from the Sheet).
+  // Note: an empty cache is stored as "[]" (a real value), which is distinct
+  // from "no cache yet" (null) — that's what lets the very first call on a
+  // page always reach the server instead of assuming "[]" means "no favorites".
+  async function getFavorites(forceRefresh) {
+    const user = getCurrentUser();
+    if (!user) return [];
+
+    if (!forceRefresh) {
+      const cached = getFavoritesCache_();
+      if (cached !== null) return cached;
+    }
+
+    try {
+      const res = await fetch(CONFIG.LISTINGS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'getFavorites', userId: user.id }),
+      });
+      const result = await res.json();
+      if (!result.success) return getFavoritesCache_() || [];
+      const ids = result.favorites.map(f => f.productId);
+      setFavoritesCache_(ids);
+      return ids;
+    } catch (e) {
+      console.warn('getFavorites: server fetch failed, using cache', e);
+      return getFavoritesCache_() || [];
+    }
+  }
+
+  function isFavorite(productId) {
+    const cached = getFavoritesCache_() || [];
+    return cached.includes(String(productId));
+  }
+
+  async function addFavorite(productId) {
+    const user = getCurrentUser();
+    if (!user) throw new Error('You must be signed in to save favorites');
+
+    // Optimistic local update so the heart fills in instantly.
+    const cached = getFavoritesCache_() || [];
+    if (!cached.includes(String(productId))) {
+      cached.push(String(productId));
+      setFavoritesCache_(cached);
+    }
+
+    const res = await fetch(CONFIG.LISTINGS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'addFavorite', userId: user.id, productId: String(productId) }),
+    });
+    const result = await res.json();
+    if (!result.success) {
+      // Roll back the optimistic update if the server rejected it.
+      setFavoritesCache_(cached.filter(id => id !== String(productId)));
+      throw new Error(result.error || 'Could not add favorite');
+    }
+    return result;
+  }
+
+  async function removeFavorite(productId) {
+    const user = getCurrentUser();
+    if (!user) throw new Error('You must be signed in to manage favorites');
+
+    // Optimistic local update so the heart empties instantly.
+    const cached = getFavoritesCache_() || [];
+    setFavoritesCache_(cached.filter(id => id !== String(productId)));
+
+    const res = await fetch(CONFIG.LISTINGS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'removeFavorite', userId: user.id, productId: String(productId) }),
+    });
+    const result = await res.json();
+    if (!result.success) {
+      // Roll back the optimistic update if the server rejected it.
+      cached.push(String(productId));
+      setFavoritesCache_(cached);
+      throw new Error(result.error || 'Could not remove favorite');
+    }
+    return result;
+  }
+
+  async function toggleFavorite(productId) {
+    if (isFavorite(productId)) {
+      await removeFavorite(productId);
+      return false; // now NOT a favorite
+    } else {
+      await addFavorite(productId);
+      return true; // now IS a favorite
+    }
+  }
+
+  // Returns full product objects for everything the user has favorited,
+  // by cross-referencing favorited ids against the live product list.
+  async function getFavoriteProducts() {
+    const user = getCurrentUser();
+    if (!user) return [];
+    const [ids, allProducts] = await Promise.all([getFavorites(true), getProducts()]);
+    const idSet = new Set(ids);
+    return allProducts.filter(p => idSet.has(String(p.id)));
+  }
+
   // ── USER AUTH ───────────────────────────────────
   // Source of truth is the "Users" tab in the Sheet, reached via
   // CONFIG.LISTINGS_API_URL (same Apps Script as listings).
@@ -289,6 +411,7 @@ const DB = (() => {
 
   function logout() {
     localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem(STORAGE_KEYS.FAVORITES_CACHE);
   }
 
   // Updates the user's profile/plan/monthlyCount on the server, then
@@ -398,5 +521,11 @@ const DB = (() => {
     getDistanceKm,
     buildFormUrl,
     getCurrentMonthKey,
+    getFavorites,
+    isFavorite,
+    addFavorite,
+    removeFavorite,
+    toggleFavorite,
+    getFavoriteProducts,
   };
 })();

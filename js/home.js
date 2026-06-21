@@ -12,6 +12,10 @@ async function initHome() {
   buildCategoryPills();
   populateCategoryFilter();
 
+  // Warm the favorites cache first so heart icons render correctly
+  // on the very first paint of the product cards below.
+  await DB.getFavorites();
+
   try {
     allProducts = await DB.getProducts();
     // Merge in any listing that hasn't synced to the Sheet yet (id starts with 'local_')

@@ -66,12 +66,19 @@ function buildProductCard(product, userLat, userLng, listView) {
     ? `<div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:white;font-size:0.7rem;font-weight:600;padding:3px 8px;border-radius:100px">📷 ${imgCount}</div>`
     : '';
 
+  const isFav = DB.isFavorite(product.id);
+  const favBtnHtml = `
+    <button class="fav-btn ${isFav ? 'is-fav' : ''}" data-product-id="${escHtml(product.id)}" onclick="event.stopPropagation();handleFavClick(this,'${product.id}')" aria-label="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </button>`;
+
   if (listView) {
     return `
   <div class="product-card--list" onclick="goToProduct('${product.id}')">
     <div class="list-img-wrap">
       ${imgHtml}
       ${multiImgBadge}
+      ${favBtnHtml}
     </div>
     <div class="list-info">
       <div class="list-cat">${getCatEmoji(product.category)} ${getCatLabel(product.category)}</div>
@@ -90,6 +97,7 @@ function buildProductCard(product, userLat, userLng, listView) {
     <div style="position:relative">
       ${imgHtml}
       ${multiImgBadge}
+      ${favBtnHtml}
       <div style="position:absolute;top:10px;left:10px;background:rgba(26,20,100,0.85);color:white;padding:3px 10px;border-radius:100px;font-size:0.72rem;font-weight:600">
         ${getCatEmoji(product.category)} ${getCatLabel(product.category)}
       </div>
@@ -106,6 +114,39 @@ function buildProductCard(product, userLat, userLng, listView) {
       </div>
     </div>
   </div>`;
+}
+
+// ── Handle a heart-button tap on a product card ──
+// Shared by every page that renders buildProductCard output.
+async function handleFavClick(btnEl, productId) {
+  if (!DB.getCurrentUser()) {
+    showToast('Sign in to save favorites', 'error');
+    const isInPages = window.location.pathname.includes('/pages/');
+    window.location.href = isInPages ? 'account.html' : 'pages/account.html';
+    return;
+  }
+
+  // Optimistic UI flip — feels instant, DB.toggleFavorite() syncs the server
+  // and rolls this back automatically if the request fails.
+  const willBeFav = !btnEl.classList.contains('is-fav');
+  btnEl.classList.toggle('is-fav', willBeFav);
+  const path = btnEl.querySelector('path');
+  if (path) path.setAttribute('fill', willBeFav ? 'currentColor' : 'none');
+  btnEl.setAttribute('aria-label', willBeFav ? 'Remove from favorites' : 'Add to favorites');
+
+  try {
+    await DB.toggleFavorite(productId);
+    // Let any listening page (e.g. the My Favorites panel) react —
+    // app.js stays page-agnostic and doesn't know about specific DOM elsewhere.
+    document.dispatchEvent(new CustomEvent('favoritechange', {
+      detail: { productId, isFavorite: willBeFav }
+    }));
+  } catch (e) {
+    // Roll back on failure
+    btnEl.classList.toggle('is-fav', !willBeFav);
+    if (path) path.setAttribute('fill', !willBeFav ? 'currentColor' : 'none');
+    showToast(e.message || 'Could not update favorites', 'error');
+  }
 }
 
 // ── Navigate to product detail page ──────────────
