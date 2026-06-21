@@ -11,12 +11,22 @@ const IMG_BASE = location.pathname.includes('/pages/')
   ? '../images/categories/'
   : 'images/categories/';
 
+// Same idea, but for banner/hero images (put yours in /images/banners/).
+const BANNER_BASE = location.pathname.includes('/pages/')
+  ? '../images/banners/'
+  : 'images/banners/';
+
 const CONFIG = {
   // ── SITE INFO ──────────────────────────────────
   siteName: "StillWorks",
   siteTagline: "Used. Cheap. Still Works.",
   currency: "RWF",
   currencySymbol: "RWF",
+
+  // Homepage hero background photo. Put your own image at
+  // images/banners/Hero.jpg (any landscape photo works — a dark
+  // semi-transparent overlay is applied on top so the white text stays readable).
+  HERO_IMAGE: `${BANNER_BASE}Hero.jpg`,
 
   // ── GOOGLE SHEETS DATABASE ─────────────────────
   // STEP 1: Create a Google Sheet with these columns:

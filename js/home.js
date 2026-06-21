@@ -9,6 +9,12 @@ let activeSubcat = {}; // { categoryId: 'subcategoryName' | null }
 
 // ── Init ─────────────────────────────────────────
 async function initHome() {
+  const hero = document.querySelector('.hero');
+  if (hero && CONFIG.HERO_IMAGE) {
+    hero.style.backgroundImage =
+      `linear-gradient(135deg, rgba(40,32,150,0.88) 0%, rgba(45,36,168,0.82) 60%, rgba(55,48,208,0.8) 100%), url('${CONFIG.HERO_IMAGE}')`;
+  }
+
   buildCategoryPills();
   populateCategoryFilter();
 
