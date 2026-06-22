@@ -372,8 +372,9 @@ input, select, textarea { font-family: inherit; }
 .promo-carousel {
   position: relative;
   width: 100%;
+  min-height: 220px;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--surface-alt, #f0f0f0);
 }
 
 .promo-track {
@@ -385,13 +386,16 @@ input, select, textarea { font-family: inherit; }
 .promo-slide {
   flex: 0 0 100%;
   width: 100%;
+  min-height: 220px;
   display: block;
   line-height: 0;
+  background: linear-gradient(135deg, #2d2470, #4338ca);
 }
 
 .promo-slide img {
   width: 100%;
   height: 220px;
+  min-height: 220px;
   object-fit: cover;
   display: block;
 }
@@ -423,7 +427,7 @@ input, select, textarea { font-family: inherit; }
 }
 
 @media (min-width: 768px) {
-  .promo-slide img { height: 320px; }
+  .promo-slide, .promo-slide img { min-height: 320px; height: 320px; }
 }
 
 /* ===== CATEGORY STRIP ===== */
