@@ -566,7 +566,11 @@
 }
 
 /* ===== SHOP PAGE ===== */
+<<<<<<< HEAD
+.shop-page { padding: 10px 16px 40px; }
+=======
 .shop-page { padding: 24px 16px 40px; }
+>>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
 
 .shop-header {
   display: flex;
@@ -743,8 +747,13 @@
 .page-hero {
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: white;
+<<<<<<< HEAD
+  padding: 14px 16px;
+  margin-bottom: 16px;
+=======
   padding: 32px 16px;
   margin-bottom: 0;
+>>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
 }
 .page-hero h1 {
   font-family: var(--font-display);
