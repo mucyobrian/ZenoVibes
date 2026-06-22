@@ -369,5 +369,56 @@ function clearFilters() {
   applyFilters();
 }
 
+// ── Promo carousel (auto-scrolling banner) ───────
+function initPromoCarousel() {
+  const track = document.getElementById('promoTrack');
+  const dotsWrap = document.getElementById('promoDots');
+  if (!track || !dotsWrap) return;
+
+  const slides = track.querySelectorAll('.promo-slide');
+  const dots = dotsWrap.querySelectorAll('.promo-dot');
+  if (!slides.length) return;
+
+  let current = 0;
+  let timer = null;
+  const AUTO_DELAY = 4000;
+
+  function goTo(index) {
+    current = (index + slides.length) % slides.length;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function next() { goTo(current + 1); }
+
+  function startAuto() {
+    stopAuto();
+    timer = setInterval(next, AUTO_DELAY);
+  }
+
+  function stopAuto() {
+    if (timer) clearInterval(timer);
+    timer = null;
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      goTo(i);
+      startAuto(); // reset timer after manual interaction
+    });
+  });
+
+  // Pause while the user is interacting, resume after
+  const section = document.getElementById('promoCarousel');
+  section.addEventListener('mouseenter', stopAuto);
+  section.addEventListener('mouseleave', startAuto);
+  section.addEventListener('touchstart', stopAuto, { passive: true });
+  section.addEventListener('touchend', startAuto, { passive: true });
+
+  goTo(0);
+  startAuto();
+}
+
 // ── Boot ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', initHome);
+document.addEventListener('DOMContentLoaded', initPromoCarousel);
