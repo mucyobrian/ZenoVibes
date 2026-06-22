@@ -36,11 +36,32 @@ async function initHome() {
   }
 }
 
-// ── Top-level category fallback icons (used only if the thumbnail image fails to load) ──
-const TOPCAT_EMOJI = {
-  all: '🗂️', electronics: '📱', fashion: '👗', accessories: '👜', food: '🥑',
-  furniture: '🛋️', vehicles: '🚗', health: '💊', sports: '⚽', books: '📚',
-  agriculture: '🌾', services: '🛠️', property: '🏠', babies: '🧸', other: '📦',
+// ── Top-level category nav icons (inline SVG, stroke uses currentColor so
+//    they inherit the pill's text color automatically) ──
+const TOPCAT_ICONS = {
+  all:          '<path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/>',
+  clothing:     '<path d="M8 3l4 2 4-2 3 4-2.5 2v10a1 1 0 0 1-1 1H7.5a1 1 0 0 1-1-1V9L4 7z"/>',
+  shoes:        '<path d="M3 17c0-2 1.5-3 3-4l6-3c1-2 3-3 5-3 1.5 0 2 1 2 2v3c2 0 4 1 4 3v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
+  jewelry:      '<circle cx="12" cy="12" r="7"/><path d="M9 9l3-4 3 4M9 12h6"/>',
+  accessories:  '<path d="M7 8V6a5 5 0 0 1 10 0v2"/><rect x="3" y="8" width="18" height="13" rx="2"/>',
+  kids:         '<circle cx="12" cy="8" r="3"/><path d="M5 21c0-4 3-6 7-6s7 2 7 6"/>',
+  home:         '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  beauty:       '<path d="M12 2v6M9 5h6"/><path d="M7 11h10l-1 10H8z"/>',
+  telecom:      '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  electronics:  '<rect x="3" y="4" width="18" height="13" rx="1"/><path d="M8 21h8M12 17v4"/>',
+  hair:         '<path d="M5 4c4 0 4 4 7 4s3-4 7-4M5 4c0 8 2 16 7 16s7-8 7-16"/>',
+  computer:     '<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M2 20h20M9 20l1-4h4l1 4"/>',
+  automobile:   '<path d="M3 13l2-6h14l2 6"/><path d="M3 13h18v5H3z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>',
+  sports:       '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"/>',
+  furniture:    '<path d="M4 11V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/><path d="M4 11h16v6H4z"/><path d="M5 17v2M19 17v2"/>',
+  vehicles:     '<path d="M3 13l2-6h14l2 6"/><path d="M3 13h18v5H3z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>',
+  food:         '<path d="M6 2v7a3 3 0 0 0 6 0V2M9 9v13M17 2c-2 0-3 2-3 5s1 5 3 5 0 0 0 0v6"/>',
+  books:        '<path d="M4 4h7v17H4zM13 4h7v17h-7z"/>',
+  agriculture:  '<path d="M12 22V12M12 12c0-4-3-7-7-7 0 4 3 7 7 7zM12 12c0-4 3-7 7-7 0 4-3 7-7 7z"/>',
+  services:     '<path d="M14.7 6.3a4 4 0 0 1 0 5.6l-7 7a2 2 0 0 1-2.8-2.8l7-7a4 4 0 0 1 5.6 0z"/><path d="M16 2l2 2-2 2-2-2z"/>',
+  property:     '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 21v-6h6v6"/>',
+  free:         '<rect x="3" y="9" width="18" height="11" rx="1"/><path d="M3 9l9-5 9 5M12 9v11M7 9c0-2 1-4 2-4M17 9c0-2-1-4-2-4"/>',
+  other:        '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
 };
 
 // ── Swap hero banner + headline/subtext for the active category ──
@@ -69,18 +90,16 @@ function applyHeroForCategory(catId) {
   if (sub)   sub.textContent = cat?.heroSub || 'No fees. Post your used stuff. Someone will take it.';
 }
 
-// ── Build category pills ─────────────────────────
+// ── Build category pills (SHEIN-style nav row: icon + text) ─────
 function buildCategoryPills() {
   const container = document.getElementById('catPills');
   if (!container) return;
   container.innerHTML = CONFIG.CATEGORIES.map(cat => `
     <button class="cat-pill ${cat.id === 'all' ? 'active' : ''}"
       onclick="selectCategory('${cat.id}', this)">
-      <div class="pill-thumb">
-        <img class="pill-img" src="${cat.image}" alt="${cat.label}"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
-        <span class="pill-fallback" style="display:none">${TOPCAT_EMOJI[cat.id] || '📦'}</span>
-      </div>
+      <svg class="pill-icon" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        ${TOPCAT_ICONS[cat.id] || TOPCAT_ICONS.other}
+      </svg>
       <span>${cat.label}</span>
     </button>
   `).join('');
