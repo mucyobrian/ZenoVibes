@@ -254,26 +254,32 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* ===== HERO ===== */
-.hero {
-  background-image: url('../images/banners/Hero.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  color: white;
-  padding: 56px 16px 64px;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero::before { content: none; }
-.hero::after { content: none; }
-
-.hero-inner {
-  max-width: 1200px;
-  margin: 0 auto;
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  justify-content: center;
+  gap: 20px;
+  padding: 32px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: white;
+  pointer-events: none; /* let clicks pass through to slide link, except on real controls */
+}
+
+.hero-overlay .hero-cta,
+.hero-overlay a {
+  pointer-events: auto; /* buttons stay clickable */
+}
+
+.hero-overlay #heroEyebrow,
+.hero-overlay h1,
+.hero-overlay p,
+.hero-overlay .stat-num,
+.hero-overlay .stat span:last-child {
+  text-shadow: 0 2px 10px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.5);
 }
 
 .hero-eyebrow {
@@ -380,7 +386,7 @@ input, select, textarea { font-family: inherit; }
 .promo-carousel-inner {
   position: relative;
   width: 100%;
-  min-height: 220px;
+  min-height: 420px;
   overflow: hidden;
   border-radius: var(--radius-md, 12px);
 }
@@ -395,7 +401,7 @@ input, select, textarea { font-family: inherit; }
 .promo-slide {
   flex: 0 0 100%;
   width: 100%;
-  min-height: 220px;
+  min-height: 420px;
   display: block;
   line-height: 0;
   background: linear-gradient(135deg, #2d2470, #4338ca);
@@ -403,8 +409,8 @@ input, select, textarea { font-family: inherit; }
 
 .promo-slide img {
   width: 100%;
-  height: 220px;
-  min-height: 220px;
+  height: 420px;
+  min-height: 420px;
   object-fit: cover;
   display: block;
 }
@@ -436,7 +442,14 @@ input, select, textarea { font-family: inherit; }
 }
 
 @media (min-width: 768px) {
-  .promo-slide, .promo-slide img { min-height: 320px; height: 320px; }
+  .promo-carousel-inner { min-height: 480px; }
+  .promo-slide, .promo-slide img { min-height: 480px; height: 480px; }
+}
+
+@media (max-width: 480px) {
+  .hero-overlay { padding: 24px 18px; gap: 14px; }
+  .hero-overlay .hero-cta { margin-top: 8px; }
+  .hero-overlay .hero-stats { gap: 18px; }
 }
 
 /* ===== CATEGORY STRIP ===== */
