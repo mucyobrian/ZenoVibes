@@ -392,13 +392,13 @@ input, select, textarea { font-family: inherit; }
   gap: 8px;
   padding: 0;
   background: transparent;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text);
   cursor: pointer;
   transition: transform 0.18s;
   text-align: center;
-  flex: 0 0 100px;
+  flex: 0 0 130px;
   scroll-snap-align: start;
   white-space: normal;
   border-radius: 0;
@@ -417,9 +417,9 @@ input, select, textarea { font-family: inherit; }
 }
 .cat-pill.active span { color: var(--primary); font-weight: 700; }
 .cat-pill .pill-thumb {
-  width: 100px;
-  height: 100px;
-  border-radius: 16px;
+  width: 130px;
+  height: 130px;
+  border-radius: 18px;
   background: linear-gradient(135deg, #e8eaf6, #d1d5f0);
   border: 2px solid var(--border);
   overflow: hidden;
@@ -442,7 +442,7 @@ input, select, textarea { font-family: inherit; }
   display: block;
 }
 .cat-pill .pill-fallback {
-  font-size: 2.6rem;
+  font-size: 3.2rem;
   line-height: 1;
 }
 .cat-section-img {
@@ -934,7 +934,7 @@ input, select, textarea { font-family: inherit; }
   overflow-x: auto;
   padding: 14px 14px 18px;
   margin: 0 -14px 14px;
-  background: rgba(245,166,35,0.3);
+  background: rgba(245,166,35,0.07);
   border-radius: 14px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -1036,8 +1036,8 @@ input, select, textarea { font-family: inherit; }
   .subcat-fallback { font-size: 2.2rem; }
   .subcat-item { width: 100px; }
   .subcat-label { font-size: 0.78rem; width: 100px; }
-  .cat-pill { flex: 0 0 84px; }
-  .cat-pill .pill-thumb { width: 84px; height: 84px; }
-  .cat-pill .pill-fallback { font-size: 2.2rem; }
+  .cat-pill { flex: 0 0 108px; }
+  .cat-pill .pill-thumb { width: 108px; height: 108px; }
+  .cat-pill .pill-fallback { font-size: 2.6rem; }
   .cat-section-title { font-size: 1.1rem; }
 }
