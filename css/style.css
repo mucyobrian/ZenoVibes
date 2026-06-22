@@ -370,7 +370,9 @@ input, select, textarea { font-family: inherit; }
 
 /* ===== CATEGORY STRIP ===== */
 .cat-strip {
-  padding: 24px 0 12px;
+  padding: 0;
+  background: var(--surface);
+  border-bottom: none;
 }
 
 /* ── Base cat-pills (shop page: thumbnail card style) ── */
