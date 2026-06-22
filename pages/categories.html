@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Categories — StillWorks</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <style>
+    /* ── Category card ── */
+    .cat-card-img {
+      width: 100%;
+      aspect-ratio: 4/5;
+      object-fit: cover;
+      border-radius: 0;
+      margin-bottom: 0;
+      display: block;
+    }
+    .cat-card-emoji-fallback {
+      width: 100%;
+      aspect-ratio: 4/5;
+      border-radius: 0;
+      margin-bottom: 0;
+      background: var(--surface-2, #f0f0f0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-muted, #888);
+    }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.88rem;
+      color: var(--text-muted, #888);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .breadcrumb a {
+      color: var(--accent, #f5a623);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb .sep { opacity: 0.5; }
+
+    /* ── Section header ── */
+    .subcat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .subcat-header h2 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .subcat-header .count-badge {
+      background: var(--surface-2, #f0f0f0);
+      color: var(--text-muted, #888);
+      font-size: 0.8rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Subcategory grid ── */
+    .subcat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .subcat-card {
+      background: var(--surface, #fff);
+      border: 1.5px solid var(--border, #eee);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .subcat-card:hover {
+      border-color: var(--accent, #f5a623);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+    .subcat-card .subcat-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .subcat-card .subcat-count {
+      font-size: 0.78rem;
+      color: var(--text-muted, #888);
+    }
+    .subcat-card .subcat-icon {
+      font-size: 1.6rem;
+      margin-bottom: 2px;
+    }
+
+    /* ── "All in category" shortcut ── */
+    .view-all-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      padding: 8px 16px;
+      background: var(--surface-2, #f4f4f4);
+      border: 1.5px solid var(--border, #eee);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text, #222);
+      text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .view-all-btn:hover { border-color: var(--accent, #f5a623); }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">Still<span>Works</span></a>
+    <div class="search-wrap">
+      <input id="globalSearch" type="text" placeholder="Search products…"/>
+      <button class="btn-search" onclick="handleSearch()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+    <nav class="top-actions">
+      <a href="sell.html" class="btn-sell">+ Sell</a>
+      <a href="account.html" class="btn-account" id="accountBtn">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <a href="../index.html" class="tab" data-tab="home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+  <a href="categories.html" class="tab active" data-tab="categories"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Categories</span></a>
+  <div class="tab-sell">
+    <a href="sell.html" class="tab-sell-btn" aria-label="Sell">
+      <svg width="24" height="24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </a>
+    <span>Sell</span>
+  </div>
+  <a href="shop.html" class="tab" data-tab="shop"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></a>
+  <a href="account.html" class="tab" data-tab="account"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Account</span></a>
+</nav>
+
+<div class="page-hero">
+  <div class="container">
+    <h1 id="pageHeroTitle">📦 All Categories</h1>
+    <p id="pageHeroSub">Browse products by category — find exactly what you need</p>
+  </div>
+</div>
+
+<main class="container categories-page">
+
+  <!-- ① ALL CATEGORIES GRID -->
+  <div id="viewAllCats">
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+
+  <!-- ② SUBCATEGORIES VIEW -->
+  <div id="viewSubcats" style="display:none">
+    <div class="breadcrumb" id="subcatBreadcrumb"></div>
+    <div class="subcat-header">
+      <h2 id="subcatTitle"></h2>
+      <span class="count-badge" id="subcatTotalCount"></span>
+    </div>
+    <a class="view-all-btn" onclick="showCatProducts(currentCatId, '')" href="#">
+      🛍️ View all <span id="viewAllLabel"></span> products
+    </a>
+    <div class="subcat-grid" id="subcatGrid"></div>
+  </div>
+
+  <!-- ③ PRODUCTS VIEW -->
+  <div id="viewProducts" style="display:none;margin-top:8px">
+    <div class="breadcrumb" id="productsBreadcrumb"></div>
+    <div class="subcat-header">
+      <h2 id="productsTitle"></h2>
+      <span class="count-badge" id="productsTotalCount"></span>
+    </div>
+    <div class="products-grid" id="catProductsGrid"></div>
+    <p class="no-results hidden" id="catNoResults">No products here yet. <a href="sell.html">Be the first to sell here!</a></p>
+  </div>
+
+</main>
+
+<!-- Contact Modal -->
+<div class="modal-backdrop hidden" id="contactModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-avatar" id="modalAvatar">🏪</div>
+    <h2 id="modalSellerName"></h2>
+    <p id="modalProductName" class="modal-product"></p>
+    <p id="modalPrice" class="modal-price"></p>
+    <div class="modal-actions">
+      <a id="modalCall" href="#" class="btn-modal btn-call"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8A16 16 0 0 0 15.2 16.09l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call Seller</a>
+      <a id="modalWhatsApp" href="#" target="_blank" class="btn-modal btn-whatsapp"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.554 4.11 1.523 5.843L0 24l6.32-1.497A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.82 9.82 0 0 1-5.007-1.371l-.36-.214-3.732.883.933-3.617-.235-.372A9.818 9.818 0 0 1 2.182 12c0-5.422 4.396-9.818 9.818-9.818 5.422 0 9.818 4.396 9.818 9.818 0 5.422-4.396 9.818-9.818 9.818z"/></svg>WhatsApp</a>
+    </div>
+    <p class="modal-note">Contact this seller directly. StillWorks is not responsible for transactions.</p>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let allProducts = [];
+let currentCatId = null;
+
+// ── Helpers ──────────────────────────────────────
+// store subcat list outside the DOM so it survives innerHTML rewrites
+let _subcatList = [];
+
+function showView(name) {
+  ['viewAllCats','viewSubcats','viewProducts'].forEach(id => {
+    document.getElementById(id).style.display = id === name ? 'block' : 'none';
+  });
+}
+
+function setHero(title, sub) {
+  document.getElementById('pageHeroTitle').textContent = title;
+  document.getElementById('pageHeroSub').textContent   = sub;
+}
+
+function catLabel(catId) {
+  return CONFIG.CATEGORIES.find(c => c.id === catId)?.label || catId;
+}
+
+// ── INIT ─────────────────────────────────────────
+async function initCategories() {
+  allProducts = await DB.getProducts();
+
+  // merge any unsynced local listings
+  const liveNames = new Set(allProducts.map(p => p.productName));
+  const localOnly  = JSON.parse(localStorage.getItem('sokohub_my_listings') || '[]')
+    .filter(p => String(p.id).startsWith('local_') && !liveNames.has(p.productName));
+  if (localOnly.length) allProducts = [...localOnly, ...allProducts];
+
+  buildCatGrid();
+
+  // deep-link support: ?cat=electronics or ?cat=electronics&sub=Laptops
+  const params = new URLSearchParams(window.location.search);
+  const cat    = params.get('cat');
+  const sub    = params.get('sub');
+  if (cat && sub) {
+    showCatProducts(cat, sub);
+  } else if (cat) {
+    showSubcats(cat);
+  }
+}
+
+// ── VIEW 1 — All categories ──────────────────────
+function buildCatGrid() {
+  const grid   = document.getElementById('catGrid');
+  const counts = {};
+  allProducts.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
+
+  grid.innerHTML = CONFIG.CATEGORIES.filter(c => c.id !== 'all').map(cat => `
+    <a class="cat-card" onclick="showSubcats('${cat.id}')" href="#">
+      <img class="cat-card-img" src="${cat.image}" alt="${cat.label}"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <span class="cat-card-emoji-fallback" style="display:none">${cat.id.charAt(0).toUpperCase()}</span>
+      <div class="cat-card-body">
+        <h3>${cat.label}</h3>
+        <span>${counts[cat.id] || 0} product${(counts[cat.id] || 0) !== 1 ? 's' : ''}</span>
+      </div>
+    </a>`).join('');
+}
+
+// ── VIEW 2 — Subcategories ───────────────────────
+function showSubcats(catId) {
+  currentCatId = catId;
+  const label    = catLabel(catId);
+  const subcats  = CONFIG.SUBCATEGORIES[catId] || [];
+  const products = allProducts.filter(p => p.category === catId);
+
+  // count per subcat
+  const counts = {};
+  products.forEach(p => {
+    const s = p.subcategory || 'Other';
+    counts[s] = (counts[s] || 0) + 1;
+  });
+
+  // breadcrumb
+  document.getElementById('subcatBreadcrumb').innerHTML =
+    `<a href="#" onclick="goAllCats()">All Categories</a>
+     <span class="sep">›</span>
+     <span>${label}</span>`;
+
+  document.getElementById('subcatTitle').textContent       = label;
+  document.getElementById('subcatTotalCount').textContent  = `${products.length} product${products.length !== 1 ? 's' : ''}`;
+  document.getElementById('viewAllLabel').textContent      = label;
+
+  // build subcat cards — show all defined subcats, plus any "Other" that have products
+  const toShow = subcats.length
+    ? subcats
+    : [...new Set(products.map(p => p.subcategory || 'Other'))];
+
+  const subcatGridEl = document.getElementById('subcatGrid');
+  subcatGridEl.innerHTML = toShow.map((sub, i) => {
+    const n = counts[sub] || 0;
+    return `
+      <a class="subcat-card" href="#" data-catid="${catId}" data-subcat-index="${i}">
+        <div class="subcat-name">${sub}</div>
+        <div class="subcat-count">${n} item${n !== 1 ? 's' : ''}</div>
+      </a>`;
+  }).join('');
+
+  // store subcat names at module level so they survive innerHTML rewrites
+  _subcatList = toShow;
+
+  subcatGridEl.onclick = function(e) {
+    const card = e.target.closest('.subcat-card');
+    if (!card) return;
+    e.preventDefault();
+    const idx = parseInt(card.dataset.subcatIndex, 10);
+    const sub = _subcatList[idx];
+    showCatProducts(card.dataset.catid, sub);
+  };
+
+  setHero(`${label}`, 'Choose a subcategory');
+  showView('viewSubcats');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── VIEW 3 — Products ────────────────────────────
+function showCatProducts(catId, subcatName) {
+  currentCatId = catId;
+  const catLbl  = catLabel(catId);
+  const filtered = subcatName
+    ? allProducts.filter(p => p.category === catId && (p.subcategory || 'Other') === subcatName)
+    : allProducts.filter(p => p.category === catId);
+  // ^ subcatName falsy (null/'') means show all in category
+
+  const title = subcatName ? `${subcatName}` : catLbl;
+
+  // breadcrumb
+  const breadcrumb = document.getElementById('productsBreadcrumb');
+  if (subcatName) {
+    breadcrumb.innerHTML =
+      `<a href="#" onclick="goAllCats()">All Categories</a>
+       <span class="sep">›</span>
+       <a href="#" onclick="showSubcats('${catId}')">${catLbl}</a>
+       <span class="sep">›</span>
+       <span>${subcatName}</span>`;
+  } else {
+    breadcrumb.innerHTML =
+      `<a href="#" onclick="goAllCats()">All Categories</a>
+       <span class="sep">›</span>
+       <span>${catLbl}</span>`;
+  }
+
+  document.getElementById('productsTitle').textContent     = title;
+  document.getElementById('productsTotalCount').textContent = `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
+
+  const grid  = document.getElementById('catProductsGrid');
+  const noRes = document.getElementById('catNoResults');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    noRes.classList.remove('hidden');
+  } else {
+    noRes.classList.add('hidden');
+    grid.innerHTML = filtered.map(p => buildProductCard(p)).join('');
+  }
+
+  setHero(title, subcatName ? `${catLbl} › ${subcatName}` : catLbl);
+  showView('viewProducts');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Navigation helpers ───────────────────────────
+function goAllCats() {
+  currentCatId = null;
+  setHero('📦 All Categories', 'Browse products by category — find exactly what you need');
+  showView('viewAllCats');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Legacy: called from URL deep-link ?cat= only
+function closeCatProducts() { goAllCats(); }
+
+document.addEventListener('DOMContentLoaded', initCategories);
+</script>
+</body>
+</html>
