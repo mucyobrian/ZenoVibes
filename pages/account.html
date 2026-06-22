@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Account — StillWorks</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <style>
+    .phone-wrap { display: flex; gap: 8px; }
+    .country-select-hidden { display: none; }
+
+    .country-picker { position: relative; flex: 0 0 auto; }
+    .country-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 46px;
+      padding: 0 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: white;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--text);
+      min-width: 92px;
+    }
+    .country-picker-btn:hover { border-color: var(--primary); }
+    .country-picker.open .country-picker-btn { border-color: var(--primary); }
+    .flag-icon { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
+    .cp-code { font-weight: 600; }
+    .cp-chevron { margin-left: 1px; flex-shrink: 0; color: var(--text-muted); transition: transform 0.15s; }
+    .country-picker.open .cp-chevron { transform: rotate(180deg); }
+
+    .country-picker-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: min(240px, 80vw);
+      max-height: 280px;
+      overflow-y: auto;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+      z-index: 50;
+      padding: 6px;
+    }
+    .country-picker.open .country-picker-menu { display: block; }
+    .country-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+    .country-picker-item:hover { background: var(--bg); }
+    .cp-name { flex: 1; }
+    .cp-code-sm { color: var(--text-muted); font-size: 0.82rem; }
+
+    .phone-wrap input[type="tel"] { flex: 1; min-width: 0; }
+
+    /* ── Edit listing: category picker ── */
+    .cat-picker-wrap { position: relative; }
+    .cat-picker-trigger {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; height: 46px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: white; cursor: pointer; font-size: 0.9rem; color: var(--text);
+      width: 100%; box-sizing: border-box; transition: border-color .15s;
+      user-select: none;
+    }
+    .cat-picker-trigger:hover, .cat-picker-trigger.open { border-color: var(--primary); }
+    .cat-picker-trigger.error { border-color: var(--danger); }
+    .cat-picker-trigger img { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+    .cat-picker-trigger .trigger-placeholder { color: var(--text-muted); }
+    .cat-picker-trigger .trigger-arrow { margin-left: auto; font-size: 0.7rem; color: var(--text-muted); transition: transform .15s; }
+    .cat-picker-trigger.open .trigger-arrow { transform: rotate(180deg); }
+    .cat-picker-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 200; max-height: 260px; overflow-y: auto;
+    }
+    .cat-picker-dropdown.open { display: block; }
+    .cat-picker-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; cursor: pointer; transition: background .1s;
+    }
+    .cat-picker-item:hover { background: var(--bg, #f5f5f5); }
+    .cat-picker-item.selected { background: color-mix(in srgb, var(--primary) 10%, white); }
+    .cat-picker-item img { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    .cat-picker-item .cat-emoji {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; background: #f0f0f0; border-radius: 6px; flex-shrink: 0;
+    }
+    .cat-picker-item span { font-size: 0.9rem; font-weight: 500; }
+    .cat-real-select { display: none !important; }
+
+    /* ── Edit listing: image slots ── */
+    .image-slot {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: #f9f9f9; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px;
+    }
+    .image-slot-preview {
+      width: 72px; height: 72px; flex-shrink: 0;
+      border-radius: 6px; background: #eee;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; overflow: hidden;
+    }
+    .image-slot-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .image-slot-preview.uploading { background: #eee; }
+    .image-slot-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .image-slot-status { font-size: 0.75rem; color: var(--text-muted); }
+    .image-slot-status.ok  { color: var(--success, #2e7d32); }
+    .image-slot-status.err { color: var(--danger); }
+    .image-slot-row { display: flex; gap: 6px; }
+    .img-tag-input   { flex: 2; min-width: 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem; }
+    .img-price-input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem; }
+    .img-file-input  { font-size: 0.8rem; }
+    .image-slot-remove {
+      background: none; border: none; cursor: pointer; font-size: 1rem;
+      color: var(--text-muted); padding: 2px 4px; align-self: flex-start;
+    }
+    .image-slot-remove:hover { color: var(--danger); }
+
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">Still<span>Works</span></a>
+    <div style="flex:1"></div>
+    <nav class="top-actions">
+      <a href="sell.html" class="btn-sell">+ Sell</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <a href="../index.html" class="tab" data-tab="home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+  <a href="categories.html" class="tab" data-tab="categories"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Categories</span></a>
+  <div class="tab-sell">
+    <a href="sell.html" class="tab-sell-btn" aria-label="Sell">
+      <svg width="24" height="24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </a>
+    <span>Sell</span>
+  </div>
+  <a href="shop.html" class="tab" data-tab="shop"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></a>
+  <a href="account.html" class="tab active" data-tab="account"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Account</span></a>
+</nav>
+
+<!-- AUTH SECTION (shown when logged out) -->
+<div id="authSection">
+  <div class="auth-page">
+    <div class="auth-card">
+      <span class="logo">Still<span>Works</span></span>
+      <h2 id="authTitle">Welcome back</h2>
+      <p id="authSubtitle">Sign in to manage your posts</p>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="field">
+          <label>Email or Phone Number</label>
+          <input type="text" id="loginEmail" placeholder="your@email.com or 7XX XXX XXX"/>
+          <div class="field-error" id="err_loginEmail"></div>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••"/>
+          <div class="field-error" id="err_loginPassword"></div>
+        </div>
+        <button class="btn-submit" onclick="doLogin()" style="margin-top:4px">Sign In</button>
+        <div class="auth-switch">Don't have an account? <a href="#" onclick="showRegister()">Create one free</a></div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" style="display:none">
+        <div class="field" style="text-align:center;margin-bottom:6px">
+          <label style="display:block;margin-bottom:10px">Profile Picture (optional)</label>
+          <div class="avatar-edit-wrap" onclick="document.getElementById('regAvatarFileInput').click()">
+            <div class="profile-avatar avatar-edit-preview" id="regAvatarPreview">👤</div>
+            <div class="avatar-edit-badge">📷</div>
+          </div>
+          <input type="file" id="regAvatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(event, 'reg')"/>
+          <div class="field-hint" id="regAvatarStatus" style="margin-top:8px">Tap to add a profile photo</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Full Name <span class="required">*</span></label>
+            <input type="text" id="regName" placeholder="Your name"/>
+            <div class="field-error" id="err_regName"></div>
+          </div>
+          <div class="field">
+            <label>City / District <span class="required">*</span></label>
+            <input type="text" id="regCity" placeholder="Kigali"/>
+            <div class="field-error" id="err_regCity"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Phone Number <span class="required">*</span></label>
+          <div class="phone-wrap">
+            <div class="country-picker" data-target="regPhoneCode">
+              <button type="button" class="country-picker-btn" onclick="toggleCountryPicker(this)">
+                <img class="flag-icon" src="" alt="" />
+                <span class="cp-code"></span>
+                <svg class="cp-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="country-picker-menu"></div>
+            </div>
+            <select class="country-select country-select-hidden" id="regPhoneCode" onchange="syncWaCode('regPhoneCode','regWaCode')"></select>
+            <input type="tel" id="regPhone" placeholder="7XX XXX XXX"/>
+          </div>
+          <div class="field-error" id="err_regPhone"></div>
+        </div>
+
+        <div class="field">
+          <label>WhatsApp Number <span class="field-hint" style="display:inline;text-transform:none;font-weight:400">(optional — leave blank if same as phone)</span></label>
+          <div class="phone-wrap">
+            <div class="country-picker" data-target="regWaCode">
+              <button type="button" class="country-picker-btn" onclick="toggleCountryPicker(this)">
+                <img class="flag-icon" src="" alt="" />
+                <span class="cp-code"></span>
+                <svg class="cp-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="country-picker-menu"></div>
+            </div>
+            <select class="country-select country-select-hidden" id="regWaCode"></select>
+            <input type="tel" id="regWhatsApp" placeholder="Same as phone if same"/>
+          </div>
+        </div>
+
+        <!-- Email is optional — toggle lets people skip it entirely -->
+        <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleRegEmail()">
+            <span>Email Address <span class="field-hint" style="display:inline;text-transform:none;font-weight:400">(optional)</span></span>
+            <span id="regEmailToggleLabel" style="color:var(--primary);font-size:0.78rem;text-transform:none;font-weight:600">+ Add email</span>
+          </label>
+          <input type="email" id="regEmail" placeholder="your@email.com" style="display:none"/>
+          <div class="field-error" id="err_regEmail"></div>
+        </div>
+
+        <div class="field">
+          <label>Password <span class="required">*</span></label>
+          <input type="password" id="regPassword" placeholder="Choose any password (6+ characters)"/>
+          <div class="field-error" id="err_regPassword"></div>
+        </div>
+        <button class="btn-submit" onclick="doRegister()" style="margin-top:4px">Create Free Account</button>
+        <div class="auth-switch">Already have an account? <a href="#" onclick="showLogin()">Sign in</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD SECTION (shown when logged in) -->
+<div id="dashSection" style="display:none">
+  <div class="container account-page">
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="dashAvatar">👤</div>
+      </div>
+      <div class="profile-info">
+        <h2 id="dashName">Seller</h2>
+        <p id="dashEmail"></p>
+        <p id="dashPhone"></p>
+        <span class="profile-badge" id="dashPlan">Free Plan</span>
+      </div>
+    </div>
+
+    <!-- Listing stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+      <div style="background:white;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--primary)" id="statUsed">0</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Used This Month</div>
+      </div>
+      <div style="background:white;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--success)" id="statRemain">30</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Remaining</div>
+      </div>
+      <div style="background:white;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--accent)" id="statTotal">0</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">Total Posts</div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="account-card">
+      <div class="account-card-title">Quick Actions</div>
+      <a href="sell.html" class="account-menu-item" style="text-decoration:none;color:inherit">
+        <div class="menu-icon" style="background:#e8eaf6">➕</div>
+        <div class="menu-text"><strong>New Post</strong><span>Share something for free</span></div>
+        <span class="menu-arrow">›</span>
+      </a>
+      <div class="account-menu-item" onclick="showMyListings()">
+        <div class="menu-icon" style="background:#e8f5e9">📦</div>
+        <div class="menu-text"><strong>My Posts</strong><span>View and manage your posts</span></div>
+        <span class="menu-badge" id="listingsBadge">0</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="account-menu-item" onclick="showMyFavorites()">
+        <div class="menu-icon" style="background:#ffeaf1">❤️</div>
+        <div class="menu-text"><strong>My Favorites</strong><span>Products you've saved</span></div>
+        <span class="menu-badge" id="favoritesBadge">0</span>
+        <span class="menu-arrow">›</span>
+      </div>
+      <a href="shop.html" class="account-menu-item" style="text-decoration:none;color:inherit">
+        <div class="menu-icon" style="background:#fff3e0">🛍️</div>
+        <div class="menu-text"><strong>Browse Shop</strong><span>Find products from other sellers</span></div>
+        <span class="menu-arrow">›</span>
+      </a>
+    </div>
+
+    <!-- Plan & upgrade -->
+    <div class="account-card">
+      <div class="account-card-title">Plan & Billing</div>
+      <div class="account-menu-item" onclick="showUpgradeModal()">
+        <div class="menu-icon" style="background:#fff8e1">🚀</div>
+        <div class="menu-text"><strong>Upgrade Plan</strong><span>Get 30 more posts for RWF 2,000/month</span></div>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Account settings -->
+    <div class="account-card">
+      <div class="account-card-title">Account</div>
+      <div class="account-menu-item" onclick="showEditProfile()">
+        <div class="menu-icon" style="background:#e3f2fd">✏️</div>
+        <div class="menu-text"><strong>Edit Profile</strong><span>Update your name, phone, city</span></div>
+        <span class="menu-arrow">›</span>
+      </div>
+      <div class="account-menu-item" onclick="doLogout()" style="color:var(--danger)">
+        <div class="menu-icon" style="background:#ffeaea">🚪</div>
+        <div class="menu-text"><strong>Sign Out</strong><span>Log out of your account</span></div>
+        <span class="menu-arrow">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MY LISTINGS PANEL -->
+<div id="myListingsPanel" style="display:none">
+  <div class="container account-page">
+    <div class="back-btn" onclick="hideMyListings()">← Back to Account</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">My Posts</h2>
+    <div id="myListingsGrid" class="products-grid"></div>
+    <div id="myListingsEmpty" class="empty-state" style="display:none">
+      <div class="empty-emoji">📦</div>
+      <h3>No posts yet</h3>
+      <p>Start selling today — it's free for your first 30 products!</p>
+      <a href="sell.html" class="btn-primary" style="display:inline-block;margin-top:8px">+ List a Product</a>
+    </div>
+  </div>
+</div>
+
+<!-- MY FAVORITES PANEL -->
+<div id="myFavoritesPanel" style="display:none">
+  <div class="container account-page">
+    <div class="back-btn" onclick="hideMyFavorites()">← Back to Account</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">My Favorites</h2>
+    <div id="myFavoritesGrid" class="products-grid"></div>
+    <div id="myFavoritesEmpty" class="empty-state" style="display:none">
+      <div class="empty-emoji">❤️</div>
+      <h3>No favorites yet</h3>
+      <p>Tap the heart on any product to save it here.</p>
+      <a href="shop.html" class="btn-primary" style="display:inline-block;margin-top:8px">Browse Shop</a>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT LISTING PANEL -->
+<div id="editListingPanel" style="display:none">
+  <div class="container account-page">
+    <div class="back-btn" onclick="hideEditListing()">← Back to My Posts</div>
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:20px">Edit Post</h2>
+    <input type="hidden" id="editListingId"/>
+
+    <div class="field">
+      <label>Product Name <span class="required">*</span></label>
+      <input type="text" id="editListingName" placeholder="Product name"/>
+    </div>
+
+    <div class="field">
+      <label>Description</label>
+      <textarea id="editListingDesc" rows="4" placeholder="Describe your product"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Price (RWF) <span class="required">*</span></label>
+      <input type="number" id="editListingPrice" min="0" placeholder="Price"/>
+    </div>
+
+    <div class="field-row" style="display:flex;gap:12px">
+      <div class="field" style="flex:1;min-width:0">
+        <label>Category</label>
+        <select id="editCategory" class="cat-real-select"></select>
+        <div class="cat-picker-wrap" id="editCatPickerWrap">
+          <div class="cat-picker-trigger" id="editCatPickerTrigger" onclick="editToggleCatPicker('cat')">
+            <span class="trigger-placeholder" id="editCatPickerLabel">Select category…</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="cat-picker-dropdown" id="editCatPickerDropdown"></div>
+        </div>
+      </div>
+      <div class="field" style="flex:1;min-width:0">
+        <label>Subcategory</label>
+        <select id="editSubcategory" class="cat-real-select"></select>
+        <div class="cat-picker-wrap" id="editSubPickerWrap">
+          <div class="cat-picker-trigger" id="editSubPickerTrigger" onclick="editToggleCatPicker('sub')">
+            <span class="trigger-placeholder" id="editSubPickerLabel">Select subcategory…</span>
+            <span class="trigger-arrow">▼</span>
+          </div>
+          <div class="cat-picker-dropdown" id="editSubPickerDropdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Photos</label>
+      <div id="editImageSlots"></div>
+      <button type="button" id="editAddImageBtn" onclick="editAddImageSlot()"
+        style="margin-top:8px;padding:10px 16px;border:1.5px dashed var(--primary);background:transparent;color:var(--primary);border-radius:var(--radius-sm);font-weight:600;font-size:0.85rem;cursor:pointer;width:100%">
+        + Add Photo
+      </button>
+    </div>
+
+    <button class="btn-submit" onclick="saveEditListing()">Save Changes</button>
+  </div>
+</div>
+
+<!-- EDIT PROFILE PANEL -->
+<div id="editProfilePanel" style="display:none">
+  <div class="container form-page">
+    <div class="back-btn" onclick="hideEditProfile()">← Back to Account</div>
+    <h1>Edit Profile</h1>
+    <div class="form-card">
+
+      <div class="field" style="text-align:center;margin-bottom:6px">
+        <label style="display:block;margin-bottom:10px">Profile Picture</label>
+        <div class="avatar-edit-wrap" onclick="document.getElementById('avatarFileInput').click()">
+          <div class="profile-avatar avatar-edit-preview" id="avatarEditPreview">👤</div>
+          <div class="avatar-edit-badge">📷</div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileChosen(event)"/>
+        <div class="field-hint" id="avatarStatus" style="margin-top:8px">Tap the photo to choose or change it</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field"><label>Full Name</label><input type="text" id="editName"/></div>
+        <div class="field"><label>City / District</label><input type="text" id="editCity"/></div>
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <div class="phone-wrap">
+          <div class="country-picker" data-target="editPhoneCode">
+            <button type="button" class="country-picker-btn" onclick="toggleCountryPicker(this)">
+              <img class="flag-icon" src="" alt="" />
+              <span class="cp-code"></span>
+              <svg class="cp-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="country-picker-menu"></div>
+          </div>
+          <select class="country-select country-select-hidden" id="editPhoneCode" onchange="syncWaCode('editPhoneCode','editWaCode')"></select>
+          <input type="tel" id="editPhone"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>WhatsApp Number</label>
+        <div class="phone-wrap">
+          <div class="country-picker" data-target="editWaCode">
+            <button type="button" class="country-picker-btn" onclick="toggleCountryPicker(this)">
+              <img class="flag-icon" src="" alt="" />
+              <span class="cp-code"></span>
+              <svg class="cp-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="country-picker-menu"></div>
+          </div>
+          <select class="country-select country-select-hidden" id="editWaCode"></select>
+          <input type="tel" id="editWhatsApp"/>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- AVATAR CROPPER MODAL -->
+<div id="avatarCropperModal" class="cropper-modal" style="display:none">
+  <div class="cropper-card">
+    <h2 style="margin:0 0 4px">Position your photo</h2>
+    <p class="field-hint" style="margin-bottom:14px">Drag to move • Scroll or pinch to zoom</p>
+    <div class="cropper-frame" id="cropperFrame">
+      <canvas id="cropperCanvas"></canvas>
+    </div>
+    <div class="cropper-actions">
+      <button class="btn-secondary" onclick="cancelAvatarCrop()">Cancel</button>
+      <button class="btn-submit" style="flex:1" onclick="confirmAvatarCrop()">Use This Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN OUT CONFIRM MODAL -->
+<div id="signOutModal" class="confirm-modal" style="display:none">
+  <div class="confirm-card">
+    <h2>Sign Out?</h2>
+    <p>Are you sure you want to sign out of your account?</p>
+    <div class="confirm-actions">
+      <button class="btn-secondary" onclick="cancelSignOut()">Cancel</button>
+      <button class="btn-danger" onclick="confirmSignOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/app.js"></script>
+<script>
+
+// ── Country code picker ────────────────────────
+const COUNTRY_CODES = [
+  { code: '+250', iso2: 'rw', name: 'Rwanda' },
+  { code: '+254', iso2: 'ke', name: 'Kenya' },
+  { code: '+255', iso2: 'tz', name: 'Tanzania' },
+  { code: '+256', iso2: 'ug', name: 'Uganda' },
+  { code: '+257', iso2: 'bi', name: 'Burundi' },
+  { code: '+243', iso2: 'cd', name: 'DR Congo' },
+  { code: '+242', iso2: 'cg', name: 'Congo' },
+  { code: '+251', iso2: 'et', name: 'Ethiopia' },
+  { code: '+233', iso2: 'gh', name: 'Ghana' },
+  { code: '+234', iso2: 'ng', name: 'Nigeria' },
+  { code: '+27',  iso2: 'za', name: 'South Africa' },
+  { code: '+20',  iso2: 'eg', name: 'Egypt' },
+  { code: '+212', iso2: 'ma', name: 'Morocco' },
+  { code: '+1',   iso2: 'us', name: 'USA / Canada' },
+  { code: '+44',  iso2: 'gb', name: 'UK' },
+  { code: '+33',  iso2: 'fr', name: 'France' },
+  { code: '+49',  iso2: 'de', name: 'Germany' },
+  { code: '+31',  iso2: 'nl', name: 'Netherlands' },
+  { code: '+32',  iso2: 'be', name: 'Belgium' },
+  { code: '+41',  iso2: 'ch', name: 'Switzerland' },
+  { code: '+91',  iso2: 'in', name: 'India' },
+  { code: '+86',  iso2: 'cn', name: 'China' },
+  { code: '+81',  iso2: 'jp', name: 'Japan' },
+  { code: '+971', iso2: 'ae', name: 'UAE' },
+  { code: '+966', iso2: 'sa', name: 'Saudi Arabia' },
+  { code: '+55',  iso2: 'br', name: 'Brazil' },
+  { code: '+61',  iso2: 'au', name: 'Australia' },
+];
+
+function flagUrl(iso2) {
+  return `https://flagcdn.com/24x18/${iso2}.png`;
+}
+
+function populateCountrySelect(selId, defaultCode) {
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  sel.innerHTML = COUNTRY_CODES.map(c =>
+    `<option value="${c.code}" ${c.code === defaultCode ? 'selected' : ''}>${c.name} (${c.code})</option>`
+  ).join('');
+  buildCountryMenu(selId);
+  refreshCountryDisplay(selId);
+}
+
+// Build the visible flag+name dropdown menu for a given hidden select
+function buildCountryMenu(selId) {
+  const picker = document.querySelector(`.country-picker[data-target="${selId}"]`);
+  if (!picker) return;
+  const menu = picker.querySelector('.country-picker-menu');
+  menu.innerHTML = COUNTRY_CODES.map(c => `
+    <div class="country-picker-item" onclick="selectCountry('${selId}','${c.code}')">
+      <img class="flag-icon" src="${flagUrl(c.iso2)}" alt="${c.name} flag" />
+      <span class="cp-name">${c.name}</span>
+      <span class="cp-code-sm">${c.code}</span>
+    </div>
+  `).join('');
+}
+
+// Sync the visible button (flag + code) to whatever the hidden select's current value is
+function refreshCountryDisplay(selId) {
+  const sel = document.getElementById(selId);
+  const picker = document.querySelector(`.country-picker[data-target="${selId}"]`);
+  if (!sel || !picker) return;
+  const c = COUNTRY_CODES.find(x => x.code === sel.value) || COUNTRY_CODES[0];
+  const img = picker.querySelector('.flag-icon');
+  img.src = flagUrl(c.iso2);
+  img.alt = c.name + ' flag';
+  picker.querySelector('.cp-code').textContent = c.code;
+}
+
+function toggleCountryPicker(btn) {
+  const picker = btn.closest('.country-picker');
+  const wasOpen = picker.classList.contains('open');
+  document.querySelectorAll('.country-picker.open').forEach(p => p.classList.remove('open'));
+  if (!wasOpen) picker.classList.add('open');
+}
+
+function selectCountry(selId, code) {
+  const sel = document.getElementById(selId);
+  if (sel) sel.value = code;
+  refreshCountryDisplay(selId);
+  document.querySelectorAll('.country-picker.open').forEach(p => p.classList.remove('open'));
+  // Keep WhatsApp country in sync with phone country, same as before
+  if (selId === 'regPhoneCode')  { syncWaCode('regPhoneCode','regWaCode');   refreshCountryDisplay('regWaCode'); }
+  if (selId === 'editPhoneCode') { syncWaCode('editPhoneCode','editWaCode'); refreshCountryDisplay('editWaCode'); }
+}
+
+// Close any open picker when clicking elsewhere on the page
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.country-picker')) {
+    document.querySelectorAll('.country-picker.open').forEach(p => p.classList.remove('open'));
+  }
+});
+
+function initPhonePickers() {
+  ['regPhoneCode','regWaCode','editPhoneCode','editWaCode'].forEach(id => {
+    populateCountrySelect(id, '+250'); // default Rwanda
+  });
+}
+
+// When phone country changes, auto-sync WhatsApp country
+function syncWaCode(phoneSelId, waSelId) {
+  const phoneSel = document.getElementById(phoneSelId);
+  const waSel = document.getElementById(waSelId);
+  if (phoneSel && waSel) waSel.value = phoneSel.value;
+}
+
+// Build full number: strip any leading 0 from local number, prepend code
+function buildPhone(codeSelId, inputId) {
+  const code = document.getElementById(codeSelId)?.value || '+250';
+  const local = (document.getElementById(inputId)?.value || '').trim().replace(/^0+/, '');
+  return local ? code + local : '';
+}
+
+// Parse existing stored number (+250783015788 or 250783015788) back into code + local
+function parseStoredPhone(full, codeSelId, inputId) {
+  if (!full && full !== 0) return;
+  full = String(full).trim();          // Google Sheets may return a number, not a string
+  if (!full) return;
+  let normalized = full.startsWith('+') ? full : '+' + full;
+  const match = COUNTRY_CODES.find(c => normalized.startsWith(c.code));
+  if (match) {
+    const sel = document.getElementById(codeSelId);
+    if (sel) sel.value = match.code;
+    refreshCountryDisplay(codeSelId);
+    const local = normalized.slice(match.code.length);
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = local;
+  } else {
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = full;
+  }
+}
+
+function initAccount() {
+  initPhonePickers();
+  const user = DB.getCurrentUser();
+  if (user) showDashboard(user);
+  else showAuth();
+}
+
+function showAuth() {
+  document.getElementById('authSection').style.display='block';
+  document.getElementById('dashSection').style.display='none';
+}
+
+async function showDashboard(user) {
+  document.getElementById('authSection').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+  document.getElementById('myListingsPanel').style.display='none';
+  document.getElementById('myFavoritesPanel').style.display='none';
+  document.getElementById('editProfilePanel').style.display='none';
+  const elp = document.getElementById('editListingPanel');
+  if (elp) elp.style.display='none';
+
+  const dashAvatarEl = document.getElementById('dashAvatar');
+  dashAvatarEl.innerHTML = user.avatarUrl
+    ? `<img src="${user.avatarUrl}" alt="${(user.name||'').replace(/"/g,'')}"/>`
+    : (user.name?.charAt(0).toUpperCase()||'👤');
+  document.getElementById('dashName').textContent   = user.name||'Seller';
+  document.getElementById('dashEmail').textContent  = user.email||'';
+  document.getElementById('dashPhone').textContent  = user.phone||'';
+  document.getElementById('dashPlan').textContent   = user.plan==='paid'?'⭐ Paid Plan':'Free Plan';
+
+  const limit  = DB.getProductLimit();
+
+  document.getElementById('statUsed').textContent   = '…';
+  document.getElementById('statRemain').textContent = '…';
+  document.getElementById('statTotal').textContent  = '…';
+  document.getElementById('listingsBadge').textContent = '…';
+  document.getElementById('favoritesBadge').textContent = '…';
+
+  const myList = await DB.getMyListings();
+  const now = new Date();
+  const used = myList.filter(p => {
+    const d = new Date(p.timestamp);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+
+  document.getElementById('statUsed').textContent   = used;
+  document.getElementById('statRemain').textContent = Math.max(0, limit - used);
+  document.getElementById('statTotal').textContent  = myList.length;
+  document.getElementById('listingsBadge').textContent = myList.length;
+
+  const favIds = await DB.getFavorites();
+  document.getElementById('favoritesBadge').textContent = favIds.length;
+}
+
+function showLogin() {
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('registerForm').style.display='none';
+  document.getElementById('authTitle').textContent='Welcome back';
+  document.getElementById('authSubtitle').textContent='Sign in to manage your posts';
+}
+
+function showRegister() {
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('registerForm').style.display='block';
+  document.getElementById('authTitle').textContent='Create free account';
+  document.getElementById('authSubtitle').textContent='Start selling in minutes';
+  // Reset any leftover avatar state from a previous (abandoned) registration attempt
+  pendingRegAvatarUrl = null;
+  document.getElementById('regAvatarPreview').innerHTML = '👤';
+  document.getElementById('regAvatarStatus').textContent = 'Tap to add a profile photo';
+  // Reset email toggle + clear any leftover field errors from a previous attempt
+  document.getElementById('regEmail').style.display = 'none';
+  document.getElementById('regEmail').value = '';
+  document.getElementById('regEmailToggleLabel').textContent = '+ Add email';
+  clearAllFieldErrors();
+}
+
+function toggleRegEmail() {
+  const input = document.getElementById('regEmail');
+  const label = document.getElementById('regEmailToggleLabel');
+  const showing = input.style.display !== 'none';
+  if (showing) {
+    input.style.display = 'none';
+    input.value = '';
+    label.textContent = '+ Add email';
+    clearFieldError('regEmail');
+  } else {
+    input.style.display = 'block';
+    label.textContent = '− Skip email';
+    input.focus();
+  }
+}
+
+// ── Lightweight per-field validation ────────────
+// Shows a short message under a field and reddens its border;
+// clearFieldError removes both. No password complexity rules —
+// just "did you fill in what's required".
+function setFieldError(fieldId, message) {
+  const input = document.getElementById(fieldId);
+  const err = document.getElementById('err_' + fieldId);
+  if (input) input.classList.add('error');
+  if (err) { err.textContent = message; err.classList.add('show'); }
+}
+
+function clearFieldError(fieldId) {
+  const input = document.getElementById(fieldId);
+  const err = document.getElementById('err_' + fieldId);
+  if (input) input.classList.remove('error');
+  if (err) { err.textContent = ''; err.classList.remove('show'); }
+}
+
+function clearAllFieldErrors() {
+  ['regName','regCity','regPhone','regEmail','regPassword','loginEmail','loginPassword'].forEach(clearFieldError);
+}
+
+async function doLogin() {
+  clearFieldError('loginEmail');
+  clearFieldError('loginPassword');
+  const identifier = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+
+  let hasError = false;
+  if (!identifier) { setFieldError('loginEmail', 'Enter your email or phone number'); hasError = true; }
+  if (!pass)       { setFieldError('loginPassword', 'Enter your password'); hasError = true; }
+  if (hasError) return;
+
+  try {
+    const user = await DB.login(identifier, pass);
+    showToast('Welcome back, '+user.name+'!','success');
+    showDashboard(user);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function doRegister() {
+  clearAllFieldErrors();
+
+  const name  = document.getElementById('regName').value.trim();
+  const city  = document.getElementById('regCity').value.trim();
+  const emailVisible = document.getElementById('regEmail').style.display !== 'none';
+  const email = emailVisible ? document.getElementById('regEmail').value.trim() : '';
+  const phone = buildPhone('regPhoneCode', 'regPhone');
+  const wa    = buildPhone('regWaCode', 'regWhatsApp');
+  const pass  = document.getElementById('regPassword').value;
+
+  let hasError = false;
+  if (!name)  { setFieldError('regName', 'Please enter your name'); hasError = true; }
+  if (!city)  { setFieldError('regCity', 'Please enter your city or district'); hasError = true; }
+  if (!phone) { setFieldError('regPhone', 'Please enter your phone number'); hasError = true; }
+  if (emailVisible && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setFieldError('regEmail', 'That email doesn\'t look right'); hasError = true;
+  }
+  if (!pass) { setFieldError('regPassword', 'Please choose a password'); hasError = true; }
+  else if (pass.length < 6) { setFieldError('regPassword', 'At least 6 characters'); hasError = true; }
+  if (hasError) return;
+
+  try {
+    const user = await DB.register({name,city,email,phone,whatsapp:wa||phone,password:pass,avatarUrl:pendingRegAvatarUrl||''});
+    pendingRegAvatarUrl = null;
+    showToast('Account created! Welcome to StillWorks 🎉','success');
+    showDashboard(user);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function doLogout() {
+  document.getElementById('signOutModal').style.display = 'flex';
+}
+
+function cancelSignOut() {
+  document.getElementById('signOutModal').style.display = 'none';
+}
+
+function confirmSignOut() {
+  document.getElementById('signOutModal').style.display = 'none';
+  DB.logout();
+  showToast('Signed out. See you soon!');
+  showAuth();
+}
+
+async function showMyListings() {
+  document.getElementById('dashSection').style.display='none';
+  document.getElementById('myListingsPanel').style.display='block';
+  const grid  = document.getElementById('myListingsGrid');
+  const empty = document.getElementById('myListingsEmpty');
+  empty.style.display='none';
+  grid.innerHTML = '<p style="color:var(--text-muted);padding:20px 0">Loading your posts…</p>';
+
+  const listings = await DB.getMyListings();
+
+  if(listings.length===0){ grid.innerHTML=''; empty.style.display='block'; return; }
+  grid.innerHTML = listings.map(p=>{
+    const firstImg = (Array.isArray(p.images) && p.images[0]?.url) ? p.images[0].url : p.imageUrl;
+    return `
+    <div class="product-card">
+      ${firstImg
+        ? `<img class="card-img" src="${escHtml(firstImg)}" alt="${escHtml(p.productName)}" loading="lazy"/>`
+        : `<div class="card-img-placeholder">${getCatEmoji(p.category)}</div>`}
+      <div class="card-body">
+        <div class="card-category">${getCatLabel(p.category)}</div>
+        <div class="card-title">${escHtml(p.productName)}</div>
+        <div class="card-footer">
+          <span class="card-price">${formatPrice(p.price)}</span>
+          <span class="card-location">📍 ${escHtml(p.sellerCity||'')}</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button onclick='openEditListing(${JSON.stringify(p).replace(/'/g,"&apos;")})' style="flex:1;padding:10px;background:#e3f2fd;color:#1565c0;border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-size:0.85rem">
+            ✏️ Edit
+          </button>
+          <button onclick="deleteListingConfirm('${p.id}')" style="flex:1;padding:10px;background:#ffeaea;color:var(--danger);border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-size:0.85rem">
+            🗑 Delete
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function hideMyListings() {
+  document.getElementById('myListingsPanel').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+}
+
+async function showMyFavorites() {
+  document.getElementById('dashSection').style.display='none';
+  document.getElementById('myFavoritesPanel').style.display='block';
+  const grid  = document.getElementById('myFavoritesGrid');
+  const empty = document.getElementById('myFavoritesEmpty');
+  empty.style.display='none';
+  grid.innerHTML = '<p style="color:var(--text-muted);padding:20px 0">Loading your favorites…</p>';
+
+  const favorites = await DB.getFavoriteProducts();
+
+  if (favorites.length === 0) { grid.innerHTML=''; empty.style.display='block'; return; }
+  grid.innerHTML = favorites.map(p => buildProductCard(p)).join('');
+}
+
+function hideMyFavorites() {
+  document.getElementById('myFavoritesPanel').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+  // Badge may be stale if items were unfavorited from inside the panel
+  DB.getFavorites(true).then(ids => {
+    document.getElementById('favoritesBadge').textContent = ids.length;
+  });
+}
+
+// If a product gets unfavorited while the My Favorites panel is open,
+// drop its card immediately rather than leaving a "favorite" that
+// no longer is one sitting in the list until the next reload.
+document.addEventListener('favoritechange', (e) => {
+  const panel = document.getElementById('myFavoritesPanel');
+  if (!panel || panel.style.display === 'none') return;
+  if (e.detail.isFavorite) return; // only react to removals here
+  const grid = document.getElementById('myFavoritesGrid');
+  const card = grid.querySelector(`[data-product-id="${e.detail.productId}"]`)?.closest('.product-card, .product-card--list');
+  if (card) card.remove();
+  if (!grid.children.length) {
+    document.getElementById('myFavoritesEmpty').style.display = 'block';
+  }
+});
+
+// deleteListingConfirm is now handled by the modal at the bottom of the page
+
+// ── Edit listing: category picker ────────────────────────────────
+const EDIT_CAT_EMOJI_MAP = {
+  'Smartphones':'📱','Tablets':'📟','Laptops':'💻','Desktops':'🖥️',
+  'TVs':'📺','Audio':'🎧','Cameras':'📷','Gaming':'🎮','Accessories':'🔌',
+  'Sofas & Chairs':'🛋️','Beds & Mattresses':'🛏️','Tables & Desks':'🪑',
+  'Wardrobes':'🚪','Kitchen Furniture':'🍳','Office Furniture':'🗄️',
+  'Cars':'🚗','Motorcycles':'🏍️','Bicycles':'🚲','Spare Parts':'🔧',
+  'Clothes':'👗','Shoes':'👟','Bags & Purses':'👜','Jewellery':'💍',
+  'Watches':'⌚','Sunglasses':'🕶️',
+  'Fridges':'❄️','Washing Machines':'🫧','Cookers & Ovens':'🍳','Microwaves':'📡',
+  'Air Conditioners':'💨','Small Appliances':'🔌',
+  'Phones & Tablets':'📱','Electronics':'💻','Furniture':'🛋️',
+  'Vehicles':'🚗','Fashion':'👗','Appliances':'🏠',
+  'Still Works':'✅','Slightly Damaged':'🩹','Heavily Damaged':'💥','Dead / Not Working':'💀',
+  'Spare Parts / Junk':'🔩','Missing Parts':'🧩','Expired (Food/Cosmetics)':'⏳','Mystery Bundle':'🎲',
+  'default':'📦'
+};
+
+function editBuildCatDropdown() {
+  const dd = document.getElementById('editCatPickerDropdown');
+  if (!dd) return;
+  dd.innerHTML = '';
+
+  // Populate the REAL hidden <select> with actual <option> elements too —
+  // without this, sel.value = id silently fails (a <select> can't hold a
+  // value that has no matching <option>), which is why category was always
+  // being saved as empty (and showing up as "Other") after an edit.
+  const sel = document.getElementById('editCategory');
+  if (sel) sel.innerHTML = '<option value="">Select category…</option>';
+
+  (CONFIG.CATEGORIES || []).filter(c => c.id !== 'all').forEach(cat => {
+    if (sel) {
+      const o = document.createElement('option');
+      o.value = cat.id; o.textContent = cat.label;
+      sel.appendChild(o);
+    }
+    const item = document.createElement('div');
+    item.className = 'cat-picker-item';
+    item.dataset.value = cat.id;
+    item.innerHTML = `<img src="${cat.image}" alt="" onerror="this.style.display='none'"><span>${cat.label}</span>`;
+    item.onclick = () => editSelectCat(cat.id, cat.label, cat.image);
+    dd.appendChild(item);
+  });
+}
+
+function editBuildSubDropdown(catId) {
+  const dd = document.getElementById('editSubPickerDropdown');
+  if (!dd) return;
+  dd.innerHTML = '';
+  const sel = document.getElementById('editSubcategory');
+  if (sel) sel.innerHTML = '<option value="">Select subcategory…</option>';
+  const subs = (CONFIG.SUBCATEGORIES || {})[catId] || [];
+  if (!subs.length) {
+    document.getElementById('editSubPickerWrap').style.opacity = '0.4';
+    document.getElementById('editSubPickerTrigger').style.pointerEvents = 'none';
+    return;
+  }
+  document.getElementById('editSubPickerWrap').style.opacity = '1';
+  document.getElementById('editSubPickerTrigger').style.pointerEvents = '';
+  subs.forEach(s => {
+    if (sel) {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    }
+    const item = document.createElement('div');
+    item.className = 'cat-picker-item';
+    const emoji = EDIT_CAT_EMOJI_MAP[s] || EDIT_CAT_EMOJI_MAP['default'];
+    item.innerHTML = `<div class="cat-emoji">${emoji}</div><span>${s}</span>`;
+    item.onclick = () => editSelectSub(s);
+    dd.appendChild(item);
+  });
+}
+
+function editToggleCatPicker(which) {
+  const triggerId = which === 'cat' ? 'editCatPickerTrigger' : 'editSubPickerTrigger';
+  const ddId      = which === 'cat' ? 'editCatPickerDropdown' : 'editSubPickerDropdown';
+  const otherId   = which === 'cat' ? 'editSubPickerDropdown' : 'editCatPickerDropdown';
+  const otherTrig = which === 'cat' ? 'editSubPickerTrigger'  : 'editCatPickerTrigger';
+  document.getElementById(otherId)?.classList.remove('open');
+  document.getElementById(otherTrig)?.classList.remove('open');
+  const dd = document.getElementById(ddId);
+  const tr = document.getElementById(triggerId);
+  dd.classList.toggle('open');
+  tr.classList.toggle('open');
+}
+
+function editSelectCat(id, label, imgSrc) {
+  document.getElementById('editCategory').value = id;
+  const trigger = document.getElementById('editCatPickerTrigger');
+  trigger.innerHTML = `<img src="${imgSrc}" alt="" onerror="this.style.display='none'"><span>${label}</span><span class="trigger-arrow">▼</span>`;
+  document.querySelectorAll('#editCatPickerDropdown .cat-picker-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.value === id);
+  });
+  document.getElementById('editCatPickerDropdown').classList.remove('open');
+  trigger.classList.remove('open');
+  // reset subcategory
+  document.getElementById('editSubcategory').value = '';
+  const subTrigger = document.getElementById('editSubPickerTrigger');
+  subTrigger.innerHTML = `<span class="trigger-placeholder" id="editSubPickerLabel">Select subcategory…</span><span class="trigger-arrow">▼</span>`;
+  editBuildSubDropdown(id);
+}
+
+function editSelectSub(name) {
+  document.getElementById('editSubcategory').value = name;
+  const trigger = document.getElementById('editSubPickerTrigger');
+  const emoji = EDIT_CAT_EMOJI_MAP[name] || EDIT_CAT_EMOJI_MAP['default'];
+  trigger.innerHTML = `<span style="font-size:1.2rem">${emoji}</span><span>${name}</span><span class="trigger-arrow">▼</span>`;
+  document.getElementById('editSubPickerDropdown').classList.remove('open');
+  trigger.classList.remove('open');
+}
+
+// ── Edit listing: image slots ─────────────────────────────────
+const EDIT_MAX_IMAGES = 5;
+let editImageSlotCount = 0;
+
+function editAddImageSlot(prefillUrl, prefillTag, prefillPrice) {
+  if (editImageSlotCount >= EDIT_MAX_IMAGES) return;
+  editImageSlotCount++;
+  const wrap = document.getElementById('editImageSlots');
+  const slotId = 'editImgSlot_' + editImageSlotCount;
+  const div = document.createElement('div');
+  div.className = 'image-slot';
+  div.id = slotId;
+  div.dataset.uploadedUrl = prefillUrl || '';
+  div.innerHTML = `
+    <div class="image-slot-preview" id="${slotId}_preview">${prefillUrl ? `<img src="${prefillUrl}"/>` : '🖼️'}</div>
+    <div class="image-slot-fields">
+      <input type="file" accept="image/*" class="img-file-input" id="${slotId}_file" onchange="editHandleImageFile('${slotId}', this.files[0])"/>
+      <div class="image-slot-status" id="${slotId}_status">${prefillUrl ? '✓ Current photo' : ''}</div>
+      <div class="image-slot-row">
+        <input type="text" placeholder="Tag — e.g. Red, Size M (optional)" class="img-tag-input" value="${prefillTag || ''}"/>
+        <input type="number" placeholder="Price (optional)" class="img-price-input" min="0" value="${prefillPrice || ''}"/>
+      </div>
+    </div>
+    <button type="button" class="image-slot-remove" onclick="editRemoveImageSlot('${slotId}')">✕</button>
+  `;
+  wrap.appendChild(div);
+  if (editImageSlotCount >= EDIT_MAX_IMAGES) {
+    document.getElementById('editAddImageBtn').style.display = 'none';
+  }
+}
+
+function editRemoveImageSlot(slotId) {
+  document.getElementById(slotId)?.remove();
+  editImageSlotCount--;
+  document.getElementById('editAddImageBtn').style.display = 'block';
+}
+
+async function editHandleImageFile(slotId, file) {
+  if (!file) return;
+  const preview = document.getElementById(slotId + '_preview');
+  const status  = document.getElementById(slotId + '_status');
+  const slot    = document.getElementById(slotId);
+  if (!file.type.startsWith('image/')) {
+    if (status) { status.textContent = 'Please choose an image file'; status.className = 'image-slot-status err'; }
+    return;
+  }
+  if (preview) { preview.className = 'image-slot-preview uploading'; preview.innerHTML = '<div class="spinner"></div>'; }
+  if (status)  { status.textContent = 'Compressing…'; status.className = 'image-slot-status'; }
+  try {
+    const blob = await compressImage(file, { maxDimension: 1200, quality: 0.75 });
+    if (status) status.textContent = `Uploading… (${(blob.size/1024).toFixed(0)} KB)`;
+    const url = await uploadToWorker(blob, file.name, 'products');
+    slot.dataset.uploadedUrl = url;
+    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = `<img src="${url}"/>`; }
+    if (status)  { status.textContent = '✓ Uploaded'; status.className = 'image-slot-status ok'; }
+  } catch (err) {
+    slot.dataset.uploadedUrl = '';
+    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = '⚠️'; }
+    if (status)  { status.textContent = 'Upload failed — try again'; status.className = 'image-slot-status err'; }
+  }
+}
+
+function editCollectImages() {
+  const slots = document.querySelectorAll('#editImageSlots .image-slot');
+  const images = [];
+  slots.forEach(slot => {
+    const url   = slot.dataset.uploadedUrl;
+    const tag   = slot.querySelector('.img-tag-input')?.value.trim();
+    const price = slot.querySelector('.img-price-input')?.value;
+    if (url) {
+      const img = { url, tag: tag || '' };
+      if (price) img.price = parseFloat(price);
+      images.push(img);
+    }
+  });
+  return images;
+}
+
+// Close edit pickers when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#editCatPickerWrap')) {
+    document.getElementById('editCatPickerDropdown')?.classList.remove('open');
+    document.getElementById('editCatPickerTrigger')?.classList.remove('open');
+  }
+  if (!e.target.closest('#editSubPickerWrap')) {
+    document.getElementById('editSubPickerDropdown')?.classList.remove('open');
+    document.getElementById('editSubPickerTrigger')?.classList.remove('open');
+  }
+});
+
+// ── openEditListing / save / hide ─────────────────────────────
+function openEditListing(p) {
+  document.getElementById('editListingId').value    = p.id;
+  document.getElementById('editListingName').value  = p.productName || '';
+  document.getElementById('editListingDesc').value  = p.description || '';
+  document.getElementById('editListingPrice').value = p.price || '';
+
+  // Build category dropdown and pre-select
+  editBuildCatDropdown();
+  if (p.category) {
+    const cat = (CONFIG.CATEGORIES || []).find(c => c.id === p.category);
+    if (cat) editSelectCat(cat.id, cat.label, cat.image);
+  }
+  // Pre-select subcategory after cat is set
+  if (p.subcategory) {
+    editSelectSub(p.subcategory);
+  }
+
+  // Reset and prefill image slots
+  editImageSlotCount = 0;
+  document.getElementById('editImageSlots').innerHTML = '';
+  document.getElementById('editAddImageBtn').style.display = 'block';
+  const imgs = Array.isArray(p.images) ? p.images : [];
+  if (imgs.length) {
+    imgs.forEach(img => {
+      const url   = typeof img === 'string' ? img : img.url;
+      const tag   = typeof img === 'object' ? (img.tag || '') : '';
+      const price = typeof img === 'object' ? (img.price || '') : '';
+      editAddImageSlot(url, tag, price);
+    });
+  } else {
+    editAddImageSlot(); // one empty slot
+  }
+
+  document.getElementById('myListingsPanel').style.display = 'none';
+  document.getElementById('editListingPanel').style.display = 'block';
+}
+
+function hideEditListing() {
+  document.getElementById('editListingPanel').style.display = 'none';
+  document.getElementById('myListingsPanel').style.display  = 'block';
+}
+
+async function saveEditListing() {
+  const id    = document.getElementById('editListingId').value;
+  const name  = document.getElementById('editListingName').value.trim();
+  const desc  = document.getElementById('editListingDesc').value.trim();
+  const price = document.getElementById('editListingPrice').value;
+
+  if (!name || !price) { showToast('Product name and price are required', 'error'); return; }
+  if (document.querySelector('#editImageSlots .image-slot-preview.uploading')) {
+    showToast('Please wait for photos to finish uploading', 'error'); return;
+  }
+
+  const images = editCollectImages();
+  if (!images.length) { showToast('Please add at least one product photo', 'error'); return; }
+
+  showToast('Saving…');
+  try {
+    await DB.updateMyListing(id, {
+      productName:  name,
+      description:  desc,
+      price:        price,
+      category:     document.getElementById('editCategory').value || '',
+      subcategory:  document.getElementById('editSubcategory').value || '',
+      imagesJson:   JSON.stringify(images),
+    });
+    showToast('Post updated!', 'success');
+    hideEditListing();
+    showMyListings();
+  } catch(e) {
+    showToast(e.message || 'Could not update post', 'error');
+  }
+}
+
+function showEditProfile() {
+  const user=DB.getCurrentUser();
+  if(!user) return;
+  document.getElementById('editName').value=user.name||'';
+  document.getElementById('editCity').value=user.city||'';
+  parseStoredPhone(user.phone||'', 'editPhoneCode', 'editPhone');
+  parseStoredPhone(user.whatsapp||user.phone||'', 'editWaCode', 'editWhatsApp');
+  const preview = document.getElementById('avatarEditPreview');
+  pendingAvatarUrl = user.avatarUrl || null;
+  preview.innerHTML = user.avatarUrl ? `<img src="${user.avatarUrl}"/>` : (user.name?.charAt(0).toUpperCase()||'👤');
+  document.getElementById('avatarStatus').textContent = 'Tap the photo to choose or change it';
+  document.getElementById('dashSection').style.display='none';
+  document.getElementById('editProfilePanel').style.display='block';
+}
+
+function hideEditProfile() {
+  document.getElementById('editProfilePanel').style.display='none';
+  document.getElementById('dashSection').style.display='block';
+}
+
+async function saveProfile() {
+  const updates={
+    name:     document.getElementById('editName').value.trim(),
+    city:     document.getElementById('editCity').value.trim(),
+    phone:    buildPhone('editPhoneCode', 'editPhone'),
+    whatsapp: buildPhone('editWaCode', 'editWhatsApp'),
+    avatarUrl: pendingAvatarUrl || '',
+  };
+  if(!updates.name||!updates.phone){ showToast('Name and phone are required','error'); return; }
+  const user = await DB.updateUser(updates);
+  showToast('Profile updated!','success');
+  hideEditProfile();
+  showDashboard(user);
+}
+
+// ================================================
+// AVATAR PICKER + CROPPER
+// Lets the seller pick a photo, then drag/zoom it inside
+// a circular frame before it's cropped, compressed, and
+// uploaded to the "avatars" folder.
+// ================================================
+
+let pendingAvatarUrl = null;   // the saved/uploaded avatar URL once confirmed (edit-profile form)
+let pendingRegAvatarUrl = null; // same, but for the register form (account doesn't exist yet)
+let avatarCropperTarget = 'edit'; // 'edit' or 'reg' — which form's preview/status to update
+let cropperImg = null;         // the Image() object being cropped
+let cropperState = { scale: 1, minScale: 1, offsetX: 0, offsetY: 0 };
+let cropperDrag = null;        // { startX, startY, startOffsetX, startOffsetY } while dragging
+
+const AVATAR_MAX_DIMENSION = 800; // output size in px (square)
+const AVATAR_QUALITY = 0.8;
+const CROPPER_DISPLAY_SIZE = 260; // matches .cropper-frame CSS width/height
+
+// IDs for the preview circle / status text / pending-url variable, per target form.
+function avatarTargetEls(target) {
+  if (target === 'reg') {
+    return { previewId: 'regAvatarPreview', statusId: 'regAvatarStatus' };
+  }
+  return { previewId: 'avatarEditPreview', statusId: 'avatarStatus' };
+}
+
+function onAvatarFileChosen(event, target = 'edit') {
+  avatarCropperTarget = target;
+  const file = event.target.files[0];
+  event.target.value = ''; // allow re-choosing the same file later
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Please choose an image file', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => openAvatarCropper(img);
+    img.onerror = () => showToast('Could not load that image', 'error');
+    img.src = e.target.result;
+  };
+  reader.onerror = () => showToast('Could not read that file', 'error');
+  reader.readAsDataURL(file);
+}
+
+function openAvatarCropper(img) {
+  cropperImg = img;
+
+  // Scale so the image's shorter side exactly fills the circular frame —
+  // this is the minimum zoom; the seller can zoom in further from there.
+  const minScale = CROPPER_DISPLAY_SIZE / Math.min(img.width, img.height);
+  cropperState = { scale: minScale, minScale, offsetX: 0, offsetY: 0 };
+
+  const canvas = document.getElementById('cropperCanvas');
+  canvas.width = CROPPER_DISPLAY_SIZE;
+  canvas.height = CROPPER_DISPLAY_SIZE;
+
+  document.getElementById('avatarCropperModal').style.display = 'flex';
+  drawCropperCanvas();
+  attachCropperInteractions();
+}
+
+function drawCropperCanvas() {
+  const canvas = document.getElementById('cropperCanvas');
+  const ctx = canvas.getContext('2d');
+  const { scale, offsetX, offsetY } = cropperState;
+  const w = cropperImg.width * scale;
+  const h = cropperImg.height * scale;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(CROPPER_DISPLAY_SIZE / 2 + offsetX, CROPPER_DISPLAY_SIZE / 2 + offsetY);
+  ctx.drawImage(cropperImg, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+// Clamp the pan offset so the image can never be dragged past the edge of the circular frame
+function clampCropperOffsets() {
+  const { scale } = cropperState;
+  const w = cropperImg.width * scale;
+  const h = cropperImg.height * scale;
+  const maxOffsetX = Math.max(0, (w - CROPPER_DISPLAY_SIZE) / 2);
+  const maxOffsetY = Math.max(0, (h - CROPPER_DISPLAY_SIZE) / 2);
+  cropperState.offsetX = Math.min(maxOffsetX, Math.max(-maxOffsetX, cropperState.offsetX));
+  cropperState.offsetY = Math.min(maxOffsetY, Math.max(-maxOffsetY, cropperState.offsetY));
+}
+
+function attachCropperInteractions() {
+  const frame = document.getElementById('cropperFrame');
+
+  // Drag to pan (mouse + touch via Pointer Events)
+  frame.onpointerdown = (e) => {
+    cropperDrag = { startX: e.clientX, startY: e.clientY, startOffsetX: cropperState.offsetX, startOffsetY: cropperState.offsetY };
+    frame.setPointerCapture(e.pointerId);
+  };
+  frame.onpointermove = (e) => {
+    if (!cropperDrag) return;
+    cropperState.offsetX = cropperDrag.startOffsetX + (e.clientX - cropperDrag.startX);
+    cropperState.offsetY = cropperDrag.startOffsetY + (e.clientY - cropperDrag.startY);
+    clampCropperOffsets();
+    drawCropperCanvas();
+  };
+  frame.onpointerup = () => { cropperDrag = null; };
+  frame.onpointercancel = () => { cropperDrag = null; };
+
+  // Scroll to zoom (desktop)
+  frame.onwheel = (e) => {
+    e.preventDefault();
+    zoomCropper(e.deltaY < 0 ? 1.08 : 0.92);
+  };
+
+  // Pinch to zoom (touch) — tracked via two-finger distance
+  let pinchStartDist = null;
+  let pinchStartScale = null;
+  frame.ontouchstart = (e) => {
+    if (e.touches.length === 2) {
+      pinchStartDist = touchDistance(e.touches);
+      pinchStartScale = cropperState.scale;
+    }
+  };
+  frame.ontouchmove = (e) => {
+    if (e.touches.length === 2 && pinchStartDist) {
+      e.preventDefault();
+      const dist = touchDistance(e.touches);
+      const factor = dist / pinchStartDist;
+      setCropperScale(pinchStartScale * factor);
+    }
+  };
+  frame.ontouchend = () => { pinchStartDist = null; };
+}
+
+function touchDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function zoomCropper(factor) {
+  setCropperScale(cropperState.scale * factor);
+}
+
+function setCropperScale(newScale) {
+  const maxScale = cropperState.minScale * 4; // allow zooming in up to 4x past the "fill frame" minimum
+  cropperState.scale = Math.min(maxScale, Math.max(cropperState.minScale, newScale));
+  clampCropperOffsets();
+  drawCropperCanvas();
+}
+
+function cancelAvatarCrop() {
+  document.getElementById('avatarCropperModal').style.display = 'none';
+  cropperImg = null;
+}
+
+async function confirmAvatarCrop() {
+  if (!cropperImg) return;
+
+  const { previewId, statusId } = avatarTargetEls(avatarCropperTarget);
+  document.getElementById('avatarCropperModal').style.display = 'none';
+  document.getElementById(statusId).textContent = 'Compressing…';
+
+  try {
+    // Work out which square region of the ORIGINAL image corresponds to
+    // what's currently visible inside the circular frame, accounting for
+    // the user's pan + zoom.
+    const { scale, offsetX, offsetY } = cropperState;
+    const sSize = CROPPER_DISPLAY_SIZE / scale;
+    const sx = (cropperImg.width / 2) - (offsetX / scale) - (sSize / 2);
+    const sy = (cropperImg.height / 2) - (offsetY / scale) - (sSize / 2);
+
+    // Re-use the original File via a temporary canvas->blob round trip,
+    // since compressImage() expects a File/Blob with onload-friendly data.
+    const sourceCanvas = document.createElement('canvas');
+    sourceCanvas.width = cropperImg.width;
+    sourceCanvas.height = cropperImg.height;
+    sourceCanvas.getContext('2d').drawImage(cropperImg, 0, 0);
+    const sourceBlob = await new Promise(resolve => sourceCanvas.toBlob(resolve, 'image/jpeg', 0.95));
+
+    const compressedBlob = await compressImage(sourceBlob, {
+      maxDimension: AVATAR_MAX_DIMENSION,
+      quality: AVATAR_QUALITY,
+      cropToSquare: true,
+      cropRect: { sx, sy, sSize },
+    });
+
+    document.getElementById(statusId).textContent = `Uploading… (${(compressedBlob.size/1024).toFixed(0)} KB)`;
+
+    const url = await uploadToWorker(compressedBlob, 'avatar.jpg', 'avatars');
+
+    if (avatarCropperTarget === 'reg') {
+      pendingRegAvatarUrl = url;
+    } else {
+      pendingAvatarUrl = url;
+    }
+    document.getElementById(previewId).innerHTML = `<img src="${url}"/>`;
+    document.getElementById(statusId).textContent = '✓ Photo ready';
+
+  } catch (err) {
+    const { statusId: sId } = avatarTargetEls(avatarCropperTarget);
+    document.getElementById(sId).textContent = 'Upload failed — try again';
+    console.error('Avatar upload failed:', err);
+  } finally {
+    cropperImg = null;
+  }
+}
+
+function showUpgradeModal() {
+  const msg=encodeURIComponent('Hi! I want to upgrade my StillWorks post plan — 30 more posts for RWF 2,000. Please activate my account.');
+  window.open(`https://wa.me/${CONFIG.PAID_WHATSAPP}?text=${msg}`,'_blank');
+}
+
+document.addEventListener('DOMContentLoaded', initAccount);
+</script>
+<!-- ===== DELETE CONFIRMATION MODAL ===== -->
+<div id="deleteModal" style="
+  display:none;
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(15,14,26,0.55);
+  backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+  padding:16px;
+">
+  <div style="
+    background:#fff;
+    border-radius:20px;
+    padding:32px 24px 24px;
+    max-width:360px;width:100%;
+    box-shadow:0 16px 48px rgba(26,20,100,0.22);
+    text-align:center;
+    animation:popIn 0.18s ease;
+  ">
+    <div style="font-size:2.8rem;margin-bottom:12px">🗑️</div>
+    <h3 style="font-size:1.2rem;font-weight:700;color:#0f0e1a;margin-bottom:8px">Delete this post?</h3>
+    <p style="color:#6b7280;font-size:0.92rem;line-height:1.5;margin-bottom:28px">
+      This will permanently remove your listing. Buyers won't be able to find it anymore. This cannot be undone.
+    </p>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeDeleteModal()" style="
+        flex:1;padding:13px;
+        background:#f3f4f6;color:#374151;
+        border:none;border-radius:12px;
+        font-weight:600;font-size:0.95rem;cursor:pointer;
+        transition:background 0.15s;
+      " onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+        Cancel
+      </button>
+      <button onclick="confirmDeleteListing()" style="
+        flex:1;padding:13px;
+        background:#ef4444;color:#fff;
+        border:none;border-radius:12px;
+        font-weight:600;font-size:0.95rem;cursor:pointer;
+        transition:background 0.15s;
+      " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+        Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+</style>
+
+<script>
+let _pendingDeleteId = null;
+
+function deleteListingConfirm(id) {
+  _pendingDeleteId = id;
+  const modal = document.getElementById('deleteModal');
+  modal.style.display = 'flex';
+}
+
+function closeDeleteModal() {
+  _pendingDeleteId = null;
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+async function confirmDeleteListing() {
+  if (!_pendingDeleteId) return;
+  closeDeleteModal();
+  showToast('Deleting…');
+  try {
+    await DB.deleteMyListing(_pendingDeleteId);
+    showToast('Post deleted', 'success');
+    showMyListings();
+    const user = DB.getCurrentUser();
+    if (user) showDashboard(user);
+  } catch(e) {
+    showToast(e.message || 'Could not delete post', 'error');
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDeleteModal();
+});
+</script>
+
+</body>
+</html>
