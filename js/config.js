@@ -65,30 +65,37 @@ const CONFIG = {
   // Put your photos in /images/categories/ in your GitHub repo,
   // named exactly as shown below (e.g. electronics.jpg).
   // Or replace any path with a full URL (Hugging Face, Cloudinary, etc.)
+  //
+  // banner: hero banner shown on the homepage when this category is selected.
+  // All of these currently point at the same placeholder (Hero.jpg) — drop your
+  // own photo in /images/banners/ named exactly as shown (e.g. Clothing.jpg)
+  // and it'll be picked up automatically (falls back to Hero.jpg if missing).
+  //
+  // heroTitle / heroSub: headline + subtext shown over that category's banner.
   CATEGORIES: [
-    { id: "all",          label: "All",               image: `${IMG_BASE}All.jpg` },
-    { id: "clothing",     label: "Clothing",          image: `${IMG_BASE}Clothing.jpg` },
-    { id: "shoes",        label: "Shoes",             image: `${IMG_BASE}Shoes.jpg` },
-    { id: "jewelry",      label: "Watches & Jewelry", image: `${IMG_BASE}Jewelry.jpg` },
-    { id: "accessories",  label: "Accessories & Bags", image: `${IMG_BASE}Accessories.jpg` },
-    { id: "kids",         label: "Kids & Toys",       image: `${IMG_BASE}Kids.jpg` },
-    { id: "home",         label: "Home & Appliances", image: `${IMG_BASE}Home.jpg` },
-    { id: "beauty",       label: "Beauty & Health",   image: `${IMG_BASE}Beauty.jpg` },
-    { id: "telecom",      label: "Phones & Telecom",  image: `${IMG_BASE}Telecom.jpg` },
-    { id: "electronics",  label: "Electronics",       image: `${IMG_BASE}Electronics.jpg` },
-    { id: "hair",         label: "Hair",              image: `${IMG_BASE}Hair.jpg` },
-    { id: "computer",     label: "Computer & Office", image: `${IMG_BASE}Computer.jpg` },
-    { id: "automobile",   label: "Automobile & Tools", image: `${IMG_BASE}Automobile.jpg` },
-    { id: "sports",       label: "Sports & Entertainment", image: `${IMG_BASE}Sports.jpg` },
-    { id: "furniture",    label: "Furniture",         image: `${IMG_BASE}Furniture.jpg` },
-    { id: "vehicles",     label: "Vehicles",          image: `${IMG_BASE}Vehicles.jpg` },
-    { id: "food",         label: "Food & Drinks",     image: `${IMG_BASE}Food.jpg` },
-    { id: "books",        label: "Books & Stationery", image: `${IMG_BASE}Books.jpg` },
-    { id: "agriculture",  label: "Agriculture",       image: `${IMG_BASE}Agriculture.jpg` },
-    { id: "services",     label: "Services",          image: `${IMG_BASE}Services.jpg` },
-    { id: "property",     label: "Property",          image: `${IMG_BASE}Property.jpg` },
-    { id: "free",          label: "Free Stuff",        image: `${IMG_BASE}Free.jpg` },
-    { id: "other",        label: "Other",             image: `${IMG_BASE}Other.jpg` },
+    { id: "all",          label: "All",               image: `${IMG_BASE}All.jpg`,          banner: `${BANNER_BASE}Hero.jpg`,        heroTitle: "Find used stuff near you",        heroSub: "No fees. Post your used stuff. Someone will take it." },
+    { id: "clothing",     label: "Clothing",          image: `${IMG_BASE}Clothing.jpg`,     banner: `${BANNER_BASE}Clothing.jpg`,    heroTitle: "Pre-loved clothing,<br><em>fresh prices</em>",        heroSub: "Quality fashion finds without the brand-new markup." },
+    { id: "shoes",        label: "Shoes",             image: `${IMG_BASE}Shoes.jpg`,        banner: `${BANNER_BASE}Shoes.jpg`,       heroTitle: "Step into a<br><em>great deal</em>",                  heroSub: "Sneakers, heels, sandals — barely worn, ready for you." },
+    { id: "jewelry",      label: "Watches & Jewelry", image: `${IMG_BASE}Jewelry.jpg`,      banner: `${BANNER_BASE}Jewelry.jpg`,     heroTitle: "Timeless pieces,<br><em>real prices</em>",            heroSub: "Watches and jewelry that still shine, for less." },
+    { id: "accessories",  label: "Accessories & Bags", image: `${IMG_BASE}Accessories.jpg`, banner: `${BANNER_BASE}Accessories.jpg`, heroTitle: "Bags & accessories<br><em>worth grabbing</em>",       heroSub: "Carry something good without paying full price." },
+    { id: "kids",         label: "Kids & Toys",       image: `${IMG_BASE}Kids.jpg`,         banner: `${BANNER_BASE}Kids.jpg`,        heroTitle: "Kids grow fast.<br><em>Spend smart.</em>",            heroSub: "Toys and gear that still have plenty of play left." },
+    { id: "home",         label: "Home & Appliances", image: `${IMG_BASE}Home.jpg`,         banner: `${BANNER_BASE}Home.jpg`,        heroTitle: "Furnish your home<br><em>for less</em>",              heroSub: "Appliances and furniture that still work great." },
+    { id: "beauty",       label: "Beauty & Health",   image: `${IMG_BASE}Beauty.jpg`,       banner: `${BANNER_BASE}Beauty.jpg`,      heroTitle: "Look good,<br><em>spend less</em>",                   heroSub: "Beauty and health finds at a price that makes sense." },
+    { id: "telecom",      label: "Phones & Telecom",  image: `${IMG_BASE}Telecom.jpg`,      banner: `${BANNER_BASE}Telecom.jpg`,     heroTitle: "Stay connected<br><em>without the markup</em>",       heroSub: "Phones and accessories that still work perfectly." },
+    { id: "electronics",  label: "Electronics",       image: `${IMG_BASE}Electronics.jpg`,  banner: `${BANNER_BASE}Electronics.jpg`, heroTitle: "Tech that<br><em>still works</em>",                   heroSub: "Gadgets and devices at a fraction of retail." },
+    { id: "hair",         label: "Hair",              image: `${IMG_BASE}Hair.jpg`,         banner: `${BANNER_BASE}Hair.jpg`,        heroTitle: "Hair essentials,<br><em>real savings</em>",           heroSub: "Wigs, extensions, and tools at a better price." },
+    { id: "computer",     label: "Computer & Office", image: `${IMG_BASE}Computer.jpg`,     banner: `${BANNER_BASE}Computer.jpg`,    heroTitle: "Work smarter,<br><em>spend smarter</em>",             heroSub: "Computers and office gear that still get the job done." },
+    { id: "automobile",   label: "Automobile & Tools", image: `${IMG_BASE}Automobile.jpg`,  banner: `${BANNER_BASE}Automobile.jpg`,  heroTitle: "Parts & tools<br><em>that still work</em>",           heroSub: "Automobile gear and tools at a fair price." },
+    { id: "sports",       label: "Sports & Entertainment", image: `${IMG_BASE}Sports.jpg`,  banner: `${BANNER_BASE}Sports.jpg`,      heroTitle: "Gear up<br><em>for less</em>",                        heroSub: "Sports and entertainment finds, barely used." },
+    { id: "furniture",    label: "Furniture",         image: `${IMG_BASE}Furniture.jpg`,    banner: `${BANNER_BASE}Furniture.jpg`,   heroTitle: "Furniture that<br><em>still has life</em>",           heroSub: "Good pieces, good condition, good price." },
+    { id: "vehicles",     label: "Vehicles",          image: `${IMG_BASE}Vehicles.jpg`,     banner: `${BANNER_BASE}Vehicles.jpg`,    heroTitle: "Your next ride,<br><em>already broken in</em>",       heroSub: "Cars, motorcycles, and bicycles from real sellers." },
+    { id: "food",         label: "Food & Drinks",     image: `${IMG_BASE}Food.jpg`,         banner: `${BANNER_BASE}Food.jpg`,        heroTitle: "Good food,<br><em>good price</em>",                   heroSub: "Fresh produce and packaged goods near you." },
+    { id: "books",        label: "Books & Stationery", image: `${IMG_BASE}Books.jpg`,       banner: `${BANNER_BASE}Books.jpg`,       heroTitle: "Stories & supplies,<br><em>secondhand smart</em>",    heroSub: "Books and stationery at a fraction of the price." },
+    { id: "agriculture",  label: "Agriculture",       image: `${IMG_BASE}Agriculture.jpg`,  banner: `${BANNER_BASE}Agriculture.jpg`, heroTitle: "From the land,<br><em>to you</em>",                   heroSub: "Seeds, tools, and produce from local sellers." },
+    { id: "services",     label: "Services",          image: `${IMG_BASE}Services.jpg`,     banner: `${BANNER_BASE}Services.jpg`,    heroTitle: "Get it done,<br><em>locally</em>",                    heroSub: "Find trusted services from people near you." },
+    { id: "property",     label: "Property",          image: `${IMG_BASE}Property.jpg`,     banner: `${BANNER_BASE}Property.jpg`,    heroTitle: "Find your<br><em>next place</em>",                    heroSub: "Property for rent or sale, listed directly by owners." },
+    { id: "free",          label: "Free Stuff",        image: `${IMG_BASE}Free.jpg`,        banner: `${BANNER_BASE}Free.jpg`,        heroTitle: "Free is the<br><em>best price</em>",                  heroSub: "Items people are giving away — first come, first served." },
+    { id: "other",        label: "Other",             image: `${IMG_BASE}Other.jpg`,        banner: `${BANNER_BASE}Other.jpg`,       heroTitle: "A little bit<br><em>of everything</em>",              heroSub: "Browse the items that don't fit anywhere else." },
   ],
 
   // ── SUBCATEGORIES ─────────────────────────────

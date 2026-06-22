@@ -9,11 +9,7 @@ let activeSubcat = {}; // { categoryId: 'subcategoryName' | null }
 
 // ── Init ─────────────────────────────────────────
 async function initHome() {
-  const hero = document.querySelector('.hero');
-  if (hero && CONFIG.HERO_IMAGE) {
-    hero.style.backgroundImage =
-      `linear-gradient(135deg, rgba(40,32,150,0.88) 0%, rgba(45,36,168,0.82) 60%, rgba(55,48,208,0.8) 100%), url('${CONFIG.HERO_IMAGE}')`;
-  }
+  applyHeroForCategory('all');
 
   buildCategoryPills();
   populateCategoryFilter();
@@ -46,6 +42,32 @@ const TOPCAT_EMOJI = {
   furniture: '🛋️', vehicles: '🚗', health: '💊', sports: '⚽', books: '📚',
   agriculture: '🌾', services: '🛠️', property: '🏠', babies: '🧸', other: '📦',
 };
+
+// ── Swap hero banner + headline/subtext for the active category ──
+function applyHeroForCategory(catId) {
+  const hero  = document.getElementById('heroSection');
+  const title = document.getElementById('heroTitle');
+  const sub   = document.getElementById('heroSub');
+  if (!hero) return;
+
+  const cat = CONFIG.CATEGORIES.find(c => c.id === catId) || CONFIG.CATEGORIES.find(c => c.id === 'all');
+  const bannerUrl = cat?.banner || CONFIG.HERO_IMAGE;
+
+  // Preload so we don't flash a broken image if the category banner file
+  // doesn't exist yet — fall back to the generic Hero.jpg silently.
+  const img = new Image();
+  img.onload = () => setHeroBg(bannerUrl);
+  img.onerror = () => setHeroBg(CONFIG.HERO_IMAGE);
+  img.src = bannerUrl;
+
+  function setHeroBg(url) {
+    hero.style.backgroundImage =
+      `linear-gradient(135deg, rgba(40,32,150,0.88) 0%, rgba(45,36,168,0.82) 60%, rgba(55,48,208,0.8) 100%), url('${url}')`;
+  }
+
+  if (title) title.innerHTML = cat?.heroTitle || 'Find used stuff near you';
+  if (sub)   sub.textContent = cat?.heroSub || 'No fees. Post your used stuff. Someone will take it.';
+}
 
 // ── Build category pills ─────────────────────────
 function buildCategoryPills() {
@@ -115,6 +137,7 @@ function selectCatFromPicker(catId) {
   const pill = [...document.querySelectorAll('.cat-pill')].find(p => p.getAttribute('onclick')?.includes(`'${catId}'`));
   if (pill) pill.classList.add('active');
   activeCat = catId === 'all' ? 'all' : catId;
+  applyHeroForCategory(activeCat);
   buildCategorySections();
 }
 
@@ -123,6 +146,7 @@ function selectCategory(catId, el) {
   activeCat = catId;
   document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
   if (el) el.classList.add('active');
+  applyHeroForCategory(catId);
   // Sync hidden input
   const filterCat = document.getElementById('filterCat');
   if (filterCat) filterCat.value = catId === 'all' ? '' : catId;
@@ -164,15 +188,16 @@ function applyFilters() {
 }
 
 // ── Get filtered+sorted products for one category (respects global filters) ──
-function getProductsForCategory(catId) {
+// Pass catId=null + allCats=true to get every product (the "All" flat grid).
+function getProductsForCategory(catId, allCats) {
   const minP   = parseFloat(document.getElementById('minPrice')?.value || '0') || 0;
   const maxP   = parseFloat(document.getElementById('maxPrice')?.value || '0') || Infinity;
   const sortBy = document.getElementById('sortBy')?.value || 'newest';
   const loc    = getUserLocation();
-  const subcat = activeSubcat[catId];
+  const subcat = catId ? activeSubcat[catId] : null;
 
   let list = allProducts.filter(p => {
-    if (p.category !== catId) return false;
+    if (!allCats && p.category !== catId) return false;
     if (subcat && p.subcategory !== subcat) return false;
     if (p.price < minP) return false;
     if (maxP !== Infinity && p.price > maxP) return false;
@@ -196,66 +221,62 @@ function getProductsForCategory(catId) {
   return list;
 }
 
-// ── Build all category sections (subcategory circles + product row) ──
+// ── Build the section below the hero: subcat circles (if a specific
+//    category is active) + that category's product grid. "All" just
+//    shows one flat grid of every product, no per-category stacking. ──
 function buildCategorySections() {
   const container = document.getElementById('categorySections');
   const noRes = document.getElementById('noResults');
   if (!container) return;
 
-  const categoriesToShow = activeCat === 'all'
-    ? CONFIG.CATEGORIES.filter(c => c.id !== 'all')
-    : CONFIG.CATEGORIES.filter(c => c.id === activeCat);
+  const loc = getUserLocation();
 
-  let anyVisible = false;
-  const sectionsHtml = categoriesToShow.map(cat => {
-    const allCatProducts = allProducts.filter(p => p.category === cat.id);
-    if (allCatProducts.length === 0) return ''; // skip categories with zero products entirely
+  // ── "All" → flat grid, no subcat circles ──
+  if (activeCat === 'all') {
+    const products = getProductsForCategory(null, true); // null = no category filter
+    container.innerHTML = products.length
+      ? `<div class="products-grid">${products.map(p => buildProductCard(p, loc?.lat, loc?.lng)).join('')}</div>`
+      : '';
+    if (noRes) noRes.classList.toggle('hidden', products.length > 0);
+    return;
+  }
 
-    anyVisible = true;
-    const subcats = CONFIG.SUBCATEGORIES[cat.id] || [];
+  // ── Specific category → subcat circles + that category's grid ──
+  const cat = CONFIG.CATEGORIES.find(c => c.id === activeCat);
+  const allCatProducts = allProducts.filter(p => p.category === activeCat);
+  const subcats = CONFIG.SUBCATEGORIES[activeCat] || [];
 
-    // Only show subcategory circles that actually have at least 1 product
-    const subcatsWithProducts = subcats.filter(sc =>
-      allCatProducts.some(p => p.subcategory === sc)
-    );
+  const subcatsWithProducts = subcats.filter(sc =>
+    allCatProducts.some(p => p.subcategory === sc)
+  );
 
-    const subcatCirclesHtml = subcatsWithProducts.map(sc => `
-      <div class="subcat-item ${activeSubcat[cat.id] === sc ? 'active' : ''}" onclick="selectSubcat('${cat.id}','${escAttr(sc)}')">
-        <div class="subcat-circle">
-          <img class="subcat-img" src="${cat.image}" alt="${escHtml(sc)}"
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
-          <span class="subcat-fallback" style="display:none">${getSubcatEmoji(cat.id, sc)}</span>
-        </div>
-        <div class="subcat-label">${escHtml(sc)}</div>
-      </div>`).join('');
+  const subcatCirclesHtml = subcatsWithProducts.map(sc => `
+    <div class="subcat-item ${activeSubcat[activeCat] === sc ? 'active' : ''}" onclick="selectSubcat('${activeCat}','${escAttr(sc)}')">
+      <div class="subcat-circle">
+        <img class="subcat-img" src="${cat.image}" alt="${escHtml(sc)}"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+        <span class="subcat-fallback" style="display:none">${getSubcatEmoji(activeCat, sc)}</span>
+      </div>
+      <div class="subcat-label">${escHtml(sc)}</div>
+    </div>`).join('');
 
-    const productsForThisCat = getProductsForCategory(cat.id);
-    const loc = getUserLocation();
-    const productsHtml = productsForThisCat.length
-      ? productsForThisCat.map(p => buildProductCard(p, loc?.lat, loc?.lng)).join('')
-      : `<p class="cat-section-empty">No products match the current filters in this category.</p>`;
+  const productsForThisCat = getProductsForCategory(activeCat);
+  const productsHtml = productsForThisCat.length
+    ? productsForThisCat.map(p => buildProductCard(p, loc?.lat, loc?.lng)).join('')
+    : '';
 
-    return `
+  container.innerHTML = `
     <section class="cat-section">
+      ${subcatCirclesHtml ? `<div class="subcat-row">${subcatCirclesHtml}</div>` : ''}
       <div class="cat-section-head">
-        <div class="cat-section-title">
-          <img class="cat-section-img" src="${cat.image}" alt="${cat.label}" onerror="this.style.display='none'" /> ${cat.label}
+        <div class="cat-section-title">${cat?.label || activeCat}
           <span class="cat-section-count">(${productsForThisCat.length})</span>
         </div>
-        <a href="pages/categories.html?cat=${cat.id}" class="see-all">See all →</a>
       </div>
-      ${subcatCirclesHtml ? `<div class="subcat-row">${subcatCirclesHtml}</div>` : ''}
-      <div class="cat-products-row">${productsHtml}</div>
+      <div class="products-grid">${productsHtml}</div>
     </section>`;
-  }).join('');
 
-  container.innerHTML = sectionsHtml;
-
-  if (!anyVisible) {
-    if (noRes) noRes.classList.remove('hidden');
-  } else {
-    if (noRes) noRes.classList.add('hidden');
-  }
+  if (noRes) noRes.classList.toggle('hidden', productsForThisCat.length > 0);
 }
 
 // ── Subcategory circle click (toggle filter within that category) ──
@@ -325,6 +346,7 @@ function clearFilters() {
   const thumb = document.getElementById('catPickerThumb');
   if (label) label.textContent = 'All Categories';
   if (thumb) thumb.style.display = 'none';
+  applyHeroForCategory('all');
   applyFilters();
 }
 
