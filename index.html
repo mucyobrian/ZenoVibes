@@ -89,57 +89,6 @@
   </div>
 </section>
 
-<!-- ===== FILTER BAR ===== -->
-<section class="filter-bar">
-  <div class="container filter-inner">
-    <div class="filter-group" style="position:relative">
-      <label>Category</label>
-      <div id="catPickerWrap" style="position:relative">
-        <button id="catPickerTrigger" type="button" onclick="toggleCatPicker()" style="
-          width:100%;display:flex;align-items:center;gap:8px;
-          padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-          background:var(--surface);cursor:pointer;font-size:0.9rem;color:var(--text);
-          text-align:left;font-family:inherit;
-        ">
-          <img id="catPickerThumb" src="" alt="" style="width:24px;height:24px;border-radius:4px;object-fit:cover;display:none"/>
-          <span id="catPickerLabel">All Categories</span>
-          <svg style="margin-left:auto;flex-shrink:0" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div id="catPickerDropdown" style="
-          display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:200;
-          background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);
-          box-shadow:var(--shadow-lg);min-width:220px;max-height:320px;overflow-y:auto;
-        "></div>
-      </div>
-      <input type="hidden" id="filterCat" value=""/>
-    </div>
-    <div class="filter-group">
-      <label>Price Range</label>
-      <div class="price-inputs">
-        <input type="number" id="minPrice" placeholder="Min" oninput="applyFilters()" />
-        <span>—</span>
-        <input type="number" id="maxPrice" placeholder="Max" oninput="applyFilters()" />
-      </div>
-    </div>
-    <div class="filter-group">
-      <label>Sort By</label>
-      <select id="sortBy" onchange="applyFilters()">
-        <option value="newest">Newest First</option>
-        <option value="price-asc">Price: Low → High</option>
-        <option value="price-desc">Price: High → Low</option>
-        <option value="near">Near Me</option>
-      </select>
-    </div>
-    <div class="filter-group near-toggle">
-      <label>Near Me</label>
-      <label class="toggle-switch">
-        <input type="checkbox" id="nearMeToggle" onchange="toggleNearMe()" />
-        <span class="slider"></span>
-      </label>
-    </div>
-  </div>
-</section>
-
 <!-- ===== CATEGORY SECTIONS (subcategory circles + product list, per category) ===== -->
 <main class="container main-content" id="categorySections">
   <div class="skeleton-card"></div>
