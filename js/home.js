@@ -72,19 +72,6 @@ function applyHeroForCategory(catId) {
   if (!hero) return;
 
   const cat = CONFIG.CATEGORIES.find(c => c.id === catId) || CONFIG.CATEGORIES.find(c => c.id === 'all');
-  const bannerUrl = cat?.banner || CONFIG.HERO_IMAGE;
-
-  // Preload so we don't flash a broken image if the category banner file
-  // doesn't exist yet — fall back to the generic Hero.jpg silently.
-  const img = new Image();
-  img.onload = () => setHeroBg(bannerUrl);
-  img.onerror = () => setHeroBg(CONFIG.HERO_IMAGE);
-  img.src = bannerUrl;
-
-  function setHeroBg(url) {
-    hero.style.backgroundImage =
-      `linear-gradient(135deg, rgba(40,32,150,0.88) 0%, rgba(45,36,168,0.82) 60%, rgba(55,48,208,0.8) 100%), url('${url}')`;
-  }
 
   if (title) title.innerHTML = cat?.heroTitle || 'Find used stuff near you';
   if (sub)   sub.textContent = cat?.heroSub || 'No fees. Post your used stuff. Someone will take it.';
