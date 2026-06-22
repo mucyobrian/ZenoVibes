@@ -25,7 +25,7 @@
 .form-card {
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 28px 24px;
+  padding: 20px 16px;
   box-shadow: var(--shadow);
   margin-bottom: 20px;
 }
@@ -283,9 +283,9 @@
   transition: border-color 0.15s, background 0.15s;
 }
 .image-slot-fields input:focus { border-color: var(--primary); background: var(--surface); }
-.image-slot-row { display: flex; gap: 8px; }
-.image-slot-row input:first-child { flex: 1; }
-.image-slot-row input:last-child { width: 110px; }
+.image-slot-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.image-slot-row input:first-child { flex: 1; min-width: 120px; }
+.image-slot-row input:last-child { width: 110px; min-width: 90px; flex: 1; }
 
 .image-slot-remove {
   background: var(--bg);
@@ -566,11 +566,7 @@
 }
 
 /* ===== SHOP PAGE ===== */
-<<<<<<< HEAD
 .shop-page { padding: 10px 16px 40px; }
-=======
-.shop-page { padding: 24px 16px 40px; }
->>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
 
 .shop-header {
   display: flex;
@@ -747,13 +743,8 @@
 .page-hero {
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: white;
-<<<<<<< HEAD
   padding: 14px 16px;
   margin-bottom: 16px;
-=======
-  padding: 32px 16px;
-  margin-bottom: 0;
->>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
 }
 .page-hero h1 {
   font-family: var(--font-display);

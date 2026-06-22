@@ -40,6 +40,7 @@ body {
   min-height: 100vh;
   padding-bottom: calc(var(--tab-height) + 16px);
   padding-top: var(--top-height);
+  overflow-x: hidden;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -419,11 +420,7 @@ input, select, textarea { font-family: inherit; }
 /* ===== PROMO CAROUSEL ===== */
 .promo-carousel {
   max-width: 1200px;
-<<<<<<< HEAD
   margin: 8px auto;
-=======
-  margin: 20px auto;
->>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
   padding: 0 16px;
   width: 100%;
   box-sizing: border-box;
@@ -492,15 +489,12 @@ input, select, textarea { font-family: inherit; }
   .promo-slide, .promo-slide img { min-height: 280px; height: 280px; }
 }
 
-<<<<<<< HEAD
 @media (max-width: 767px) {
   .promo-carousel-inner { min-height: 220px; }
   .promo-slide { min-height: 220px; }
   .promo-slide img { height: 220px; min-height: 220px; object-fit: cover; object-position: center top; }
 }
 
-=======
->>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
 @media (max-width: 480px) {
   .hero-overlay { padding: 16px 16px; gap: 6px; }
   .hero-overlay .hero-cta { margin-top: 6px; gap: 6px; }
@@ -645,11 +639,7 @@ input, select, textarea { font-family: inherit; }
 
 /* ===== FILTER BAR ===== */
 .filter-bar {
-<<<<<<< HEAD
   padding: 8px 0;
-=======
-  padding: 16px 0;
->>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
   background: var(--surface);
   border-bottom: 1.5px solid var(--border);
   margin-bottom: 8px;
@@ -735,11 +725,7 @@ input, select, textarea { font-family: inherit; }
 .toggle-switch input:checked + .slider::before { transform: translateX(20px); }
 
 /* ===== MAIN CONTENT ===== */
-<<<<<<< HEAD
 .main-content { padding: 10px 16px 16px; }
-=======
-.main-content { padding: 24px 16px 32px; }
->>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
 
 .section-head {
   display: flex;
@@ -1096,11 +1082,7 @@ input, select, textarea { font-family: inherit; }
 /* Contained to the same max-width as Featured Products — no full-width banners */
 
 .cat-section {
-<<<<<<< HEAD
   margin-bottom: 18px;
-=======
-  margin-bottom: 36px;
->>>>>>> 3f65bf1bed7cd888c7c75eb6667f34c62d9f53ed
 }
 
 .cat-section-head {
