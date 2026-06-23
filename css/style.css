@@ -489,19 +489,38 @@ input, select, textarea { font-family: inherit; }
   .promo-slide, .promo-slide img { min-height: 280px; height: 280px; }
 }
 
+/* Tablets / large phones: a bit shorter than desktop, full text kept.
+   The gradient keeps overlay text readable no matter what's in the photo behind it. */
 @media (max-width: 767px) {
-  .promo-carousel-inner { min-height: 220px; }
-  .promo-slide { min-height: 220px; }
-  .promo-slide img { height: 220px; min-height: 220px; object-fit: cover; object-position: center top; }
+  .promo-carousel-inner { min-height: 190px; }
+  .promo-slide { min-height: 190px; }
+  .promo-slide img { height: 190px; min-height: 190px; object-fit: cover; object-position: center top; }
+  .hero-overlay {
+    background: linear-gradient(90deg, rgba(8,6,20,0.88) 0%, rgba(8,6,20,0.88) 58%, rgba(8,6,20,0.3) 74%, rgba(8,6,20,0) 86%);
+  }
 }
 
-@media (max-width: 480px) {
-  .hero-overlay { padding: 16px 16px; gap: 6px; }
-  .hero-overlay .hero-cta { margin-top: 6px; gap: 6px; }
+/* Phones: short banner — drop the stats row and subtext for a cleaner fit */
+@media (max-width: 600px) {
+  .promo-carousel-inner { min-height: 170px; }
+  .promo-slide { min-height: 170px; }
+  .promo-slide img { height: 170px; min-height: 170px; }
+  .hero-overlay { padding: 12px 16px; gap: 4px; }
+  .hero-overlay p,
+  .hero-overlay .hero-stats { display: none; }
+  .hero-overlay .hero-cta { margin-top: 4px; gap: 6px; }
   .hero-overlay .hero-cta .btn-primary,
   .hero-overlay .hero-cta .btn-outline { padding: 6px 14px; font-size: 0.75rem; }
-  .hero-overlay .hero-stats { gap: 12px; }
-  .hero-overlay p { display: none; } /* hide subtext on very small screens to keep buttons visible */
+}
+
+/* Small phones: tighten a little further */
+@media (max-width: 480px) {
+  .promo-carousel-inner { min-height: 150px; }
+  .promo-slide { min-height: 150px; }
+  .promo-slide img { height: 150px; min-height: 150px; }
+  .hero-overlay { padding: 10px 16px; }
+  .hero-overlay .hero-cta .btn-primary,
+  .hero-overlay .hero-cta .btn-outline { padding: 5px 12px; font-size: 0.7rem; }
 }
 
 /* ===== CATEGORY STRIP ===== */
