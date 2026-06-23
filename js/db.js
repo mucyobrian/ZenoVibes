@@ -36,10 +36,17 @@ const DB = (() => {
     const cols = json.table.cols.map(c => c.label.toLowerCase().replace(/\s+/g, ''));
 
     return rows.map((row, i) => {
-      const obj = { id: `gs_${i}` };
+      const obj = { id: `gs_${i}` }; // fallback only — overwritten below if the sheet has a real id
       row.c.forEach((cell, ci) => {
         obj[cols[ci]] = cell ? cell.v : '';
       });
+      // Prefer the stable id written by Apps Script at creation time.
+      // Only legacy rows created before the id column existed fall back to gs_${i}.
+      if (obj.id !== undefined && obj.id !== null && String(obj.id).trim() !== '') {
+        obj.id = String(obj.id);
+      } else {
+        obj.id = `gs_${i}`;
+      }
       return obj;
     }).filter(p => p.status !== 'rejected' && p.productname);
   }
@@ -113,7 +120,7 @@ const DB = (() => {
       .map(p => normalizeProduct(p));
 
     // Clean up any local-only stub whose product has now synced to the Sheet
-    // (matched by same product name, since the synced row gets a new gs_ id)
+    // (matched by same product name, since the synced row gets a real id from the server)
     const localStubs = JSON.parse(localStorage.getItem(STORAGE_KEYS.MY_LISTINGS) || '[]');
     if (localStubs.length) {
       const liveNames = new Set(liveMine.map(p => p.productName));
