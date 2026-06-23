@@ -268,6 +268,8 @@ input, select, textarea { font-family: inherit; }
   margin: 0 auto;
   color: white;
   pointer-events: none; /* let clicks pass through to slide link, except on real controls */
+  /* Dark-to-clear scrim so overlay text stays readable no matter what's in the photo behind it */
+  background: linear-gradient(90deg, rgba(8,6,20,0.88) 0%, rgba(8,6,20,0.88) 58%, rgba(8,6,20,0.3) 74%, rgba(8,6,20,0) 86%);
 }
 
 .hero-overlay .hero-cta,
@@ -495,9 +497,6 @@ input, select, textarea { font-family: inherit; }
   .promo-carousel-inner { min-height: 190px; }
   .promo-slide { min-height: 190px; }
   .promo-slide img { height: 190px; min-height: 190px; object-fit: cover; object-position: center top; }
-  .hero-overlay {
-    background: linear-gradient(90deg, rgba(8,6,20,0.88) 0%, rgba(8,6,20,0.88) 58%, rgba(8,6,20,0.3) 74%, rgba(8,6,20,0) 86%);
-  }
 }
 
 /* Phones: short banner — drop the stats row and subtext for a cleaner fit */
