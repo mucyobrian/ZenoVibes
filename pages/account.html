@@ -1541,10 +1541,11 @@ function closeDeleteModal() {
 
 async function confirmDeleteListing() {
   if (!_pendingDeleteId) return;
+  const idToDelete = _pendingDeleteId; // capture before closeDeleteModal() clears it
   closeDeleteModal();
   showToast('Deleting…');
   try {
-    await DB.deleteMyListing(_pendingDeleteId);
+    await DB.deleteMyListing(idToDelete);
     showToast('Post deleted', 'success');
     showMyListings();
     const user = DB.getCurrentUser();
