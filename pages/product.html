@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post — StillWorks</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <style>
+    .detail-page { padding: 8px 12px 40px; max-width: 760px; margin: 0 auto; }
+
+    /* Image carousel */
+    .carousel {
+      position: relative;
+      background: var(--bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .carousel-track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .carousel-track::-webkit-scrollbar { display: none; }
+    .carousel-slide {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+    }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: contain; }
+    .carousel-slide .ph { font-size: 4rem; }
+    .carousel-counter {
+      position: absolute;
+      bottom: 12px; right: 12px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .carousel-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 5px 0 2px;
+    }
+    .carousel-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .carousel-dot.active { background: var(--primary); width: 18px; border-radius: 4px; }
+
+    .thumb-strip {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+    }
+    .thumb {
+      width: 52px; height: 52px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      opacity: 0.7;
+      transition: all 0.15s;
+    }
+    .thumb.active { border-color: var(--primary); opacity: 1; }
+
+    /* Variant tag buttons */
+    .variant-section { margin-bottom: 12px; }
+    .variant-label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .variant-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .variant-tag {
+      padding: 7px 14px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: white;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .variant-tag:hover { border-color: var(--primary); }
+    .variant-tag.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .detail-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+    .detail-category { display: inline-block; background: #e8eaf6; color: var(--primary); font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 100px; margin-bottom: 6px; }
+    .detail-price { font-size: 1.9rem; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
+    .detail-price .old-price { font-size: 1.1rem; color: var(--text-light); text-decoration: line-through; font-weight: 500; margin-left: 8px; }
+
+    .detail-section { background: white; border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--shadow); }
+    .detail-section h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+    .detail-desc { font-size: 0.92rem; color: var(--text-muted); line-height: 1.6; white-space: pre-wrap; }
+
+    .seller-row { display: flex; align-items: center; gap: 14px; }
+    .seller-row--clickable { cursor: pointer; transition: opacity 0.15s; }
+    .seller-row--clickable:hover { opacity: 0.75; }
+    .seller-row-arrow { margin-left: auto; font-size: 1.6rem; color: var(--text-light); flex-shrink: 0; }
+    .seller-avatar { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0; overflow: hidden; }
+    .seller-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .seller-name { font-weight: 600; font-size: 0.95rem; }
+    .seller-loc { font-size: 0.84rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+
+    .map-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--primary); font-size: 0.86rem; font-weight: 600; }
+
+    .sticky-cta {
+      position: sticky;
+      bottom: calc(var(--tab-height) + 12px);
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      z-index: 40;
+    }
+    .sticky-cta .btn-modal { flex: 1; justify-content: center; }
+
+    .related-section { margin-top: 24px; margin-bottom: 24px; }
+    .related-section h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; }
+
+    /* Similar products grid */
+    .similar-section { margin-top: 16px; margin-bottom: 20px; }
+    .similar-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .similar-section-header h3 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+    .similar-section-header a {
+      font-size: 0.82rem; font-weight: 600; color: var(--primary);
+      text-decoration: none; white-space: nowrap;
+    }
+    .similar-scroll {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .similar-card {
+      background: white;
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow: hidden; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .similar-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .similar-card-img {
+      width: 100%; aspect-ratio: 1/1;
+      background: var(--bg); display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem;
+    }
+    .similar-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .similar-card-body { padding: 8px 10px 10px; }
+    .similar-card-title {
+      font-size: 0.84rem; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .similar-card-price { font-size: 0.9rem; font-weight: 700; color: var(--primary); }
+    .similar-card-loc { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .similar-empty { font-size: 0.88rem; color: var(--text-muted); font-style: italic; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">Still<span>Works</span></a>
+    <div style="flex:1"></div>
+    <nav class="top-actions">
+      <a href="account.html" class="btn-account" id="accountBtn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+    </nav>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <a href="../index.html" class="tab" data-tab="home"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></a>
+  <a href="categories.html" class="tab" data-tab="categories"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Categories</span></a>
+  <a href="shop.html" class="tab" data-tab="shop"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></a>
+  <a href="account.html" class="tab" data-tab="account"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Account</span></a>
+</nav>
+
+<div class="detail-page" id="detailPage">
+  <div class="back-btn" onclick="history.length>1 ? history.back() : location.href='shop.html'">← Back</div>
+
+  <div id="loadingState" style="text-align:center;padding:60px 0;color:var(--text-muted)">Loading product…</div>
+
+  <div id="productContent" style="display:none">
+    <!-- Image Carousel -->
+    <div class="carousel">
+      <div class="carousel-track" id="carouselTrack"></div>
+      <div class="carousel-counter" id="carouselCounter">1/1</div>
+    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
+    <div class="thumb-strip" id="thumbStrip"></div>
+
+    <!-- Title / Price -->
+    <span class="detail-category" id="detailCategory"></span>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+      <h1 class="detail-title" id="detailTitle" style="margin-bottom:0"></h1>
+      <button id="detailFavBtn" class="fav-btn" style="position:static;flex-shrink:0;width:38px;height:38px;box-shadow:0 1px 4px rgba(0,0,0,0.15)" onclick="handleDetailFavClick()" aria-label="Add to favorites">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+    </div>
+    <div class="detail-price" id="detailPrice"></div>
+
+    <!-- Variant tags -->
+    <div class="variant-section" id="variantSection" style="display:none">
+      <div class="variant-label">Choose an option</div>
+      <div class="variant-tags" id="variantTags"></div>
+    </div>
+
+    <!-- Description -->
+    <div class="detail-section">
+      <h3>Description</h3>
+      <p class="detail-desc" id="detailDesc"></p>
+    </div>
+
+    <!-- Seller & location -->
+    <div class="detail-section">
+      <h3>Seller & Location</h3>
+      <div class="seller-row seller-row--clickable" id="sellerRow" onclick="goToSellerShop()">
+        <div class="seller-avatar" id="sellerAvatar"></div>
+        <div>
+          <div class="seller-name" id="sellerName"></div>
+          <div class="seller-loc">📍 <span id="sellerCity"></span><span id="sellerDist" style="color:var(--success);font-weight:600"></span></div>
+        </div>
+        <div class="seller-row-arrow">›</div>
+      </div>
+      <a href="#" id="mapLink" target="_blank" class="map-link" style="display:none">
+        🗺️ View location on Google Maps →
+      </a>
+    </div>
+
+    <!-- Similar Products -->
+    <div class="similar-section" id="similarSection" style="display:none">
+      <div class="similar-section-header">
+        <h3>🔁 Similar Listings</h3>
+        <a href="#" id="similarSeeAll">See all →</a>
+      </div>
+      <div class="similar-scroll" id="similarScroll"></div>
+    </div>
+
+    <!-- Sticky contact buttons -->
+    <div class="sticky-cta">
+      <a id="callBtn" href="#" class="btn-modal btn-call">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8A16 16 0 0 0 15.2 16.09l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call
+      </a>
+      <a id="waBtn" href="#" target="_blank" class="btn-modal btn-whatsapp">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.554 4.11 1.523 5.843L0 24l6.32-1.497A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.82 9.82 0 0 1-5.007-1.371l-.36-.214-3.732.883.933-3.617-.235-.372A9.818 9.818 0 0 1 2.182 12c0-5.422 4.396-9.818 9.818-9.818 5.422 0 9.818 4.396 9.818 9.818 0 5.422-4.396 9.818-9.818 9.818z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let product = null;
+let images = [];
+let activeVariantIdx = 0;
+
+async function initDetail() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { showNotFound(); return; }
+
+  let all = await DB.getProducts();
+  await DB.getFavorites();
+
+  // If this id is a not-yet-synced local stub, pull it in directly
+  if (String(id).startsWith('local_')) {
+    const localStubs = JSON.parse(localStorage.getItem('sokohub_my_listings') || '[]');
+    const stub = localStubs.find(p => String(p.id) === String(id));
+    if (stub) all = [stub, ...all];
+  }
+
+  product = all.find(p => String(p.id) === String(id));
+  if (!product) { showNotFound(); return; }
+
+  // Normalize images: support legacy "imageUrl" string OR new "images" array
+  images = normalizeImages(product);
+
+  renderDetail();
+}
+
+function normalizeImages(p) {
+  if (Array.isArray(p.images) && p.images.length) return p.images;
+  if (p.imageUrl) return [{ url: p.imageUrl, tag: '', price: p.price }];
+  return [{ url: '', tag: '', price: p.price }];
+}
+
+function showNotFound() {
+  document.getElementById('loadingState').innerHTML =
+    '<div class="empty-state"><div class="empty-emoji">😕</div><h3>Product not found</h3><p>It may have been removed.</p><a href="shop.html" class="btn-primary" style="display:inline-block;margin-top:8px">Browse Shop</a></div>';
+}
+
+function setDetailFavUI(isFav) {
+  const btn = document.getElementById('detailFavBtn');
+  if (!btn) return;
+  btn.classList.toggle('is-fav', isFav);
+  const path = btn.querySelector('path');
+  if (path) path.setAttribute('fill', isFav ? 'currentColor' : 'none');
+  btn.setAttribute('aria-label', isFav ? 'Remove from favorites' : 'Add to favorites');
+}
+
+async function handleDetailFavClick() {
+  if (!DB.getCurrentUser()) {
+    showToast('Sign in to save favorites', 'error');
+    window.location.href = 'account.html';
+    return;
+  }
+  const willBeFav = !DB.isFavorite(product.id);
+  setDetailFavUI(willBeFav); // optimistic
+  try {
+    await DB.toggleFavorite(product.id);
+  } catch (e) {
+    setDetailFavUI(!willBeFav); // roll back
+    showToast(e.message || 'Could not update favorites', 'error');
+  }
+}
+
+function renderDetail() {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('productContent').style.display = 'block';
+
+  // Carousel
+  const track = document.getElementById('carouselTrack');
+  track.innerHTML = images.map(img => `
+    <div class="carousel-slide">
+      ${img.url
+        ? `<img src="${escHtml(img.url)}" alt="${escHtml(product.productName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>`
+        : ''}
+      <div class="ph" style="display:${img.url ? 'none' : 'flex'}">${getCatEmoji(product.category)}</div>
+    </div>`).join('');
+
+  document.getElementById('carouselCounter').textContent = `1/${images.length}`;
+
+  const dots = document.getElementById('carouselDots');
+  if (images.length > 1) {
+    dots.innerHTML = images.map((_, i) => `<div class="carousel-dot ${i===0?'active':''}" onclick="selectVariant(${i})"></div>`).join('');
+  } else {
+    dots.innerHTML = '';
+  }
+
+  const thumbStrip = document.getElementById('thumbStrip');
+  if (images.length > 1) {
+    thumbStrip.innerHTML = images.map((img, i) => `
+      <img class="thumb ${i===0?'active':''}" src="${escHtml(img.url)}" onclick="selectVariant(${i})" onerror="this.style.opacity=0.2"/>
+    `).join('');
+  } else {
+    thumbStrip.innerHTML = '';
+  }
+
+  track.addEventListener('scroll', onCarouselScroll);
+
+  // Title / category
+  document.getElementById('detailCategory').innerHTML = `${getCatEmoji(product.category)} ${getCatLabel(product.category)}`;
+  document.getElementById('detailTitle').textContent = product.productName;
+  document.getElementById('detailDesc').textContent = product.description || 'No description provided.';
+
+  // Favorite heart state
+  setDetailFavUI(DB.isFavorite(product.id));
+
+  // Variant tags (only show if any image has a non-empty tag)
+  const hasTags = images.some(img => img.tag && img.tag.trim());
+  if (hasTags) {
+    document.getElementById('variantSection').style.display = 'block';
+    document.getElementById('variantTags').innerHTML = images
+      .map((img, i) => img.tag ? `<button class="variant-tag ${i===0?'active':''}" onclick="selectVariant(${i})">${escHtml(img.tag)}</button>` : '')
+      .join('');
+  }
+
+  updatePriceDisplay(0);
+
+  // Seller info
+  const sellerAvatarEl = document.getElementById('sellerAvatar');
+  sellerAvatarEl.innerHTML = product.sellerAvatarUrl
+    ? `<img src="${escHtml(product.sellerAvatarUrl)}" alt="${escHtml(product.sellerName||'Seller')}"/>`
+    : (product.sellerName||'S').charAt(0).toUpperCase();
+  document.getElementById('sellerName').textContent = product.sellerName || 'Seller';
+  document.getElementById('sellerCity').textContent = product.sellerCity || 'Location not specified';
+
+  const loc = getUserLocation();
+  if (loc && product.sellerLat) {
+    const dist = DB.getDistanceKm(loc.lat, loc.lng, product.sellerLat, product.sellerLng);
+    document.getElementById('sellerDist').textContent = ' · ' + formatDist(dist);
+  }
+
+  const mapLink = document.getElementById('mapLink');
+  if (product.sellerLat && product.sellerLng) {
+    mapLink.href = `https://www.google.com/maps?q=${product.sellerLat},${product.sellerLng}`;
+    mapLink.style.display = 'inline-flex';
+  } else if (product.sellerCity) {
+    mapLink.href = `https://www.google.com/maps/search/${encodeURIComponent(product.sellerCity)}`;
+    mapLink.style.display = 'inline-flex';
+  }
+
+  // Contact buttons
+  const phone = String(product.sellerPhone||'').replace(/\s+/g,'');
+  const wa    = String(product.sellerWhatsApp||product.sellerPhone||'').replace(/[\s+]/g,'');
+  const callBtn = document.getElementById('callBtn');
+  const waBtn   = document.getElementById('waBtn');
+  if (phone) { callBtn.href = `tel:${phone}`; } else { callBtn.style.display='none'; }
+  if (wa) {
+    const variantNote = hasTags && images[activeVariantIdx].tag ? ` (${images[activeVariantIdx].tag})` : '';
+    const msg = encodeURIComponent(`Hi ${product.sellerName}, I saw your post on StillWorks and I'm interested in "${product.productName}"${variantNote}. Is it still available?`);
+    waBtn.href = `https://wa.me/${wa}?text=${msg}`;
+  } else { waBtn.style.display='none'; }
+
+  document.title = `${product.productName} — StillWorks`;
+
+  // Load similar products asynchronously (won't block the main render)
+  renderSimilarProducts();
+}
+
+function selectVariant(i) {
+  scrollToSlide(i);
+  applyVariantState(i);
+}
+
+// Shared by selectVariant (tap a tag/thumb/dot) and onCarouselScroll (swipe) —
+// everything that should happen when the active photo changes, except the
+// actual scrolling (selectVariant scrolls; onCarouselScroll is already mid-scroll).
+function applyVariantState(i) {
+  activeVariantIdx = i;
+  document.querySelectorAll('.variant-tag').forEach((el,idx) => el.classList.toggle('active', idx===i));
+  document.querySelectorAll('.carousel-dot').forEach((d,idx) => d.classList.toggle('active', idx===i));
+  document.querySelectorAll('.thumb').forEach((t,idx) => t.classList.toggle('active', idx===i));
+  updatePriceDisplay(i);
+  // Update WhatsApp message with variant
+  const wa = String(product.sellerWhatsApp||product.sellerPhone||'').replace(/[\s+]/g,'');
+  if (wa) {
+    const tag = images[i].tag ? ` (${images[i].tag})` : '';
+    const msg = encodeURIComponent(`Hi ${product.sellerName}, I saw your post on StillWorks and I'm interested in "${product.productName}"${tag}. Is it still available?`);
+    document.getElementById('waBtn').href = `https://wa.me/${wa}?text=${msg}`;
+  }
+}
+
+function updatePriceDisplay(i) {
+  const img = images[i];
+  const price = (img && img.price) ? img.price : product.price;
+  document.getElementById('detailPrice').textContent = formatPrice(price);
+}
+
+function scrollToSlide(i) {
+  const track = document.getElementById('carouselTrack');
+  track.scrollTo({ left: track.clientWidth * i, behavior: 'smooth' });
+}
+
+function onCarouselScroll(e) {
+  const track = e.target;
+  const idx = Math.round(track.scrollLeft / track.clientWidth);
+  document.getElementById('carouselCounter').textContent = `${idx+1}/${images.length}`;
+  applyVariantState(idx);
+}
+
+// Takes the buyer to the Shop page, filtered to show only this seller's other listings.
+// Filtered by phone number (a reliable unique key) rather than name, since two
+// different sellers could share the same display name.
+function goToSellerShop() {
+  if (!product) return;
+  const phone = (product.sellerPhone || product.sellerWhatsApp || '').replace(/^\+/, '');
+  if (!phone) return;
+  const params = new URLSearchParams({
+    seller: phone,
+    sellerName: product.sellerName || 'Seller',
+  });
+  window.location.href = `shop.html?${params.toString()}`;
+}
+
+// ── Similar Products ─────────────────────────────────────────────────────
+async function renderSimilarProducts() {
+  if (!product) return;
+
+  const all = await DB.getProducts();
+
+  // Score each product by similarity to the current one
+  function scoreProduct(p) {
+    if (String(p.id) === String(product.id)) return -1; // exclude self
+    let score = 0;
+    if (p.category === product.category) score += 10;       // same category = strong match
+    if (p.sellerCity && p.sellerCity === product.sellerCity) score += 4; // same city
+    // price proximity: within 50% of current price earns up to 3 pts
+    const curPrice  = parseFloat(product.price) || 0;
+    const candPrice = parseFloat(p.price) || 0;
+    if (curPrice > 0 && candPrice > 0) {
+      const ratio = Math.min(curPrice, candPrice) / Math.max(curPrice, candPrice);
+      score += Math.round(ratio * 3);
+    }
+    return score;
+  }
+
+  const ranked = all
+    .map(p => ({ p, score: scoreProduct(p) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10)
+    .map(({ p }) => p);
+
+  if (!ranked.length) return;
+
+  const section = document.getElementById('similarSection');
+  const scroll  = document.getElementById('similarScroll');
+  const seeAll  = document.getElementById('similarSeeAll');
+
+  // "See all" link → shop filtered to same category
+  seeAll.href = `shop.html?category=${encodeURIComponent(product.category || '')}`;
+
+  scroll.innerHTML = ranked.map(p => {
+    const imgSrc = Array.isArray(p.images) && p.images[0]?.url
+      ? p.images[0].url
+      : (p.imageUrl || '');
+    const imgHtml = imgSrc
+      ? `<img src="${escHtml(imgSrc)}" alt="${escHtml(p.productName)}" onerror="this.parentElement.innerHTML='<span>${getCatEmoji(p.category)}</span>'">`
+      : `<span>${getCatEmoji(p.category)}</span>`;
+    return `
+      <div class="similar-card" onclick="goToProduct('${p.id}')">
+        <div class="similar-card-img">${imgHtml}</div>
+        <div class="similar-card-body">
+          <div class="similar-card-title">${escHtml(p.productName)}</div>
+          <div class="similar-card-price">${formatPrice(p.price)}</div>
+          <div class="similar-card-loc">📍 ${escHtml(p.sellerCity || '')}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  section.style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', initDetail);
+</script>
+</body>
+</html>
