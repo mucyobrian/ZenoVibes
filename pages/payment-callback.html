@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Status — StillWorks</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <style>
+    .pay-wrap {
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .pay-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 36px 28px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    .pay-icon {
+      font-size: 3rem;
+      margin-bottom: 14px;
+      line-height: 1;
+    }
+    .pay-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .pay-sub {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 22px;
+    }
+    .pay-spinner {
+      width: 34px; height: 34px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      animation: pay-spin 0.8s linear infinite;
+    }
+    @keyframes pay-spin { to { transform: rotate(360deg); } }
+    .pay-actions { display: flex; flex-direction: column; gap: 10px; }
+    .pay-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 12px 20px;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+    }
+    .pay-btn-primary { background: var(--primary); color: white; }
+    .pay-btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+    .pay-note {
+      margin-top: 18px;
+      font-size: 0.78rem;
+      color: var(--text-light);
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="../index.html">Still<span>Works</span></a>
+  </div>
+</header>
+
+<div class="pay-wrap">
+  <div class="pay-card" id="payCard">
+    <div class="pay-spinner"></div>
+    <div class="pay-title">Confirming your payment…</div>
+    <div class="pay-sub">Hang tight — we're checking with Pesapal to confirm your upgrade. This usually takes just a few seconds.</div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/app.js"></script>
+<script>
+async function initPaymentCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const orderTrackingId = params.get('OrderTrackingId');
+  const card = document.getElementById('payCard');
+
+  if (!orderTrackingId) {
+    renderResult('error', '⚠️', 'Something went wrong', "We couldn't find your payment reference. If you completed a payment, it may still go through shortly — check your account page in a minute.");
+    return;
+  }
+
+  // Poll briefly — Pesapal/Apps Script may need a moment after redirect
+  // before the IPN has been processed and the sheet updated.
+  const maxAttempts = 6;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const result = await DB.checkPaymentStatus(orderTrackingId);
+      if (result.status === 'COMPLETED') {
+        await DB.refreshCurrentUser();
+        renderResult('success', '🎉', 'Payment successful!', 'Your plan has been upgraded. You now have 30 extra posts available this month.');
+        return;
+      }
+      if (result.status === 'FAILED') {
+        renderResult('error', '❌', 'Payment failed', "Your payment didn't go through. No charge should have been made — feel free to try again.");
+        return;
+      }
+      // status is PENDING — wait and retry
+    } catch (err) {
+      // network hiccup — keep retrying until attempts run out
+      console.warn('Payment status check failed, retrying…', err);
+    }
+    await new Promise(r => setTimeout(r, 2500));
+  }
+
+  // Still pending after all retries — don't tell the user it failed,
+  // since Pesapal/mobile money confirmations can occasionally lag.
+  renderResult('pending', '⏳', 'Still confirming…', "Your payment is being processed. This can take a minute or two for mobile money — check your account page shortly. We'll upgrade your plan automatically once it's confirmed.");
+}
+
+function renderResult(type, icon, title, sub) {
+  const card = document.getElementById('payCard');
+  card.innerHTML = `
+    <div class="pay-icon">${icon}</div>
+    <div class="pay-title">${title}</div>
+    <div class="pay-sub">${sub}</div>
+    <div class="pay-actions">
+      <a href="account.html" class="pay-btn pay-btn-primary">Go to My Account</a>
+      <a href="../index.html" class="pay-btn pay-btn-secondary">Back to StillWorks</a>
+    </div>
+    <div class="pay-note">Reference: ${new URLSearchParams(window.location.search).get('OrderMerchantReference') || '—'}</div>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded', initPaymentCallback);
+</script>
+</body>
+</html>
