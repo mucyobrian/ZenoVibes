@@ -65,6 +65,58 @@
     }
     .country-select:focus { outline: none; border-color: var(--primary); }
     .phone-wrap input[type="tel"] { flex: 1; min-width: 0; }
+
+  /* ── Crop Modal ── */
+  .crop-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.92); flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .crop-overlay.active { display: flex; }
+  .crop-title {
+    color: #fff; font-size: 1rem; font-weight: 700;
+    margin-bottom: 12px; text-align: center;
+  }
+  .crop-hint {
+    color: #aaa; font-size: 0.78rem; margin-bottom: 10px; text-align: center;
+  }
+  .crop-viewport {
+    position: relative; width: 300px; height: 300px;
+    overflow: hidden; border: 2px solid var(--primary);
+    border-radius: 10px; background: #000; cursor: grab; touch-action: none;
+  }
+  .crop-viewport.grabbing { cursor: grabbing; }
+  .crop-viewport img {
+    position: absolute; user-select: none; pointer-events: none;
+    transform-origin: 0 0;
+  }
+  .crop-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px);
+    background-size: 100px 100px;
+  }
+  .crop-zoom-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 12px; width: 300px;
+  }
+  .crop-zoom-row input[type=range] {
+    flex: 1; accent-color: var(--primary);
+  }
+  .crop-zoom-label { color: #aaa; font-size: 0.78rem; width: 36px; text-align: right; }
+  .crop-actions {
+    display: flex; gap: 10px; margin-top: 16px;
+  }
+  .btn-crop-cancel {
+    flex: 1; padding: 11px; border: 1.5px solid #555; background: none;
+    color: #fff; border-radius: var(--radius-sm); font-size: 0.9rem; cursor: pointer;
+  }
+  .btn-crop-confirm {
+    flex: 2; padding: 11px; background: var(--primary);
+    color: #fff; border: none; border-radius: var(--radius-sm);
+    font-size: 0.9rem; font-weight: 700; cursor: pointer;
+  }
   </style>
 </head>
 <body>
@@ -610,37 +662,13 @@ const IMAGE_QUALITY = 0.75;
 
 async function handleImageFile(slotId, file) {
   if (!file) return;
-  const preview = document.getElementById(slotId + '_preview');
-  const status  = document.getElementById(slotId + '_status');
-  const slot    = document.getElementById(slotId);
-
+  const status = document.getElementById(slotId + '_status');
   if (!file.type.startsWith('image/')) {
     if (status) { status.textContent = 'Please choose an image file'; status.className = 'image-slot-status err'; }
     return;
   }
-
-  // Show spinner while we work
-  if (preview) { preview.className = 'image-slot-preview uploading'; preview.innerHTML = '<div class="spinner"></div>'; }
-  if (status)  { status.textContent = 'Compressing…'; status.className = 'image-slot-status'; }
-
-  try {
-    const compressedBlob = await compressImage(file, { maxDimension: MAX_IMAGE_DIMENSION, quality: IMAGE_QUALITY });
-
-    if (status) status.textContent = `Uploading… (${(compressedBlob.size/1024).toFixed(0)} KB)`;
-
-    const url = await uploadToWorker(compressedBlob, file.name, 'products');
-
-    slot.dataset.uploadedUrl = url;
-    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = `<img src="${url}"/>`; }
-    if (status)  { status.textContent = '✓ Uploaded'; status.className = 'image-slot-status ok'; }
-    clearFieldError('images');
-
-  } catch (err) {
-    slot.dataset.uploadedUrl = '';
-    if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = '⚠️'; }
-    if (status)  { status.textContent = 'Upload failed — try again'; status.className = 'image-slot-status err'; }
-    console.error('Image upload failed:', err);
-  }
+  // Open crop modal — upload happens after user confirms crop
+  openCropModal(slotId, file);
 }
 
 function collectImages() {
@@ -848,6 +876,176 @@ function showUpgrade() {
 }
 
 document.addEventListener('DOMContentLoaded', initSellPage);
+</script>
+<!-- ── Crop Modal ── -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-title">Crop Photo</div>
+  <div class="crop-hint">Drag to reposition · Pinch or use slider to zoom</div>
+  <div class="crop-viewport" id="cropViewport">
+    <img id="cropImg" src="" alt=""/>
+    <div class="crop-grid"></div>
+  </div>
+  <div class="crop-zoom-row">
+    <span style="color:#aaa;font-size:0.78rem">🔍</span>
+    <input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" oninput="onCropZoom(this.value)"/>
+    <span class="crop-zoom-label" id="cropZoomLabel">1.0×</span>
+  </div>
+  <div class="crop-actions" style="width:300px">
+    <button class="btn-crop-cancel" onclick="cancelCrop()">Cancel</button>
+    <button class="btn-crop-confirm" onclick="confirmCrop()">✓ Crop & Upload</button>
+  </div>
+</div>
+
+<script>
+// ── Crop logic ───────────────────────────────────────────────────────
+let _cropSlotId = null;
+let _cropFile   = null;
+let _cropScale  = 1;
+let _cropX = 0, _cropY = 0;
+let _cropNatW = 0, _cropNatH = 0;
+let _cropDragging = false;
+let _cropLastX = 0, _cropLastY = 0;
+let _cropPinchDist = 0;
+
+const CROP_SIZE = 300; // px — matches viewport width/height
+
+function openCropModal(slotId, file) {
+  _cropSlotId = slotId;
+  _cropFile   = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('cropImg');
+    img.onload = () => {
+      _cropNatW = img.naturalWidth;
+      _cropNatH = img.naturalHeight;
+      // Fit the image so its shorter side fills the 300px viewport
+      const fitScale = CROP_SIZE / Math.min(_cropNatW, _cropNatH);
+      _cropScale = fitScale;
+      document.getElementById('cropZoom').min = fitScale;
+      document.getElementById('cropZoom').value = fitScale;
+      document.getElementById('cropZoomLabel').textContent = fitScale.toFixed(1) + '×';
+      // Center
+      _cropX = (CROP_SIZE - _cropNatW * _cropScale) / 2;
+      _cropY = (CROP_SIZE - _cropNatH * _cropScale) / 2;
+      applyCropTransform();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('cropOverlay').classList.add('active');
+}
+
+function applyCropTransform() {
+  const img = document.getElementById('cropImg');
+  // Clamp so image always covers the viewport
+  const minX = CROP_SIZE - _cropNatW * _cropScale;
+  const minY = CROP_SIZE - _cropNatH * _cropScale;
+  _cropX = Math.min(0, Math.max(minX, _cropX));
+  _cropY = Math.min(0, Math.max(minY, _cropY));
+  img.style.transform = `translate(${_cropX}px, ${_cropY}px) scale(${_cropScale})`;
+  img.style.width  = _cropNatW + 'px';
+  img.style.height = _cropNatH + 'px';
+}
+
+function onCropZoom(val) {
+  const newScale = parseFloat(val);
+  // Zoom toward center
+  const cx = CROP_SIZE / 2, cy = CROP_SIZE / 2;
+  _cropX = cx - (cx - _cropX) * (newScale / _cropScale);
+  _cropY = cy - (cy - _cropY) * (newScale / _cropScale);
+  _cropScale = newScale;
+  document.getElementById('cropZoomLabel').textContent = newScale.toFixed(1) + '×';
+  applyCropTransform();
+}
+
+function cancelCrop() {
+  document.getElementById('cropOverlay').classList.remove('active');
+  _cropSlotId = null; _cropFile = null;
+}
+
+async function confirmCrop() {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = CROP_SIZE;
+  const ctx = canvas.getContext('2d');
+  const img = document.getElementById('cropImg');
+  ctx.drawImage(img, _cropX, _cropY, _cropNatW * _cropScale, _cropNatH * _cropScale);
+  document.getElementById('cropOverlay').classList.remove('active');
+
+  // Convert canvas to blob and hand off to existing upload pipeline
+  canvas.toBlob(async blob => {
+    const slotId = _cropSlotId;
+    const preview = document.getElementById(slotId + '_preview');
+    const status  = document.getElementById(slotId + '_status');
+    const slot    = document.getElementById(slotId);
+    if (preview) { preview.className = 'image-slot-preview uploading'; preview.innerHTML = '<div class="spinner"></div>'; }
+    if (status)  { status.textContent = 'Uploading…'; status.className = 'image-slot-status'; }
+    try {
+      const url = await uploadToWorker(blob, 'crop.jpg', 'products');
+      slot.dataset.uploadedUrl = url;
+      if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = `<img src="${url}"/>`; }
+      if (status)  { status.textContent = '✓ Uploaded'; status.className = 'image-slot-status ok'; }
+      clearFieldError('images');
+    } catch(err) {
+      slot.dataset.uploadedUrl = '';
+      if (preview) { preview.className = 'image-slot-preview'; preview.innerHTML = '⚠️'; }
+      if (status)  { status.textContent = 'Upload failed — try again'; status.className = 'image-slot-status err'; }
+    }
+  }, 'image/jpeg', 0.85);
+}
+
+// ── Drag to pan ──────────────────────────────────────────────────────
+const vp = document.getElementById('cropViewport');
+
+vp.addEventListener('mousedown', e => {
+  _cropDragging = true; _cropLastX = e.clientX; _cropLastY = e.clientY;
+  vp.classList.add('grabbing');
+});
+window.addEventListener('mousemove', e => {
+  if (!_cropDragging) return;
+  _cropX += e.clientX - _cropLastX; _cropY += e.clientY - _cropLastY;
+  _cropLastX = e.clientX; _cropLastY = e.clientY;
+  applyCropTransform();
+});
+window.addEventListener('mouseup', () => { _cropDragging = false; vp.classList.remove('grabbing'); });
+
+vp.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    _cropDragging = true;
+    _cropLastX = e.touches[0].clientX; _cropLastY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    _cropDragging = false;
+    _cropPinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY);
+  }
+}, { passive: true });
+
+vp.addEventListener('touchmove', e => {
+  if (e.touches.length === 1 && _cropDragging) {
+    _cropX += e.touches[0].clientX - _cropLastX;
+    _cropY += e.touches[0].clientY - _cropLastY;
+    _cropLastX = e.touches[0].clientX; _cropLastY = e.touches[0].clientY;
+    applyCropTransform();
+  } else if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY);
+    const newScale = Math.min(4, Math.max(
+      parseFloat(document.getElementById('cropZoom').min),
+      _cropScale * (dist / _cropPinchDist)));
+    const slider = document.getElementById('cropZoom');
+    const cx = CROP_SIZE / 2, cy = CROP_SIZE / 2;
+    _cropX = cx - (cx - _cropX) * (newScale / _cropScale);
+    _cropY = cy - (cy - _cropY) * (newScale / _cropScale);
+    _cropScale = newScale;
+    slider.value = newScale;
+    document.getElementById('cropZoomLabel').textContent = newScale.toFixed(1) + '×';
+    _cropPinchDist = dist;
+    applyCropTransform();
+  }
+}, { passive: true });
+
+vp.addEventListener('touchend', () => { _cropDragging = false; });
 </script>
 </body>
 </html>
