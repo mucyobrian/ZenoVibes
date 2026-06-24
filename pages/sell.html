@@ -898,26 +898,36 @@ document.addEventListener('DOMContentLoaded', initSellPage);
 </div>
 
 <script>
-// ── Crop logic (fixed: centering, rotation, img.onload race) ─────────
+// ── Crop logic (simplified: canvas-based display, no CSS rotation) ───
 let _cropSlotId  = null;
 let _cropScale   = 1;
-let _cropX = 0,  _cropY = 0;
-let _cropNatW = 0, _cropNatH = 0;
+let _cropX = 0, _cropY = 0;
 let _cropRotation = 0;
 let _cropDragging = false;
 let _cropLastX = 0, _cropLastY = 0;
 let _cropPinchDist = 0;
+let _cropSrcImg = null; // original Image element
 
 const CROP_SIZE = 300;
 
-function _cropLogicalDims() {
-  const swapped = _cropRotation === 90 || _cropRotation === 270;
-  return { w: swapped ? _cropNatH : _cropNatW, h: swapped ? _cropNatW : _cropNatH };
+// Off-screen canvas used to show the rotated image in the viewport
+let _displayCanvas = null;
+
+function _getDisplayCanvas() {
+  if (!_displayCanvas) {
+    _displayCanvas = document.createElement('canvas');
+    _displayCanvas.style.position = 'absolute';
+    _displayCanvas.style.top = '0';
+    _displayCanvas.style.left = '0';
+    _displayCanvas.style.pointerEvents = 'none';
+  }
+  return _displayCanvas;
 }
 
 function openCropModal(slotId, file) {
   _cropSlotId   = slotId;
   _cropRotation = 0;
+
   const isImage = file.type.startsWith('image/') ||
     /\.(jpg|jpeg|png|gif|webp|bmp|tiff|avif|heic)$/i.test(file.name);
   if (!isImage) {
@@ -925,59 +935,76 @@ function openCropModal(slotId, file) {
     if (st) { st.textContent = 'Please choose an image file'; st.className = 'image-slot-status err'; }
     return;
   }
+
   const reader = new FileReader();
   reader.onload = e => {
-    const img = document.getElementById('cropImg');
+    const img = new Image();
     img.onload = () => {
-      _cropNatW = img.naturalWidth;
-      _cropNatH = img.naturalHeight;
-      if (!_cropNatW || !_cropNatH) {
-        setTimeout(() => { _cropNatW = img.naturalWidth; _cropNatH = img.naturalHeight; _resetCropFit(); }, 60);
-        return;
-      }
+      _cropSrcImg = img;
       _resetCropFit();
+      document.getElementById('cropOverlay').classList.add('active');
     };
-    img.onerror = () => {
-      document.getElementById('cropOverlay').classList.remove('active');
-      alert('Could not load image. Try a JPG or PNG.');
-    };
+    img.onerror = () => alert('Could not load image. Try a JPG or PNG.');
     img.src = e.target.result;
-    if (img.complete && img.naturalWidth) {
-      _cropNatW = img.naturalWidth; _cropNatH = img.naturalHeight; _resetCropFit();
-    }
   };
   reader.readAsDataURL(file);
-  document.getElementById('cropOverlay').classList.add('active');
+}
+
+function _getRotatedSize() {
+  // Returns the width/height of the image AFTER rotation
+  const swapped = _cropRotation === 90 || _cropRotation === 270;
+  return {
+    w: swapped ? _cropSrcImg.naturalHeight : _cropSrcImg.naturalWidth,
+    h: swapped ? _cropSrcImg.naturalWidth  : _cropSrcImg.naturalHeight,
+  };
 }
 
 function _resetCropFit() {
-  const { w, h } = _cropLogicalDims();
+  const { w, h } = _getRotatedSize();
+  // Scale so the image COVERS the square (use the larger ratio)
   const fit = CROP_SIZE / Math.min(w, h);
   _cropScale = fit;
   const sl = document.getElementById('cropZoom');
-  sl.min = fit * 0.99; sl.max = 4; sl.value = fit;
+  sl.min = fit * 0.999; sl.max = 4; sl.value = fit;
   document.getElementById('cropZoomLabel').textContent = fit.toFixed(1) + '×';
+  // Center
   _cropX = (CROP_SIZE - w * fit) / 2;
   _cropY = (CROP_SIZE - h * fit) / 2;
   _applyCropTransform();
 }
 
 function _applyCropTransform() {
-  const img = document.getElementById('cropImg');
-  const { w, h } = _cropLogicalDims();
-  // Clamp so image always fully covers the square
+  const { w, h } = _getRotatedSize();
+  // Clamp so image always covers the square
   _cropX = Math.min(0, Math.max(CROP_SIZE - w * _cropScale, _cropX));
   _cropY = Math.min(0, Math.max(CROP_SIZE - h * _cropScale, _cropY));
-  img.style.width  = _cropNatW + 'px';
-  img.style.height = _cropNatH + 'px';
-  img.style.transformOrigin = '0 0';
-  // Translate so the logical top-left lands at (_cropX, _cropY)
-  const swapped = _cropRotation === 90 || _cropRotation === 270;
-  let tx = _cropX, ty = _cropY;
-  if (_cropRotation === 90)  { tx = _cropX + w * _cropScale; ty = _cropY; }
-  if (_cropRotation === 180) { tx = _cropX + w * _cropScale; ty = _cropY + h * _cropScale; }
-  if (_cropRotation === 270) { tx = _cropX; ty = _cropY + h * _cropScale; }
-  img.style.transform = `translate(${tx}px,${ty}px) rotate(${_cropRotation}deg) scale(${_cropScale})`;
+
+  // Draw rotated image onto a canvas that sits inside the viewport
+  const vp = document.getElementById('cropViewport');
+  const dc = _getDisplayCanvas();
+  dc.width  = CROP_SIZE;
+  dc.height = CROP_SIZE;
+  if (!dc.parentNode) vp.insertBefore(dc, vp.firstChild);
+
+  // Hide the <img> tag — we use the canvas for display
+  document.getElementById('cropImg').style.display = 'none';
+
+  const ctx = dc.getContext('2d');
+  ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
+  ctx.save();
+
+  const natW = _cropSrcImg.naturalWidth;
+  const natH = _cropSrcImg.naturalHeight;
+
+  // Move origin to where we want the image top-left to appear
+  ctx.translate(_cropX, _cropY);
+
+  // Rotate around the center of the scaled+rotated bounding box
+  ctx.translate(w * _cropScale / 2, h * _cropScale / 2);
+  ctx.rotate(_cropRotation * Math.PI / 180);
+  ctx.translate(-natW * _cropScale / 2, -natH * _cropScale / 2);
+  ctx.drawImage(_cropSrcImg, 0, 0, natW * _cropScale, natH * _cropScale);
+  ctx.restore();
 }
 
 function onCropZoom(val) {
@@ -1001,21 +1028,20 @@ function cancelCrop() {
 }
 
 async function confirmCrop() {
+  // Final crop canvas — draw at full CROP_SIZE
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = CROP_SIZE;
   const ctx = canvas.getContext('2d');
-  const img = document.getElementById('cropImg');
-  const { w, h } = _cropLogicalDims();
+  const { w, h } = _getRotatedSize();
+  const natW = _cropSrcImg.naturalWidth;
+  const natH = _cropSrcImg.naturalHeight;
 
   ctx.save();
-  ctx.translate(-_cropX, -_cropY);
-  const swapped = _cropRotation === 90 || _cropRotation === 270;
-  if (_cropRotation === 90)  { ctx.translate(w * _cropScale, 0); }
-  if (_cropRotation === 180) { ctx.translate(w * _cropScale, h * _cropScale); }
-  if (_cropRotation === 270) { ctx.translate(0, h * _cropScale); }
+  ctx.translate(_cropX, _cropY);
+  ctx.translate(w * _cropScale / 2, h * _cropScale / 2);
   ctx.rotate(_cropRotation * Math.PI / 180);
-  ctx.scale(_cropScale, _cropScale);
-  ctx.drawImage(img, 0, 0);
+  ctx.translate(-natW * _cropScale / 2, -natH * _cropScale / 2);
+  ctx.drawImage(_cropSrcImg, 0, 0, natW * _cropScale, natH * _cropScale);
   ctx.restore();
 
   document.getElementById('cropOverlay').classList.remove('active');
