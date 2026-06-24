@@ -965,7 +965,7 @@ function _resetCropFit() {
   const fit = CROP_SIZE / Math.min(w, h);
   _cropScale = fit;
   const sl = document.getElementById('cropZoom');
-  sl.min = fit * 0.999; sl.max = 4; sl.value = fit;
+  sl.min = 0.25; sl.max = 4; sl.value = fit;
   document.getElementById('cropZoomLabel').textContent = fit.toFixed(1) + '×';
   // Center
   _cropX = (CROP_SIZE - w * fit) / 2;
@@ -975,9 +975,13 @@ function _resetCropFit() {
 
 function _applyCropTransform() {
   const { w, h } = _getRotatedSize();
-  // Clamp so image always covers the square
-  _cropX = Math.min(0, Math.max(CROP_SIZE - w * _cropScale, _cropX));
-  _cropY = Math.min(0, Math.max(CROP_SIZE - h * _cropScale, _cropY));
+  // Allow free panning when zoomed out
+  const minX = Math.min(0, (CROP_SIZE - w * _cropScale) / 2);
+  const minY = Math.min(0, (CROP_SIZE - h * _cropScale) / 2);
+  const maxX = Math.max(0, (CROP_SIZE - w * _cropScale) / 2);
+  const maxY = Math.max(0, (CROP_SIZE - h * _cropScale) / 2);
+  _cropX = Math.min(maxX, Math.max(minX, _cropX));
+  _cropY = Math.min(maxY, Math.max(minY, _cropY));
 
   // Draw rotated image onto a canvas that sits inside the viewport
   const vp = document.getElementById('cropViewport');
