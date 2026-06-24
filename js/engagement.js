@@ -32,7 +32,8 @@ const ENG = (() => {
     try {
       const res = await fetch(API(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight
         body: JSON.stringify(payload),
       });
       return await res.json();
@@ -53,7 +54,7 @@ const ENG = (() => {
     if (!API()) return null;
     try {
       const url = `${API()}?action=getEngagement&productId=${encodeURIComponent(productId)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { redirect: 'follow' });
       return await res.json();
     } catch (e) { return null; }
   }
@@ -77,7 +78,7 @@ const ENG = (() => {
     if (!API()) return [];
     try {
       const url = `${API()}?action=getComments&productId=${encodeURIComponent(productId)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { redirect: 'follow' });
       const data = await res.json();
       return data.comments || [];
     } catch (e) { return []; }
@@ -103,7 +104,7 @@ const ENG = (() => {
     if (!API()) return null;
     try {
       const url = `${API()}?action=getSellerEngagement&sellerPhone=${encodeURIComponent(sellerPhone)}&userId=${encodeURIComponent(userId())}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { redirect: 'follow' });
       return await res.json();
     } catch (e) { return null; }
   }
@@ -122,7 +123,7 @@ const ENG = (() => {
     if (!API() || !productIds.length) return {};
     try {
       const url = `${API()}?action=getBatchEngagement&ids=${encodeURIComponent(productIds.join(','))}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { redirect: 'follow' });
       const data = await res.json();
       return data.results || {};
     } catch (e) { return {}; }
