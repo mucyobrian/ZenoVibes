@@ -283,7 +283,69 @@
       <p class="detail-desc" id="detailDesc"></p>
     </div>
 
-    <!-- Seller & location -->\n    <div class=\"detail-section\">\n      <h3>Seller & Location</h3>\n      <div class=\"seller-row seller-row--clickable\" id=\"sellerRow\" onclick=\"goToSellerShop()\">\n        <div class=\"seller-avatar\" id=\"sellerAvatar\"></div>\n        <div>\n          <div class=\"seller-name\" id=\"sellerName\"></div>\n          <div class=\"seller-loc\">📍 <span id=\"sellerCity\"></span><span id=\"sellerDist\" style=\"color:var(--success);font-weight:600\"></span></div>\n        </div>\n        <div class=\"seller-row-arrow\">›</div>\n      </div>\n      <!-- Subscribe button -->\n      <div class=\"seller-subscribe-row\">\n        <span class=\"sub-count\">👥 <span id=\"subCount\">–</span> subscribers</span>\n        <button class=\"btn-subscribe\" id=\"subscribeBtn\" onclick=\"handleSubscribe()\">Follow Seller</button>\n      </div>\n      <a href=\"#\" id=\"mapLink\" target=\"_blank\" class=\"map-link\" style=\"display:none\">\n        🗺️ View location on Google Maps →\n      </a>\n    </div>\n\n    <!-- Engagement: views, likes, dislikes -->\n    <div class=\"detail-section engagement-bar\">\n      <span class=\"eng-stat\">👁 <span id=\"viewCount\">–</span> views</span>\n      <button class=\"eng-btn\" id=\"likeBtn\" onclick=\"handleLike()\">\n        <svg width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\"><path d=\"M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z\"/><path d=\"M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3\"/></svg>\n        <span id=\"likeCount\">0</span>\n      </button>\n      <button class=\"eng-btn\" id=\"dislikeBtn\" onclick=\"handleDislike()\">\n        <svg width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\"><path d=\"M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z\"/><path d=\"M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17\"/></svg>\n        <span id=\"dislikeCount\">0</span>\n      </button>\n    </div>\n\n    <!-- Star Rating -->\n    <div class=\"detail-section\">\n      <h3>Rate this product</h3>\n      <div class=\"rating-summary\">\n        <div class=\"rating-stars-display\" id=\"ratingDisplay\"></div>\n        <span class=\"rating-avg\" id=\"ratingAvg\">–</span>\n        <span class=\"rating-count\" id=\"ratingCountLabel\"></span>\n      </div>\n      <div class=\"star-picker\" id=\"starPicker\">\n        <span style=\"font-size:0.85rem;color:var(--text-light)\">Your rating:</span>\n        <div class=\"star-input\" id=\"starInput\">\n          <button class=\"star-btn\" data-val=\"1\" onclick=\"handleRate(1)\">★</button>\n          <button class=\"star-btn\" data-val=\"2\" onclick=\"handleRate(2)\">★</button>\n          <button class=\"star-btn\" data-val=\"3\" onclick=\"handleRate(3)\">★</button>\n          <button class=\"star-btn\" data-val=\"4\" onclick=\"handleRate(4)\">★</button>\n          <button class=\"star-btn\" data-val=\"5\" onclick=\"handleRate(5)\">★</button>\n        </div>\n      </div>\n    </div>\n\n    <!-- Comments -->\n    <div class=\"detail-section\" id=\"commentsSection\">\n      <h3>Comments <span id=\"commentCountLabel\" style=\"font-size:0.85rem;font-weight:500;color:var(--text-light)\"></span></h3>\n      <div class=\"comment-input-row\">\n        <input type=\"text\" id=\"commentInput\" placeholder=\"Write a comment…\" maxlength=\"500\" onkeydown=\"if(event.key==='Enter')handlePostComment()\" />\n        <button class=\"btn-comment-post\" onclick=\"handlePostComment()\">Post</button>\n      </div>\n      <div class=\"comments-list\" id=\"commentsList\"><div class=\"comments-loading\">Loading comments…</div></div>\n    </div>
+    <!-- Seller & location -->
+    <div class="detail-section">
+      <h3>Seller & Location</h3>
+      <div class="seller-row seller-row--clickable" id="sellerRow" onclick="goToSellerShop()">
+        <div class="seller-avatar" id="sellerAvatar"></div>
+        <div>
+          <div class="seller-name" id="sellerName"></div>
+          <div class="seller-loc">📍 <span id="sellerCity"></span><span id="sellerDist" style="color:var(--success);font-weight:600"></span></div>
+        </div>
+        <div class="seller-row-arrow">›</div>
+      </div>
+      <!-- Subscribe button -->
+      <div class="seller-subscribe-row">
+        <span class="sub-count">👥 <span id="subCount">–</span> subscribers</span>
+        <button class="btn-subscribe" id="subscribeBtn" onclick="handleSubscribe()">Follow Seller</button>
+      </div>
+      <a href="#" id="mapLink" target="_blank" class="map-link" style="display:none">
+        🗺️ View location on Google Maps →
+      </a>
+    </div>
+
+    <!-- Engagement: views, likes, dislikes -->
+    <div class="detail-section engagement-bar">
+      <span class="eng-stat">👁 <span id="viewCount">–</span> views</span>
+      <button class="eng-btn" id="likeBtn" onclick="handleLike()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+        <span id="likeCount">0</span>
+      </button>
+      <button class="eng-btn" id="dislikeBtn" onclick="handleDislike()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+        <span id="dislikeCount">0</span>
+      </button>
+    </div>
+
+    <!-- Star Rating -->
+    <div class="detail-section">
+      <h3>Rate this product</h3>
+      <div class="rating-summary">
+        <div class="rating-stars-display" id="ratingDisplay"></div>
+        <span class="rating-avg" id="ratingAvg">–</span>
+        <span class="rating-count" id="ratingCountLabel"></span>
+      </div>
+      <div class="star-picker" id="starPicker">
+        <span style="font-size:0.85rem;color:var(--text-light)">Your rating:</span>
+        <div class="star-input" id="starInput">
+          <button class="star-btn" data-val="1" onclick="handleRate(1)">★</button>
+          <button class="star-btn" data-val="2" onclick="handleRate(2)">★</button>
+          <button class="star-btn" data-val="3" onclick="handleRate(3)">★</button>
+          <button class="star-btn" data-val="4" onclick="handleRate(4)">★</button>
+          <button class="star-btn" data-val="5" onclick="handleRate(5)">★</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="detail-section" id="commentsSection">
+      <h3>Comments <span id="commentCountLabel" style="font-size:0.85rem;font-weight:500;color:var(--text-light)"></span></h3>
+      <div class="comment-input-row">
+        <input type="text" id="commentInput" placeholder="Write a comment…" maxlength="500" onkeydown="if(event.key==='Enter')handlePostComment()" />
+        <button class="btn-comment-post" onclick="handlePostComment()">Post</button>
+      </div>
+      <div class="comments-list" id="commentsList"><div class="comments-loading">Loading comments…</div></div>
+    </div>
 
     <!-- Similar Products -->
     <div class="similar-section" id="similarSection" style="display:none">
