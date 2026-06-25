@@ -1,0 +1,748 @@
+// ================================================
+// SOKOHUB CONFIG — Edit these values to connect
+// your Google Sheets database
+// ================================================
+
+// Pages at the site root (index.html) need "images/categories/..."
+// Pages one level down (pages/*.html) need "../images/categories/..."
+// This figures out which one to use automatically, so the same
+// CATEGORIES array below works correctly on every page.
+const IMG_BASE = location.pathname.includes('/pages/')
+  ? '../images/categories/'
+  : 'images/categories/';
+
+// Same idea, but for banner/hero images (put yours in /images/banners/).
+const BANNER_BASE = location.pathname.includes('/pages/')
+  ? '../images/banners/'
+  : 'images/banners/';
+
+const CONFIG = {
+  // ── SITE INFO ──────────────────────────────────
+  siteName: "StillWorks",
+  siteTagline: "Used. Cheap. Still Works.",
+  currency: "RWF",
+  currencySymbol: "RWF",
+
+  // Homepage hero background photo. Put your own image at
+  // images/banners/Hero.jpg (any landscape photo works — a dark
+  // semi-transparent overlay is applied on top so the white text stays readable).
+  HERO_IMAGE: `${BANNER_BASE}Hero.jpg`,
+
+  // ── GOOGLE SHEETS DATABASE ─────────────────────
+  // STEP 1: Create a Google Sheet with these columns:
+  //   id | timestamp | sellerName | sellerPhone | sellerWhatsApp
+  //   | sellerEmail | sellerCity | sellerLat | sellerLng
+  //   | productName | description | price | category | subcategory
+  //   | imageUrl | status | monthlyCount | isPaid
+  //
+  // STEP 2: File → Share → Publish to web → CSV → Sheet1 → Publish
+  //   Copy the URL and paste it below as SHEET_CSV_URL
+  //
+  // STEP 3: For the FORM, create a Google Form linked to this sheet
+  //   Copy the Form URL below as FORM_URL
+
+  SHEET_ID: "1YVGwMNkJNbtJl8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo",
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/1YVGwMNkJNbtJl8OEw6Q5YGUU0UG7gcfoqfxsDHEJdGo/gviz/tq?tqx=out:json&sheet=Sheet1",
+  FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSdeLKmDBXQjpEKYlzV8sVWMvBzWOE201oFUrFTMr6vxQ0_S_w/viewform",
+
+  // Apps Script Web App — handles editing/deleting listings directly in the Sheet
+  LISTINGS_API_URL: "https://script.google.com/macros/s/AKfycbzrC7pwuGmnAVq8nZdt2cGZRugwv4MwHMoyydgM1RmluOVRlWjZ6FNmgzBy9IBqnWjeEw/exec",
+
+  // Engagement API — handles views, likes, dislikes, ratings, comments, subscriptions
+  // See Code_Engagement.gs — deploy it and paste the URL here
+  ENGAGEMENT_API_URL: "https://script.google.com/macros/s/AKfycbzrC7pwuGmnAVq8nZdt2cGZRugwv4MwHMoyydgM1RmluOVRlWjZ6FNmgzBy9IBqnWjeEw/exec", // ← paste your new Apps Script Web App URL here
+
+  // ── SELLER LIMITS ──────────────────────────────
+  FREE_LIMIT: 30,           // free products per month
+  PAID_EXTRA: 30,           // extra products when paid
+  PAID_PRICE: 2000,         // price in RWF for 30 more
+  PAID_WHATSAPP: "+250700000000", // fallback WhatsApp if a seller wants to pay manually
+  PAID_CURRENCY: "RWF",     // currency sent to Pesapal (RWF is supported)
+
+  // ── PESAPAL CHECKOUT ───────────────────────────
+  // Same Apps Script Web App (LISTINGS_API_URL above) doubles as the
+  // payment backend — it talks to Pesapal server-to-server and is also
+  // the registered IPN endpoint. Nothing here needs your Pesapal
+  // consumer_key/consumer_secret — those live ONLY in Code.gs (server side),
+  // never in this file, since this file is public/visible in the browser.
+  PESAPAL_ENABLED: true,    // flip to false to fall back to the WhatsApp-only flow
+
+  // ── LOCATION ──────────────────────────────────
+  DEFAULT_CITY: "Kigali",
+  DEFAULT_LAT: -1.9441,
+  DEFAULT_LNG: 30.0619,
+  NEAR_RADIUS_KM: 20,       // km for "Near Me" filter
+
+  // ── GRID BANNERS ──────────────────────────────
+  // 4 clickable banner tiles shown below the hero carousel.
+  // image: path relative to site root, or a full URL.
+  //        Drop your own image named Grid_Banner_A_1.jpg … Grid_Banner_A_4.jpg
+  //        into /images/banners/ and they'll be picked up automatically.
+  // label: text overlay (shown bottom-left of the tile).
+  // category: category id to filter when tapped (must match CATEGORIES ids above,
+  //           or use 'all' to show everything).
+  GRID_BANNERS: [
+    {
+      image: `${BANNER_BASE}Grid_Banner_A_1.jpg`,
+      label: 'Free Stuff',
+      action: 'free',
+    },
+    {
+      image: `${BANNER_BASE}Grid_Banner_A_2.jpg`,
+      label: 'Premium Sale',
+      category: 'all',
+    },
+    {
+      image: `${BANNER_BASE}Grid_Banner_A_3.jpg`,
+      label: 'Clothing',
+      category: 'clothing',
+    },
+    {
+      image: `${BANNER_BASE}Grid_Banner_A_4.jpg`,
+      label: 'Sellers',
+      action: 'sellers',
+    },
+  ],
+
+  // ── CATEGORIES ────────────────────────────────
+  // image: path to your category thumbnail.
+  // Put your photos in /images/categories/ in your GitHub repo,
+  // named exactly as shown below (e.g. electronics.jpg).
+  // Or replace any path with a full URL (Hugging Face, Cloudinary, etc.)
+  //
+  // banner: hero banner shown on the homepage when this category is selected.
+  // All of these currently point at the same placeholder (Hero.jpg) — drop your
+  // own photo in /images/banners/ named exactly as shown (e.g. Clothing.jpg)
+  // and it'll be picked up automatically (falls back to Hero.jpg if missing).
+  //
+  // heroTitle / heroSub: headline + subtext shown over that category's banner.
+  CATEGORIES: [
+    { id: "all",          label: "All",               image: `${IMG_BASE}All.jpg`,          banner: `${BANNER_BASE}Hero.jpg`,        heroTitle: "Find used stuff near you",        heroSub: "No fees. Post your used stuff. Someone will take it." },
+    { id: "clothing",     label: "Clothing",          image: `${IMG_BASE}Clothing.jpg`,     banner: `${BANNER_BASE}Clothing.jpg`,    heroTitle: "Pre-loved clothing,<br><em>fresh prices</em>",        heroSub: "Quality fashion finds without the brand-new markup." },
+    { id: "shoes",        label: "Shoes",             image: `${IMG_BASE}Shoes.jpg`,        banner: `${BANNER_BASE}Shoes.jpg`,       heroTitle: "Step into a<br><em>great deal</em>",                  heroSub: "Sneakers, heels, sandals — barely worn, ready for you." },
+    { id: "jewelry",      label: "Watches & Jewelry", image: `${IMG_BASE}Jewelry.jpg`,      banner: `${BANNER_BASE}Jewelry.jpg`,     heroTitle: "Timeless pieces,<br><em>real prices</em>",            heroSub: "Watches and jewelry that still shine, for less." },
+    { id: "accessories",  label: "Accessories & Bags", image: `${IMG_BASE}Accessories.jpg`, banner: `${BANNER_BASE}Accessories.jpg`, heroTitle: "Bags & accessories<br><em>worth grabbing</em>",       heroSub: "Carry something good without paying full price." },
+    { id: "kids",         label: "Kids & Toys",       image: `${IMG_BASE}Kids.jpg`,         banner: `${BANNER_BASE}Kids.jpg`,        heroTitle: "Kids grow fast.<br><em>Spend smart.</em>",            heroSub: "Toys and gear that still have plenty of play left." },
+    { id: "home",         label: "Home & Appliances", image: `${IMG_BASE}Home.jpg`,         banner: `${BANNER_BASE}Home.jpg`,        heroTitle: "Furnish your home<br><em>for less</em>",              heroSub: "Appliances and furniture that still work great." },
+    { id: "beauty",       label: "Beauty & Health",   image: `${IMG_BASE}Beauty.jpg`,       banner: `${BANNER_BASE}Beauty.jpg`,      heroTitle: "Look good,<br><em>spend less</em>",                   heroSub: "Beauty and health finds at a price that makes sense." },
+    { id: "telecom",      label: "Phones & Telecom",  image: `${IMG_BASE}Telecom.jpg`,      banner: `${BANNER_BASE}Telecom.jpg`,     heroTitle: "Stay connected<br><em>without the markup</em>",       heroSub: "Phones and accessories that still work perfectly." },
+    { id: "electronics",  label: "Electronics",       image: `${IMG_BASE}Electronics.jpg`,  banner: `${BANNER_BASE}Electronics.jpg`, heroTitle: "Tech that<br><em>still works</em>",                   heroSub: "Gadgets and devices at a fraction of retail." },
+    { id: "hair",         label: "Hair",              image: `${IMG_BASE}Hair.jpg`,         banner: `${BANNER_BASE}Hair.jpg`,        heroTitle: "Hair essentials,<br><em>real savings</em>",           heroSub: "Wigs, extensions, and tools at a better price." },
+    { id: "computer",     label: "Computer & Office", image: `${IMG_BASE}Computer.jpg`,     banner: `${BANNER_BASE}Computer.jpg`,    heroTitle: "Work smarter,<br><em>spend smarter</em>",             heroSub: "Computers and office gear that still get the job done." },
+    { id: "automobile",   label: "Automobile & Tools", image: `${IMG_BASE}Automobile.jpg`,  banner: `${BANNER_BASE}Automobile.jpg`,  heroTitle: "Parts & tools<br><em>that still work</em>",           heroSub: "Automobile gear and tools at a fair price." },
+    { id: "sports",       label: "Sports & Entertainment", image: `${IMG_BASE}Sports.jpg`,  banner: `${BANNER_BASE}Sports.jpg`,      heroTitle: "Gear up<br><em>for less</em>",                        heroSub: "Sports and entertainment finds, barely used." },
+    { id: "furniture",    label: "Furniture",         image: `${IMG_BASE}Furniture.jpg`,    banner: `${BANNER_BASE}Furniture.jpg`,   heroTitle: "Furniture that<br><em>still has life</em>",           heroSub: "Good pieces, good condition, good price." },
+    { id: "vehicles",     label: "Vehicles",          image: `${IMG_BASE}Vehicles.jpg`,     banner: `${BANNER_BASE}Vehicles.jpg`,    heroTitle: "Your next ride,<br><em>already broken in</em>",       heroSub: "Cars, motorcycles, and bicycles from real sellers." },
+    { id: "food",         label: "Food & Drinks",     image: `${IMG_BASE}Food.jpg`,         banner: `${BANNER_BASE}Food.jpg`,        heroTitle: "Good food,<br><em>good price</em>",                   heroSub: "Fresh produce and packaged goods near you." },
+    { id: "books",        label: "Books & Stationery", image: `${IMG_BASE}Books.jpg`,       banner: `${BANNER_BASE}Books.jpg`,       heroTitle: "Stories & supplies,<br><em>secondhand smart</em>",    heroSub: "Books and stationery at a fraction of the price." },
+    { id: "agriculture",  label: "Agriculture",       image: `${IMG_BASE}Agriculture.jpg`,  banner: `${BANNER_BASE}Agriculture.jpg`, heroTitle: "From the land,<br><em>to you</em>",                   heroSub: "Seeds, tools, and produce from local sellers." },
+    { id: "services",     label: "Services",          image: `${IMG_BASE}Services.jpg`,     banner: `${BANNER_BASE}Services.jpg`,    heroTitle: "Get it done,<br><em>locally</em>",                    heroSub: "Find trusted services from people near you." },
+    { id: "property",     label: "Property",          image: `${IMG_BASE}Property.jpg`,     banner: `${BANNER_BASE}Property.jpg`,    heroTitle: "Find your<br><em>next place</em>",                    heroSub: "Property for rent or sale, listed directly by owners." },
+    { id: "free",          label: "Free Stuff",        image: `${IMG_BASE}Free.jpg`,        banner: `${BANNER_BASE}Free.jpg`,        heroTitle: "Free is the<br><em>best price</em>",                  heroSub: "Items people are giving away — first come, first served." },
+    { id: "other",        label: "Other",             image: `${IMG_BASE}Other.jpg`,        banner: `${BANNER_BASE}Other.jpg`,       heroTitle: "A little bit<br><em>of everything</em>",              heroSub: "Browse the items that don't fit anywhere else." },
+  ],
+
+  // ── SUBCATEGORIES ─────────────────────────────
+  SUBCATEGORIES: {
+    clothing: [
+      "Dresses", "Tops & Tees", "Shirts & Blouses", "Pants & Jeans", "Shorts",
+      "Suits & Blazers", "Coats & Jackets", "Hoodies & Sweatshirts", "Sweaters",
+      "Swimwear", "Underwear & Intimates", "Sleepwear", "Active & Tracksuits",
+      "Leggings", "Socks & Hosiery", "Africa Wear", "Muslim Fashion",
+      "Wedding Dresses", "Wedding Suits & Gowns", "Flower Girl Dresses", "Bridal Accessories",
+    ],
+    shoes: [
+      "Sneakers", "Sandals & Flip Flops", "Boots", "Loafers", "Business Shoes",
+      "Canvas Shoes", "Slippers", "Shoe Accessories", "Other Shoes",
+    ],
+    jewelry: [
+      "Quartz Watches", "Digital Watches", "Mechanical Watches", "Earrings",
+      "Necklaces", "Rings", "Bracelets", "Jewelry Sets", "Anklets", "Body Jewelry",
+      "Children's Watches", "Hair Jewelry", "Cufflinks & Tie Clips", "Other Watches & Jewelry",
+    ],
+    accessories: [
+      "Shoulder Bags", "Handbags", "Cross Body Bags", "Backpacks", "Wallets",
+      "Clutches", "Briefcases", "Waist Packs", "Travel Bags", "Kids' Bags",
+      "Sunglasses", "Hats & Caps", "Belts", "Scarves & Wraps", "Gloves & Mittens", "Ties",
+    ],
+    kids: [
+      "Kids' Clothing", "Kids' Shoes", "Baby Clothing & Sets", "Baby Shoes",
+      "Baby Care", "Feeding", "Strollers & Gear", "Maternity", "Bedding", "Safety",
+      "Learning Toys", "Classic Toys", "Building & Model Toys", "Dolls", "Puzzles",
+      "Outdoor Play", "Remote Control Toys", "Baby Toys",
+    ],
+    home: [
+      "Kitchenware", "Bedding & Textiles", "Curtains & Carpets", "Decor & Wall Art",
+      "Clocks", "Lighting", "Storage & Organization", "Cleaning Supplies", "Bathroom",
+      "Kitchen Appliances", "Air Conditioning", "Personal Care Appliances",
+      "Laundry Appliances", "Sewing & Craft",
+    ],
+    beauty: [
+      "Makeup", "Skin Care", "Hair Care", "Nail Art", "Bath & Shower",
+      "Shaving & Hair Removal", "Tattoo & Body Art", "Beauty Tools", "Health Monitors",
+      "Oral Hygiene", "Massage & Wellness", "Supplements", "Medical",
+    ],
+    telecom: [
+      "Phones", "Headphones & Earphones", "Bluetooth Headsets", "Phone Cases & Bags",
+      "Phone Holders & Stands", "Chargers & Cables", "Screen Protectors",
+      "Memory Cards", "Other Phone Accessories",
+    ],
+    electronics: [
+      "Tablets", "TVs", "Cameras", "Audio Equipment", "Smart Home",
+      "Wearable Devices", "Camera Accessories", "Digital Cables", "Selfie Sticks",
+    ],
+    hair: [
+      "Wigs", "Hair Extensions", "Lace Closures & Frontals", "Synthetic Hair",
+      "Hair Care Tools & Accessories",
+    ],
+    computer: [
+      "Laptops", "Keyboards & Mice", "External Storage", "Networking", "Tablets & Accessories",
+      "Office Electronics", "Other Computer",
+    ],
+    automobile: [
+      "Car Electronics", "Car Audio & GPS", "Interior Accessories", "Exterior Accessories",
+      "Motorcycle Parts & Gear", "Tools & Maintenance", "Diagnostic Tools",
+      "Car Care & Washing", "Safety & Surveillance", "Hand Tools",
+    ],
+    sports: [
+      "Fitness Equipment", "Yoga", "Camping & Hiking Gear", "Cycling", "Water Sports",
+      "Ball Sports", "Fishing Gear", "Musical Instruments", "Sports Bags",
+    ],
+    furniture: [
+      "Sofas & Couches", "Beds & Bed Frames", "Mattresses", "Dining Tables & Chairs",
+      "Office Desks", "Office Chairs", "Wardrobes & Closets", "Bookshelves & Shelving",
+      "TV Stands", "Coffee & Side Tables", "Outdoor Furniture", "Cabinets & Storage",
+      "Kids' Furniture", "Decor & Mirrors",
+    ],
+    vehicles: [
+      "Cars", "SUVs & Trucks", "Motorcycles", "Bicycles", "Auto Parts & Spares",
+      "Tires & Rims", "Car Electronics", "Car Audio & GPS", "Helmets & Riding Gear",
+      "Boats & Watercraft", "Heavy Machinery", "Vehicle Accessories",
+    ],
+    food: [
+      "Fresh Produce", "Meat & Poultry", "Fish & Seafood", "Dairy & Eggs",
+      "Packaged Snacks", "Beverages", "Bakery & Bread", "Homemade Meals",
+      "Spices & Seasonings", "Grains & Cereals", "Cooking Oils", "Catering Services",
+    ],
+    books: [
+      "Textbooks", "Novels & Fiction", "Children's Books", "Religious Books",
+      "Magazines", "Notebooks & Pads", "Pens & Writing Tools", "Art Supplies",
+      "Craft Materials", "School Supplies", "Office Stationery", "Calendars & Planners",
+    ],
+    agriculture: [
+      "Seeds & Seedlings", "Farm Tools", "Irrigation Equipment", "Fertilizers",
+      "Pesticides", "Livestock", "Poultry", "Animal Feed", "Fresh Farm Produce",
+      "Farm Machinery", "Greenhouse Supplies", "Beekeeping Supplies",
+    ],
+    services: [
+      "Plumbing", "Electrical Work", "Cleaning Services", "Tutoring & Lessons",
+      "Photography & Videography", "Catering", "Event Planning", "Repairs & Maintenance",
+      "Hair & Beauty Services", "Transport & Moving", "Construction & Renovation", "IT & Tech Support",
+    ],
+    property: [
+      "For Rent — Houses", "For Rent — Apartments", "For Sale — Houses",
+      "For Sale — Apartments", "Land for Sale", "Land for Rent", "Office Space",
+      "Commercial Space", "Shared Rooms", "Short-Term Stays", "Warehouses",
+    ],
+    other: [
+      "Miscellaneous", "Collectibles", "Pet Supplies", "Gift Items",
+      "Lost & Found", "Event Tickets", "Other",
+    ],
+    free: [
+      "Still Works", "Slightly Damaged", "Heavily Damaged", "Dead / Not Working",
+      "Spare Parts / Junk", "Missing Parts", "Expired (Food/Cosmetics)",
+      "Mystery Bundle", "Other",
+    ],
+  },
+
+  // ── SAMPLE/DEMO DATA (used when Sheet not connected) ──
+  // NOTE: "images" is an array of { url, tag, price }.
+  //   - tag: optional label like "Black", "Size M", "Large Box" — shown as a button
+  //   - price: optional — if set, selecting this image's tag updates displayed price
+  //   If only one image / no tags needed, just give it one images[] entry with no tag.
+  DEMO_PRODUCTS: [
+    {
+      id: "demo_001",
+      sellerName: "Jean Pierre",
+      sellerPhone: "+250781234567",
+      sellerWhatsApp: "+250781234567",
+      sellerCity: "Kigali, Kicukiro",
+      sellerLat: -1.9506,
+      sellerLng: 30.0588,
+      productName: "Samsung Galaxy A54",
+      description: "Brand new sealed Samsung Galaxy A54 5G. 128GB storage, 6GB RAM. Original receipt included.",
+      price: 380000,
+      category: "telecom",
+      subcategory: "Phones",
+      images: [
+        { url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600", tag: "Black — 128GB", price: 380000 },
+        { url: "https://images.unsplash.com/photo-1592286927505-1def25115558?w=600", tag: "Silver — 128GB", price: 380000 },
+        { url: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600", tag: "Black — 256GB", price: 430000 },
+      ],
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: "demo_002",
+      sellerName: "Marie Claire",
+      sellerPhone: "+250782345678",
+      sellerWhatsApp: "+250782345678",
+      sellerCity: "Kigali, Kimironko",
+      sellerLat: -1.9400,
+      sellerLng: 30.0619,
+      productName: "Elegant Ankara Dress",
+      description: "Beautiful hand-crafted Ankara dress. Perfect for parties and events. Made to order with quality fabric.",
+      price: 35000,
+      category: "clothing",
+      subcategory: "Africa Wear",
+      images: [
+        { url: "https://images.unsplash.com/photo-1594938298603-c8148c4b4def?w=600", tag: "Size M", price: 35000 },
+        { url: "https://images.unsplash.com/photo-1612336307429-8a898d10e223?w=600", tag: "Size L", price: 38000 },
+        { url: "https://images.unsplash.com/photo-1551803091-e20673f15770?w=600", tag: "Size XL", price: 40000 },
+      ],
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: "demo_003",
+      sellerName: "Patrick Mugisha",
+      sellerPhone: "+250783456789",
+      sellerWhatsApp: "+250783456789",
+      sellerCity: "Musanze",
+      sellerLat: -1.4986,
+      sellerLng: 29.6354,
+      productName: "Fresh Farm Avocados",
+      description: "Fresh organic avocados from my farm in Musanze. Very fresh, harvested this week. Wholesale crates also available.",
+      price: 12000,
+      category: "food",
+      subcategory: "Fresh Produce",
+      images: [
+        { url: "https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?w=600", tag: "1 Crate (50pcs)", price: 12000 },
+        { url: "https://images.unsplash.com/photo-1601039641847-7857b994d704?w=600", tag: "Half Crate (25pcs)", price: 7000 },
+      ],
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: "demo_004",
+      sellerName: "Alice Uwimana",
+      sellerPhone: "+250784567890",
+      sellerWhatsApp: "+250784567890",
+      sellerCity: "Kigali, Remera",
+      sellerLat: -1.9650,
+      sellerLng: 30.1040,
+      productName: "HP Laptop 15-inch",
+      description: "HP laptop, Core i5 10th gen, 8GB RAM, 256GB SSD. Windows 11 installed. Good condition, barely used.",
+      price: 550000,
+      category: "electronics",
+      subcategory: "Laptops",
+      images: [
+        { url: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600", tag: "", price: 550000 },
+        { url: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600", tag: "", price: 550000 },
+      ],
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: "demo_005",
+      sellerName: "Emmanuel Habimana",
+      sellerPhone: "+250785678901",
+      sellerWhatsApp: "+250785678901",
+      sellerCity: "Huye",
+      sellerLat: -2.5963,
+      sellerLng: 29.7396,
+      productName: "Wooden Dining Table Set",
+      description: "Handcrafted mahogany dining table. Local craftsmanship. Delivery available in Huye.",
+      price: 280000,
+      category: "furniture",
+      subcategory: "Dining Tables & Chairs",
+      images: [
+        { url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600", tag: "4 Chairs", price: 280000 },
+        { url: "https://images.unsplash.com/photo-1617806118233-18e1de247200?w=600", tag: "6 Chairs", price: 340000 },
+      ],
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: "demo_006",
+      sellerName: "Grace Umutoni",
+      sellerPhone: "+250786789012",
+      sellerWhatsApp: "+250786789012",
+      sellerCity: "Kigali, Nyamirambo",
+      sellerLat: -1.9441,
+      sellerLng: 30.0619,
+      productName: "Gold Necklace Set",
+      description: "Beautiful 18K gold-plated necklace and earring set. Perfect gift. Comes in a luxury box.",
+      price: 45000,
+      category: "jewelry",
+      subcategory: "Necklaces",
+      images: [
+        { url: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600", tag: "Gold", price: 45000 },
+        { url: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600", tag: "Rose Gold", price: 48000 },
+        { url: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600", tag: "Silver", price: 40000 },
+      ],
+      timestamp: new Date().toISOString(),
+    },
+
+    // ── Extra Electronics (to reach 5) ──
+    {
+      id: "demo_007",
+      sellerName: "David Niyonzima",
+      sellerPhone: "+250787123456",
+      sellerWhatsApp: "+250787123456",
+      sellerCity: "Kigali, Gikondo",
+      sellerLat: -1.9690,
+      sellerLng: 30.0750,
+      productName: "iPhone 13 Pro",
+      description: "Used iPhone 13 Pro, 256GB, excellent battery health. Comes with original box and charger.",
+      price: 620000,
+      category: "telecom",
+      subcategory: "Phones",
+      images: [
+        { url: "https://images.unsplash.com/photo-1632661674596-df8be070a8c5?w=600", tag: "Graphite", price: 620000 },
+        { url: "https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=600", tag: "Gold", price: 640000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*5).toISOString(),
+    },
+    {
+      id: "demo_008",
+      sellerName: "Eric Bizimana",
+      sellerPhone: "+250788234567",
+      sellerWhatsApp: "+250788234567",
+      sellerCity: "Kigali, Kacyiru",
+      sellerLat: -1.9355,
+      sellerLng: 30.0928,
+      productName: "Sony Bluetooth Headphones",
+      description: "Sony WH-CH520 wireless headphones. Up to 50 hours battery life. Brand new, sealed box.",
+      price: 65000,
+      category: "telecom",
+      subcategory: "Headphones & Earphones",
+      images: [
+        { url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600", tag: "Black", price: 65000 },
+        { url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600", tag: "Blue", price: 65000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*10).toISOString(),
+    },
+    {
+      id: "demo_009",
+      sellerName: "Diane Mukamana",
+      sellerPhone: "+250789345678",
+      sellerWhatsApp: "+250789345678",
+      sellerCity: "Kigali, Kicukiro",
+      sellerLat: -1.9650,
+      sellerLng: 30.1100,
+      productName: "Samsung 32-inch Smart TV",
+      description: "Samsung Smart TV, Full HD, built-in WiFi and apps. Used for 6 months, perfect condition.",
+      price: 195000,
+      category: "electronics",
+      subcategory: "TVs",
+      images: [
+        { url: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600", tag: "", price: 195000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*20).toISOString(),
+    },
+
+    // ── Extra Fashion (to reach 5) ──
+    {
+      id: "demo_010",
+      sellerName: "Sandrine Ingabire",
+      sellerPhone: "+250781112233",
+      sellerWhatsApp: "+250781112233",
+      sellerCity: "Kigali, Nyarugenge",
+      sellerLat: -1.9536,
+      sellerLng: 30.0606,
+      productName: "Men's Leather Jacket",
+      description: "Genuine leather jacket, slim fit. Great for cool evenings. Barely worn, like new.",
+      price: 58000,
+      category: "clothing",
+      subcategory: "Coats & Jackets",
+      images: [
+        { url: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600", tag: "Size M", price: 58000 },
+        { url: "https://images.unsplash.com/photo-1520975954732-35dd22299614?w=600", tag: "Size L", price: 60000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*7).toISOString(),
+    },
+    {
+      id: "demo_011",
+      sellerName: "Aline Mutesi",
+      sellerPhone: "+250782223344",
+      sellerWhatsApp: "+250782223344",
+      sellerCity: "Kigali, Kimironko",
+      sellerLat: -1.9420,
+      sellerLng: 30.0650,
+      productName: "Designer Handbag",
+      description: "Stylish faux-leather handbag with adjustable strap. Spacious interior, multiple pockets.",
+      price: 28000,
+      category: "accessories",
+      subcategory: "Handbags",
+      images: [
+        { url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600", tag: "Black", price: 28000 },
+        { url: "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=600", tag: "Tan", price: 28000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*14).toISOString(),
+    },
+    {
+      id: "demo_012",
+      sellerName: "Yves Karangwa",
+      sellerPhone: "+250783334455",
+      sellerWhatsApp: "+250783334455",
+      sellerCity: "Kigali, Remera",
+      sellerLat: -1.9580,
+      sellerLng: 30.1030,
+      productName: "Sneakers — Sport Edition",
+      description: "Comfortable everyday sneakers, breathable mesh upper. Great for walking and light sport.",
+      price: 32000,
+      category: "shoes",
+      subcategory: "Sneakers",
+      images: [
+        { url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600", tag: "Size 41", price: 32000 },
+        { url: "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=600", tag: "Size 43", price: 32000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*30).toISOString(),
+    },
+    {
+      id: "demo_022",
+      sellerName: "Pacifique Mugenzi",
+      sellerPhone: "+250784556622",
+      sellerWhatsApp: "+250784556622",
+      sellerCity: "Kigali, Kicukiro",
+      sellerLat: -1.9610,
+      sellerLng: 30.0980,
+      productName: "Casual Denim Jeans",
+      description: "Slim-fit denim jeans, durable stitching, comfortable stretch fabric. True to size.",
+      price: 22000,
+      category: "clothing",
+      subcategory: "Pants & Jeans",
+      images: [
+        { url: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=600", tag: "Size 32", price: 22000 },
+        { url: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600", tag: "Size 34", price: 22000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*36).toISOString(),
+    },
+
+    // ── Extra Food & Drinks (to reach 5) ──
+    {
+      id: "demo_013",
+      sellerName: "Beatrice Nyiraneza",
+      sellerPhone: "+250784445566",
+      sellerWhatsApp: "+250784445566",
+      sellerCity: "Musanze",
+      sellerLat: -1.5020,
+      sellerLng: 29.6300,
+      productName: "Organic Honey — 1L Jar",
+      description: "Pure organic honey harvested from local beehives in Musanze. No additives, no preservatives.",
+      price: 9000,
+      category: "food",
+      subcategory: "Packaged Snacks",
+      images: [
+        { url: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600", tag: "1L Jar", price: 9000 },
+        { url: "https://images.unsplash.com/photo-1582543005511-7c3a86ef862e?w=600", tag: "500ml Jar", price: 5000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*9).toISOString(),
+    },
+    {
+      id: "demo_014",
+      sellerName: "Joseph Rugamba",
+      sellerPhone: "+250785556677",
+      sellerWhatsApp: "+250785556677",
+      sellerCity: "Huye",
+      sellerLat: -2.6000,
+      sellerLng: 29.7430,
+      productName: "Fresh Rwandan Coffee Beans",
+      description: "Premium Arabica coffee beans, freshly roasted. Grown in the hills of southern Rwanda.",
+      price: 8500,
+      category: "food",
+      subcategory: "Beverages",
+      images: [
+        { url: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600", tag: "250g Bag", price: 8500 },
+        { url: "https://images.unsplash.com/photo-1559525839-8f275bb555ff?w=600", tag: "1kg Bag", price: 28000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*16).toISOString(),
+    },
+    {
+      id: "demo_015",
+      sellerName: "Claudine Uwase",
+      sellerPhone: "+250786667788",
+      sellerWhatsApp: "+250786667788",
+      sellerCity: "Kigali, Kimironko",
+      sellerLat: -1.9410,
+      sellerLng: 30.0660,
+      productName: "Homemade Banana Bread",
+      description: "Freshly baked banana bread, made daily with no preservatives. Orders ready within 2 hours.",
+      price: 4500,
+      category: "food",
+      subcategory: "Homemade Meals",
+      images: [
+        { url: "https://images.unsplash.com/photo-1606101273945-e9573884a5b9?w=600", tag: "", price: 4500 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*3).toISOString(),
+    },
+    {
+      id: "demo_023",
+      sellerName: "Fabrice Ndayisenga",
+      sellerPhone: "+250787667733",
+      sellerWhatsApp: "+250787667733",
+      sellerCity: "Musanze",
+      sellerLat: -1.4950,
+      sellerLng: 29.6400,
+      productName: "Fresh Irish Potatoes — Sack",
+      description: "Premium Irish potatoes from Musanze farms. One full sack (50kg). Bulk discounts available.",
+      price: 18000,
+      category: "food",
+      subcategory: "Fresh Produce",
+      images: [
+        { url: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600", tag: "Full Sack (50kg)", price: 18000 },
+        { url: "https://images.unsplash.com/photo-1518977822534-7049a61ee0c2?w=600", tag: "Half Sack (25kg)", price: 10000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*40).toISOString(),
+    },
+
+    // ── Extra Furniture (to reach 5) ──
+    {
+      id: "demo_016",
+      sellerName: "Innocent Habiyaremye",
+      sellerPhone: "+250787778899",
+      sellerWhatsApp: "+250787778899",
+      sellerCity: "Kigali, Kanombe",
+      sellerLat: -1.9700,
+      sellerLng: 30.1350,
+      productName: "Modern Office Desk",
+      description: "Sturdy wooden office desk with drawer storage. Great for home office setups.",
+      price: 95000,
+      category: "furniture",
+      subcategory: "Office Desks",
+      images: [
+        { url: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=600", tag: "", price: 95000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*22).toISOString(),
+    },
+    {
+      id: "demo_017",
+      sellerName: "Theresa Mukamurenzi",
+      sellerPhone: "+250788889900",
+      sellerWhatsApp: "+250788889900",
+      sellerCity: "Kigali, Kibagabaga",
+      sellerLat: -1.9280,
+      sellerLng: 30.1050,
+      productName: "3-Seater Fabric Sofa",
+      description: "Comfortable 3-seater sofa, grey fabric upholstery. Used for 1 year, well maintained.",
+      price: 220000,
+      category: "furniture",
+      subcategory: "Sofas & Couches",
+      images: [
+        { url: "https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=600", tag: "Grey", price: 220000 },
+        { url: "https://images.unsplash.com/photo-1567538096631-e0c55bd6374c?w=600", tag: "Beige", price: 225000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*12).toISOString(),
+    },
+    {
+      id: "demo_018",
+      sellerName: "Olivier Mugabo",
+      sellerPhone: "+250789990011",
+      sellerWhatsApp: "+250789990011",
+      sellerCity: "Huye",
+      sellerLat: -2.5980,
+      sellerLng: 29.7410,
+      productName: "Wooden Bookshelf",
+      description: "5-tier wooden bookshelf, sturdy and spacious. Perfect for books, decor, or storage.",
+      price: 65000,
+      category: "furniture",
+      subcategory: "Bookshelves & Shelving",
+      images: [
+        { url: "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=600", tag: "", price: 65000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*28).toISOString(),
+    },
+    {
+      id: "demo_024",
+      sellerName: "Solange Nyirahabimana",
+      sellerPhone: "+250788001122",
+      sellerWhatsApp: "+250788001122",
+      sellerCity: "Kigali, Gisozi",
+      sellerLat: -1.9180,
+      sellerLng: 30.0680,
+      productName: "Queen Size Bed Frame",
+      description: "Solid wood queen bed frame with headboard. Excellent condition, mattress not included.",
+      price: 150000,
+      category: "furniture",
+      subcategory: "Beds & Bed Frames",
+      images: [
+        { url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600", tag: "", price: 150000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*44).toISOString(),
+    },
+
+    // ── Extra Accessories (to reach 5) ──
+    {
+      id: "demo_019",
+      sellerName: "Vanessa Iradukunda",
+      sellerPhone: "+250781230099",
+      sellerWhatsApp: "+250781230099",
+      sellerCity: "Kigali, Kicukiro",
+      sellerLat: -1.9520,
+      sellerLng: 30.0950,
+      productName: "Classic Leather Belt",
+      description: "Genuine leather belt with stainless steel buckle. Available in multiple sizes.",
+      price: 15000,
+      category: "accessories",
+      subcategory: "Belts",
+      images: [
+        { url: "https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=600", tag: "Black", price: 15000 },
+        { url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600", tag: "Brown", price: 15000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*18).toISOString(),
+    },
+    {
+      id: "demo_020",
+      sellerName: "Christine Ishimwe",
+      sellerPhone: "+250782341100",
+      sellerWhatsApp: "+250782341100",
+      sellerCity: "Kigali, Nyamirambo",
+      sellerLat: -1.9460,
+      sellerLng: 30.0590,
+      productName: "Polarized Sunglasses",
+      description: "UV-protected polarized sunglasses with sturdy frame. Comes with a protective case.",
+      price: 12000,
+      category: "accessories",
+      subcategory: "Sunglasses",
+      images: [
+        { url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600", tag: "Black Frame", price: 12000 },
+        { url: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600", tag: "Tortoise Frame", price: 13000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*25).toISOString(),
+    },
+    {
+      id: "demo_021",
+      sellerName: "Robert Tuyisenge",
+      sellerPhone: "+250783452211",
+      sellerWhatsApp: "+250783452211",
+      sellerCity: "Kigali, Remera",
+      sellerLat: -1.9570,
+      sellerLng: 30.1010,
+      productName: "Men's Wrist Watch",
+      description: "Elegant stainless steel wrist watch, water resistant. Great for formal or casual wear.",
+      price: 38000,
+      category: "jewelry",
+      subcategory: "Quartz Watches",
+      images: [
+        { url: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600", tag: "Silver", price: 38000 },
+        { url: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600", tag: "Gold", price: 42000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*33).toISOString(),
+    },
+    {
+      id: "demo_025",
+      sellerName: "Nadine Uwineza",
+      sellerPhone: "+250784563322",
+      sellerWhatsApp: "+250784563322",
+      sellerCity: "Kigali, Kimironko",
+      sellerLat: -1.9430,
+      sellerLng: 30.0640,
+      productName: "Silk Scarf Collection",
+      description: "Set of 3 lightweight silk scarves in different patterns. Soft texture, vibrant colors.",
+      price: 16000,
+      category: "accessories",
+      subcategory: "Scarves & Wraps",
+      images: [
+        { url: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=600", tag: "Set of 3", price: 16000 },
+        { url: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600", tag: "Single Scarf", price: 6000 },
+      ],
+      timestamp: new Date(Date.now() - 1000*60*60*48).toISOString(),
+    },
+  ]
+};
