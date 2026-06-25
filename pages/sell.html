@@ -491,24 +491,13 @@ function buildSubDropdown(catId) {
   trigger.innerHTML = '<span class="trigger-placeholder" id="subPickerLabel">Select subcategory…</span><span class="trigger-arrow">▼</span>';
   if (!subs.length) return;
   subs.forEach(s=>{
-    // option in hidden select
     const o = document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
-    // look up image from SUBCAT_IMAGES using the "catId:label" key
-    const imgSrc = (window.SUBCAT_IMAGES && SUBCAT_IMAGES[`${catId}:${s}`]) || '';
-    const emoji = SUB_EMOJI[s] || SUB_EMOJI['default'];
+    const imgSrc = getSubcatImage(catId, s);
     const item = document.createElement('div');
     item.className = 'cat-picker-item';
     item.dataset.value = s;
-    if (imgSrc) {
-      item.innerHTML = `
-        <img src="${imgSrc}" alt="${s}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-        <div class="cat-emoji" style="display:none">${emoji}</div>
-        <span>${s}</span>`;
-    } else {
-      item.innerHTML = `<div class="cat-emoji">${emoji}</div><span>${s}</span>`;
-    }
-    item.onclick = () => selectSub(s, imgSrc, emoji);
+    item.innerHTML = `<img src="${imgSrc}" alt="${s}" onerror="this.style.display='none'"><span>${s}</span>`;
+    item.onclick = () => selectSub(catId, s);
     dd.appendChild(item);
   });
 }
@@ -548,19 +537,12 @@ function selectCat(id, label, imgSrc) {
   buildSubDropdown(id);
 }
 
-function selectSub(name, imgSrc, emoji) {
-  // update hidden select
+function selectSub(catId, name) {
   const sel = document.getElementById('subcategory');
   sel.value = name;
-  // update trigger UI — show image if available, fallback to emoji
-  const resolvedImg = imgSrc || '';
-  const resolvedEmoji = emoji || SUB_EMOJI[name] || SUB_EMOJI['default'];
+  const imgSrc = getSubcatImage(catId, name);
   const trigger = document.getElementById('subPickerTrigger');
-  trigger.innerHTML = `
-    <img src="${resolvedImg}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0"
-         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-    <div style="display:none;width:28px;height:28px;align-items:center;justify-content:center;font-size:1.2rem;background:#f0f0f0;border-radius:4px;flex-shrink:0">${resolvedEmoji}</div>
-    <span>${name}</span><span class="trigger-arrow">▼</span>`;
+  trigger.innerHTML = `<img src="${imgSrc}" alt="" onerror="this.style.display='none'"><span>${name}</span><span class="trigger-arrow">▼</span>`;
   trigger.classList.remove('open');
   document.querySelectorAll('#subPickerDropdown .cat-picker-item').forEach(el=>{
     el.classList.toggle('selected', el.dataset.value===name);
