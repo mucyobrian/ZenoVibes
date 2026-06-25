@@ -353,9 +353,11 @@ function buildGridBanners() {
     // Clicking a tile selects the category pill then scrolls to the products grid
     const onclick = b.action === 'sellers'
       ? `showSellerDirectory()`
-      : b.category && b.category !== 'all'
-        ? `selectCategory('${b.category}', document.querySelector('.cat-pill[onclick*=\\'${b.category}\\']')); document.getElementById('categorySections')?.scrollIntoView({behavior:'smooth', block:'start'})`
-        : `selectCategory('all', document.querySelector('.cat-pill')); document.getElementById('categorySections')?.scrollIntoView({behavior:'smooth', block:'start'})`;
+      : b.action === 'free'
+        ? `showFreeProducts()`
+        : b.category && b.category !== 'all'
+          ? `selectCategory('${b.category}', document.querySelector('.cat-pill[onclick*=\\'${b.category}\\']')); document.getElementById('categorySections')?.scrollIntoView({behavior:'smooth', block:'start'})`
+          : `selectCategory('all', document.querySelector('.cat-pill')); document.getElementById('categorySections')?.scrollIntoView({behavior:'smooth', block:'start'})`;
 
     return `
       <a class="grid-banner-tile"
@@ -497,6 +499,37 @@ function filterBySeller(sellerKey) {
 function closeSellerDirectory() {
   sellerDirectoryActive = false;
   buildCategorySections();
+}
+
+// ── Free Stuff view (triggered from grid banner tile) ────────────
+// Shows every listing priced at 0 ("FREE"), in the same product-grid
+// style as a normal category, with a Back button to return to browsing.
+function showFreeProducts() {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  const container = document.getElementById('categorySections');
+  const noRes = document.getElementById('noResults');
+  if (!container) return;
+
+  const loc = getUserLocation();
+  const products = allProducts.filter(p => isFreePrice(p.price));
+
+  if (noRes) noRes.classList.add('hidden');
+
+  container.innerHTML = `
+    <section class="cat-section">
+      <div class="cat-section-head">
+        <div class="cat-section-title">Free Stuff
+          <span class="cat-section-count">(${products.length})</span>
+        </div>
+        <button class="seller-dir-back" style="margin-left:auto" onclick="clearFilters()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> All
+        </button>
+      </div>
+      ${products.length
+        ? `<div class="products-grid">${products.map(p => buildProductCard(p, loc?.lat, loc?.lng)).join('')}</div>`
+        : `<p class="no-results" style="display:block">No free listings right now.</p>`}
+    </section>`;
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function initPromoCarousel() {

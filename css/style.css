@@ -916,6 +916,10 @@ input, select, textarea { font-family: inherit; }
   white-space: nowrap;
 }
 
+.price-free {
+  color: var(--accent) !important;
+}
+
 .card-location {
   font-size: 0.7rem;
   color: var(--text-muted);

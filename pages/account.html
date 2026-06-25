@@ -1002,7 +1002,7 @@ async function showMyListings() {
         <div class="card-category">${getCatLabel(p.category)}</div>
         <div class="card-title">${escHtml(p.productName)}</div>
         <div class="card-footer">
-          <span class="card-price">${formatPrice(p.price)}</span>
+          <span class="card-price${isFreePrice(p.price) ? ' price-free' : ''}">${formatPrice(p.price)}</span>
           <span class="card-location">📍 ${escHtml(p.sellerCity||'')}</span>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px">

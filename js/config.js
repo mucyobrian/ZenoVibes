@@ -84,24 +84,23 @@ const CONFIG = {
   GRID_BANNERS: [
     {
       image: `${BANNER_BASE}Grid_Banner_A_1.jpg`,
+      label: 'Free Stuff',
+      action: 'free',
+    },
+    {
+      image: `${BANNER_BASE}Grid_Banner_A_2.jpg`,
       label: 'Premium Sale',
       category: 'all',
     },
     {
-      image: `${BANNER_BASE}Grid_Banner_A_2.jpg`,
-      label: "Women's Shoes",
-      category: 'shoes',
-      action: 'sellers',
-    },
-    {
       image: `${BANNER_BASE}Grid_Banner_A_3.jpg`,
-      label: 'Phones',
-      category: 'telecom',
+      label: 'Clothing',
+      category: 'clothing',
     },
     {
       image: `${BANNER_BASE}Grid_Banner_A_4.jpg`,
-      label: 'Accessories',
-      category: 'accessories',
+      label: 'Sellers',
+      action: 'sellers',
     },
   ],
 

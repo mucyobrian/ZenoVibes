@@ -21,7 +21,13 @@ function showToast(msg, type = '') {
 // ── Format currency ─────────────────────────────
 function formatPrice(amount) {
   if (!amount && amount !== 0) return 'N/A';
+  if (Number(amount) === 0) return 'FREE';
   return CONFIG.currencySymbol + ' ' + Number(amount).toLocaleString();
+}
+
+// True only for listings that should display as "FREE" (price === 0, not N/A)
+function isFreePrice(amount) {
+  return (amount === 0 || amount === '0') && amount !== null && amount !== undefined && amount !== '';
 }
 
 // ── Format distance ─────────────────────────────
@@ -95,9 +101,9 @@ function buildProductCard(product, userLat, userLng, listView) {
     ? `<img class="card-img" src="${escHtml(firstImg)}" alt="${escHtml(product.productName)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-img-placeholder" style="display:none">${getCatEmoji(product.category)}</div>`
     : `<div class="card-img-placeholder">${getCatEmoji(product.category)}</div>`;
 
-  const imgCount = Array.isArray(product.images) ? product.images.length : (product.imageUrl ? 1 : 0);
-  const multiImgBadge = imgCount > 1
-    ? `<div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:white;font-size:0.7rem;font-weight:600;padding:3px 8px;border-radius:100px">📷 ${imgCount}</div>`
+  const qty = parseInt(product.quantity, 10) || 1;
+  const qtyBadge = qty > 1
+    ? `<div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:white;font-size:0.7rem;font-weight:600;padding:3px 8px;border-radius:100px">x${qty}</div>`
     : '';
 
   const isFav = DB.isFavorite(product.id);
@@ -119,7 +125,7 @@ function buildProductCard(product, userLat, userLng, listView) {
   <div class="product-card--list" onclick="goToProduct('${product.id}')">
     <div class="list-img-wrap">
       ${imgHtml}
-      ${multiImgBadge}
+      ${qtyBadge}
       ${favBtnHtml}
     </div>
     <div class="list-info">
@@ -128,7 +134,7 @@ function buildProductCard(product, userLat, userLng, listView) {
       <div class="list-desc">${escHtml(product.description || '')}</div>
       ${engBadge}
       <div class="list-footer">
-        <span class="list-price">${formatPrice(product.price)}</span>
+        <span class="list-price${isFreePrice(product.price) ? ' price-free' : ''}">${formatPrice(product.price)}</span>
         <span class="list-loc">📍 ${escHtml(product.sellerCity || '')}${dist !== null ? ` · <span style="color:var(--success)">${formatDist(dist)}</span>` : ''}</span>
       </div>
     </div>
@@ -139,7 +145,7 @@ function buildProductCard(product, userLat, userLng, listView) {
   <div class="product-card" onclick="goToProduct('${product.id}')">
     <div style="position:relative">
       ${imgHtml}
-      ${multiImgBadge}
+      ${qtyBadge}
       ${favBtnHtml}
       <div style="position:absolute;top:10px;left:10px;background:rgba(26,20,100,0.85);color:white;padding:3px 10px;border-radius:100px;font-size:0.72rem;font-weight:600">
         ${getCatEmoji(product.category)} ${getCatLabel(product.category)}
@@ -150,7 +156,7 @@ function buildProductCard(product, userLat, userLng, listView) {
       <div class="card-desc">${escHtml(product.description || '')}</div>
       ${engBadge}
       <div class="card-footer">
-        <span class="card-price">${formatPrice(product.price)}</span>
+        <span class="card-price${isFreePrice(product.price) ? ' price-free' : ''}">${formatPrice(product.price)}</span>
         <span class="card-location">
           📍 ${escHtml(product.sellerCity || '')}
           ${dist !== null ? `<span style="color:var(--success);margin-left:4px">${formatDist(dist)}</span>` : ''}
@@ -212,7 +218,9 @@ function openContact(product) {
 
   document.getElementById('modalSellerName').textContent = product.sellerName || 'Seller';
   document.getElementById('modalProductName').textContent = product.productName || '';
-  document.getElementById('modalPrice').textContent = formatPrice(product.price);
+  const modalPriceEl = document.getElementById('modalPrice');
+  modalPriceEl.textContent = formatPrice(product.price);
+  modalPriceEl.classList.toggle('price-free', isFreePrice(product.price));
   document.getElementById('modalAvatar').textContent = getCatEmoji(product.category);
 
   const phone = String(product.sellerPhone || '').replace(/\s+/g, '');

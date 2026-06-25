@@ -100,6 +100,7 @@
     .detail-posted { display: inline-block; font-size: 0.75rem; color: var(--text-light); }
     .detail-price { font-size: 1.9rem; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
     .detail-price .old-price { font-size: 1.1rem; color: var(--text-light); text-decoration: line-through; font-weight: 500; margin-left: 8px; }
+    .detail-qty { display: inline-flex; align-items: center; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border); border-radius: 100px; padding: 4px 12px; margin-bottom: 10px; }
 
     .detail-section { background: white; border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--shadow); }
     .detail-section h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 10px; color: var(--text); }
@@ -266,11 +267,19 @@
     </div>
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
       <h1 class="detail-title" id="detailTitle" style="margin-bottom:0"></h1>
-      <button id="detailFavBtn" class="fav-btn" style="position:static;flex-shrink:0;width:38px;height:38px;box-shadow:0 1px 4px rgba(0,0,0,0.15)" onclick="handleDetailFavClick()" aria-label="Add to favorites">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      </button>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button id="detailShareBtn" class="fav-btn" style="position:static;width:38px;height:38px;box-shadow:0 1px 4px rgba(0,0,0,0.15)" onclick="handleShareClick()" aria-label="Copy link to this listing">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+        <button id="detailFavBtn" class="fav-btn" style="position:static;width:38px;height:38px;box-shadow:0 1px 4px rgba(0,0,0,0.15)" onclick="handleDetailFavClick()" aria-label="Add to favorites">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="detail-price" id="detailPrice"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="detail-price" id="detailPrice" style="margin-bottom:0"></div>
+      <span class="detail-qty" id="detailQty" style="display:none"></span>
+    </div>
 
     <!-- Variant tags -->
     <div class="variant-section" id="variantSection" style="display:none">
@@ -440,6 +449,29 @@ async function handleDetailFavClick() {
   }
 }
 
+// ── Copy a shareable link to this listing ────────
+async function handleShareClick() {
+  const url = window.location.href;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      // Fallback for browsers without the Clipboard API
+      const tmp = document.createElement('textarea');
+      tmp.value = url;
+      tmp.style.position = 'fixed';
+      tmp.style.opacity = '0';
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      document.body.removeChild(tmp);
+    }
+    showToast('Link copied!', 'success');
+  } catch (e) {
+    showToast('Could not copy link', 'error');
+  }
+}
+
 function renderDetail() {
   document.getElementById('loadingState').style.display = 'none';
   document.getElementById('productContent').style.display = 'block';
@@ -478,6 +510,18 @@ function renderDetail() {
   document.getElementById('detailCategory').innerHTML = `${getCatEmoji(product.category)} ${getCatLabel(product.category)}`;
   document.getElementById('detailTitle').textContent = product.productName;
   document.getElementById('detailDesc').textContent = product.description || 'No description provided.';
+
+  // Quantity (only shown when more than 1 available)
+  const qty = parseInt(product.quantity, 10) || 1;
+  const qtyEl = document.getElementById('detailQty');
+  if (qtyEl) {
+    if (qty > 1) {
+      qtyEl.textContent = `📦 ${qty} available`;
+      qtyEl.style.display = 'inline-flex';
+    } else {
+      qtyEl.style.display = 'none';
+    }
+  }
 
   // Posted time ago
   const postedEl = document.getElementById('detailPosted');
@@ -594,7 +638,9 @@ function applyVariantState(i) {
 function updatePriceDisplay(i) {
   const img = images[i];
   const price = (img && img.price) ? img.price : product.price;
-  document.getElementById('detailPrice').textContent = formatPrice(price);
+  const priceEl = document.getElementById('detailPrice');
+  priceEl.textContent = formatPrice(price);
+  priceEl.classList.toggle('price-free', isFreePrice(price));
 }
 
 function scrollToSlide(i) {
@@ -673,7 +719,7 @@ async function renderSimilarProducts() {
         <div class="similar-card-img">${imgHtml}</div>
         <div class="similar-card-body">
           <div class="similar-card-title">${escHtml(p.productName)}</div>
-          <div class="similar-card-price">${formatPrice(p.price)}</div>
+          <div class="similar-card-price${isFreePrice(p.price) ? ' price-free' : ''}">${formatPrice(p.price)}</div>
           <div class="similar-card-loc">📍 ${escHtml(p.sellerCity || '')}</div>
         </div>
       </div>`;
