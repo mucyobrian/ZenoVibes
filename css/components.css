@@ -231,28 +231,32 @@
 /* Image slot upload (multi-image with tags & variant pricing) */
 .image-slot {
   display: flex;
-  gap: 14px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px;
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: 14px;
   margin-bottom: 10px;
   align-items: flex-start;
   transition: border-color 0.15s;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
 }
 .image-slot:hover { border-color: var(--primary-light); }
 
 .image-slot-preview {
-  width: 84px;
-  height: 84px;
-  border-radius: 12px;
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  border-radius: 10px;
   background: var(--bg);
   border: 1.5px dashed var(--border);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -271,10 +275,11 @@
 }
 .image-slot-placeholder-text { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
 
-.image-slot-fields { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; padding-top: 2px; }
+.image-slot-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding-top: 2px; overflow: hidden; }
 .image-slot-fields input {
   width: 100%;
-  padding: 9px 12px;
+  box-sizing: border-box;
+  padding: 8px 10px;
   border: 1.5px solid var(--border);
   border-radius: 10px;
   font-size: 0.84rem;
@@ -283,9 +288,9 @@
   transition: border-color 0.15s, background 0.15s;
 }
 .image-slot-fields input:focus { border-color: var(--primary); background: var(--surface); }
-.image-slot-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.image-slot-row input:first-child { flex: 1; min-width: 120px; }
-.image-slot-row input:last-child { width: 110px; min-width: 90px; flex: 1; }
+.image-slot-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.image-slot-row input:first-child { flex: 1; min-width: 0; }
+.image-slot-row input:last-child { width: 90px; min-width: 0; flex-shrink: 0; }
 
 .image-slot-remove {
   background: var(--bg);

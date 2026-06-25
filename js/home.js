@@ -428,21 +428,21 @@ async function _renderSellerCards() {
     const likes  = stats.totalLikes  != null ? stats.totalLikes  : '—';
     const rating = stats.avgRating   != null ? parseFloat(stats.avgRating).toFixed(1) : '—';
     const initials = (s.name || 'S').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    const avatarHtml = s.avatar
-      ? `<img class="seller-card-avatar" src="${escHtml(s.avatar)}" alt="${escHtml(s.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="seller-card-initials" style="display:none">${initials}</div>`
+    const coverHtml = s.avatar
+      ? `<img src="${escHtml(s.avatar)}" alt="${escHtml(s.name)}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="seller-card-initials" style="display:none">${initials}</div>`
       : `<div class="seller-card-initials">${initials}</div>`;
     const phone  = s.phone ? s.phone.replace(/\D/g, '') : '';
     const waHref = phone ? `https://wa.me/${phone}?text=${encodeURIComponent('Hi, I found you on StillWorks!')}` : '#';
     const sellerKey = escHtml(s.phone || s.name);
     return `
       <div class="seller-card">
-        <div class="seller-card-top">
-          <div class="seller-card-avatar-wrap">${avatarHtml}</div>
-          <div class="seller-card-info">
-            <div class="seller-card-name">${escHtml(s.name)}</div>
-            ${s.city ? `<div class="seller-card-city">📍 ${escHtml(s.city)}</div>` : ''}
-            <div class="seller-card-posts">${s.count} listing${s.count !== 1 ? 's' : ''}</div>
-          </div>
+        <div class="seller-card-cover">
+          ${coverHtml}
+          <span class="seller-card-badge">${s.count} listing${s.count !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="seller-card-info">
+          <div class="seller-card-name">${escHtml(s.name)}</div>
+          ${s.city ? `<div class="seller-card-city">📍 ${escHtml(s.city)}</div>` : ''}
         </div>
         <div class="seller-card-stats">
           <div class="seller-stat">
@@ -463,7 +463,7 @@ async function _renderSellerCards() {
           </div>
         </div>
         <div class="seller-card-actions">
-          <button class="seller-btn-listings" onclick="filterBySeller('${sellerKey}')">View Listings</button>
+          <button class="seller-btn-listings" onclick="filterBySeller('${sellerKey}')">View Posts</button>
           ${phone ? `<a class="seller-btn-wa" href="${waHref}" target="_blank" rel="noopener">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.554 4.11 1.523 5.843L0 24l6.32-1.497A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.82 9.82 0 0 1-5.007-1.371l-.36-.214-3.732.883.933-3.617-.235-.372A9.818 9.818 0 0 1 2.182 12c0-5.422 4.396-9.818 9.818-9.818 5.422 0 9.818 4.396 9.818 9.818 0 5.422-4.396 9.818-9.818 9.818z"/></svg>
             WhatsApp

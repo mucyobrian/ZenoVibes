@@ -49,19 +49,21 @@
     /* hidden real selects (still used for form value reading) */
     .cat-real-select { display: none !important; }
 
-    .phone-wrap { display: flex; gap: 8px; }
+    .phone-wrap { display: flex; gap: 6px; }
     .country-select {
       flex: 0 0 auto;
-      padding: 0 10px;
+      padding: 0 6px;
       height: 46px;
       border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       background: white;
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       cursor: pointer;
       color: var(--text);
-      min-width: 105px;
-      max-width: 125px;
+      min-width: 0;
+      max-width: 100px;
+      width: 90px;
+      box-sizing: border-box;
     }
     .country-select:focus { outline: none; border-color: var(--primary); }
     .phone-wrap input[type="tel"] { flex: 1; min-width: 0; }
@@ -340,6 +342,7 @@
 </div>
 
 <script src="../js/config.js"></script>
+<script src="../js/subcat-images.js"></script>
 <script src="../js/db.js"></script>
 <script src="../js/app.js"></script>
 <script>
@@ -490,13 +493,22 @@ function buildSubDropdown(catId) {
   subs.forEach(s=>{
     // option in hidden select
     const o = document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
-    // visual item
+    // look up image from SUBCAT_IMAGES using the "catId:label" key
+    const imgSrc = (window.SUBCAT_IMAGES && SUBCAT_IMAGES[`${catId}:${s}`]) || '';
     const emoji = SUB_EMOJI[s] || SUB_EMOJI['default'];
     const item = document.createElement('div');
     item.className = 'cat-picker-item';
     item.dataset.value = s;
-    item.innerHTML = `<div class="cat-emoji">${emoji}</div><span>${s}</span>`;
-    item.onclick = () => selectSub(s);
+    if (imgSrc) {
+      item.innerHTML = `
+        <img src="${imgSrc}" alt="${s}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+        <div class="cat-emoji" style="display:none">${emoji}</div>
+        <span>${s}</span>`;
+    } else {
+      item.innerHTML = `<div class="cat-emoji">${emoji}</div><span>${s}</span>`;
+    }
+    item.onclick = () => selectSub(s, imgSrc, emoji);
     dd.appendChild(item);
   });
 }
@@ -536,14 +548,19 @@ function selectCat(id, label, imgSrc) {
   buildSubDropdown(id);
 }
 
-function selectSub(name) {
+function selectSub(name, imgSrc, emoji) {
   // update hidden select
   const sel = document.getElementById('subcategory');
   sel.value = name;
-  // update trigger UI
-  const emoji = SUB_EMOJI[name] || SUB_EMOJI['default'];
+  // update trigger UI — show image if available, fallback to emoji
+  const resolvedImg = imgSrc || '';
+  const resolvedEmoji = emoji || SUB_EMOJI[name] || SUB_EMOJI['default'];
   const trigger = document.getElementById('subPickerTrigger');
-  trigger.innerHTML = `<span style="font-size:1.2rem">${emoji}</span><span>${name}</span><span class="trigger-arrow">▼</span>`;
+  trigger.innerHTML = `
+    <img src="${resolvedImg}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    <div style="display:none;width:28px;height:28px;align-items:center;justify-content:center;font-size:1.2rem;background:#f0f0f0;border-radius:4px;flex-shrink:0">${resolvedEmoji}</div>
+    <span>${name}</span><span class="trigger-arrow">▼</span>`;
   trigger.classList.remove('open');
   document.querySelectorAll('#subPickerDropdown .cat-picker-item').forEach(el=>{
     el.classList.toggle('selected', el.dataset.value===name);
