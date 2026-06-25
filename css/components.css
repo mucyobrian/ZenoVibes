@@ -761,6 +761,15 @@
 }
 .page-hero p { font-size: 0.9rem; color: rgba(255,255,255,0.7); }
 
+/* Compact variant — used on pages whose hero has no subtitle (categories, shop) */
+.page-hero.compact {
+  padding: 10px 16px;
+}
+.page-hero.compact h1 {
+  font-size: 1.25rem;
+  margin-bottom: 0;
+}
+
 /* ===== PRICING BOX ===== */
 .pricing-box {
   background: linear-gradient(135deg, #fff8eb, #fff3d4);
