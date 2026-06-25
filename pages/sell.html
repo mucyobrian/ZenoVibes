@@ -76,11 +76,11 @@
       .field-row-tight input { padding: 12px 8px; font-size: 0.88rem; }
     }
 
-  /* ── Crop Modal ── */
   .crop-overlay {
     display: none; position: fixed; inset: 0; z-index: 9999;
     background: rgba(0,0,0,0.92); flex-direction: column;
     align-items: center; justify-content: center;
+    padding: 16px;
   }
   .crop-overlay.active { display: flex; }
   .crop-title {
@@ -91,7 +91,9 @@
     color: #aaa; font-size: 0.78rem; margin-bottom: 10px; text-align: center;
   }
   .crop-viewport {
-    position: relative; width: 300px; height: 300px;
+    position: relative;
+    width: min(300px, calc(100vw - 32px));
+    height: min(300px, calc(100vw - 32px));
     overflow: hidden; border: 2px solid var(--primary);
     border-radius: 10px; background: #000; cursor: grab; touch-action: none;
   }
@@ -109,7 +111,8 @@
   }
   .crop-zoom-row {
     display: flex; align-items: center; gap: 10px;
-    margin-top: 12px; width: 300px;
+    margin-top: 12px;
+    width: min(300px, calc(100vw - 32px));
   }
   .crop-zoom-row input[type=range] {
     flex: 1; accent-color: var(--primary);
@@ -117,6 +120,7 @@
   .crop-zoom-label { color: #aaa; font-size: 0.78rem; width: 36px; text-align: right; }
   .crop-actions {
     display: flex; gap: 10px; margin-top: 16px;
+    width: min(300px, calc(100vw - 32px));
   }
   .btn-crop-cancel {
     flex: 1; padding: 11px; border: 1.5px solid #555; background: none;
@@ -993,7 +997,7 @@ document.addEventListener('DOMContentLoaded', initSellPage);
     <input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" oninput="onCropZoom(this.value)"/>
     <span class="crop-zoom-label" id="cropZoomLabel">1.0×</span>
   </div>
-  <div class="crop-actions" style="width:300px">
+  <div class="crop-actions">
     <button class="btn-crop-cancel" onclick="cancelCrop()">Cancel</button>
     <button class="btn-crop-cancel" onclick="rotateCrop()" title="Rotate 90°">↻ Rotate</button>
     <button class="btn-crop-confirm" onclick="confirmCrop()">✓ Use Photo</button>
