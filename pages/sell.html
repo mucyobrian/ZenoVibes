@@ -1068,15 +1068,21 @@ function _getRotatedSize() {
 
 function _resetCropFit() {
   const { w, h } = _getRotatedSize();
-  // Scale so the image COVERS the square (use the larger ratio)
-  const fit = CROP_SIZE / Math.min(w, h);
-  _cropScale = fit;
+  // Scale so the image COVERS the square (fit to cover = smaller side fills viewport)
+  const fitCover = CROP_SIZE / Math.min(w, h);
+  // Scale so the whole image fits inside the viewport (fit to contain)
+  const fitContain = CROP_SIZE / Math.max(w, h);
+  _cropScale = fitCover;
   const sl = document.getElementById('cropZoom');
-  sl.min = 0.25; sl.max = 4; sl.value = fit;
-  document.getElementById('cropZoomLabel').textContent = fit.toFixed(1) + '×';
+  // Set min to fit-contain so even a 4K image can zoom all the way out
+  sl.min = fitContain;
+  sl.max = Math.max(4, fitCover * 4);
+  sl.step = fitContain / 20; // smooth steps relative to image size
+  sl.value = fitCover;
+  document.getElementById('cropZoomLabel').textContent = fitCover.toFixed(2) + '×';
   // Center
-  _cropX = (CROP_SIZE - w * fit) / 2;
-  _cropY = (CROP_SIZE - h * fit) / 2;
+  _cropX = (CROP_SIZE - w * fitCover) / 2;
+  _cropY = (CROP_SIZE - h * fitCover) / 2;
   _applyCropTransform();
 }
 
@@ -1124,7 +1130,9 @@ function onCropZoom(val) {
   _cropX = cx - (cx - _cropX) * (ns / _cropScale);
   _cropY = cy - (cy - _cropY) * (ns / _cropScale);
   _cropScale = ns;
-  document.getElementById('cropZoomLabel').textContent = ns.toFixed(1) + '×';
+  // Show enough decimals for small scales (e.g. 4K images)
+  const decimals = ns < 0.1 ? 3 : ns < 1 ? 2 : 1;
+  document.getElementById('cropZoomLabel').textContent = ns.toFixed(decimals) + '×';
   _applyCropTransform();
 }
 
