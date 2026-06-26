@@ -2,8 +2,8 @@
   "name": "StillWorks",
   "short_name": "StillWorks",
   "description": "Used. Cheap. Still Works. — Rwanda's free secondhand marketplace.",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "/ZenoVibes/index.html",
+  "scope": "/ZenoVibes/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
@@ -38,14 +38,14 @@
       "name": "Browse Shop",
       "short_name": "Shop",
       "description": "Browse all listings",
-      "url": "/pages/shop.html",
+      "url": "/ZenoVibes/pages/shop.html",
       "icons": [{ "src": "images/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Sell Something",
       "short_name": "Sell",
       "description": "Post a new listing",
-      "url": "/pages/sell.html",
+      "url": "/ZenoVibes/pages/sell.html",
       "icons": [{ "src": "images/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

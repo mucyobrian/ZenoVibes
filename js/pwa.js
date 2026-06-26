@@ -1,30 +1,23 @@
 // StillWorks PWA — Service Worker registration + install prompt
-// Include this script in every page just before </body>
-
 (function () {
   'use strict';
 
   // ── Register Service Worker ───────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
-    // Resolve SW path regardless of whether we're in root or /pages/
-    const swPath = location.pathname.startsWith('/pages/')
+    const swPath = location.pathname.startsWith('/ZenoVibes/pages/')
       ? '../sw.js'
       : 'sw.js';
 
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register(swPath, { scope: '/' })
+        .register(swPath, { scope: '/ZenoVibes/' })
         .then(reg => {
           console.log('[SW] Registered, scope:', reg.scope);
 
-          // Notify user when a new version is available
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
             newWorker.addEventListener('statechange', () => {
-              if (
-                newWorker.state === 'installed' &&
-                navigator.serviceWorker.controller
-              ) {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 showUpdateBanner();
               }
             });
@@ -34,14 +27,12 @@
     });
   }
 
-  // ── Install prompt (Android Chrome "Add to Home Screen") ─────────────────
+  // ── Install prompt ────────────────────────────────────────────────────────
   let deferredPrompt = null;
 
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-
-    // Only show the banner if user hasn't dismissed it this session
     if (!sessionStorage.getItem('pwa-banner-dismissed')) {
       showInstallBanner();
     }
@@ -50,7 +41,6 @@
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
     hideInstallBanner();
-    console.log('[PWA] App installed');
   });
 
   // ── Install banner UI ─────────────────────────────────────────────────────
@@ -64,19 +54,18 @@
         <img src="${resolveIconPath()}" alt="StillWorks" class="pwa-banner-icon"/>
         <div class="pwa-banner-text">
           <strong>Add StillWorks to your phone</strong>
-          <span>Shop & sell — works offline too</span>
+          <span>Fast loads. No browser chrome.</span>
         </div>
         <button class="pwa-banner-install" id="pwaInstallBtn">Install</button>
         <button class="pwa-banner-dismiss" id="pwaDismissBtn" aria-label="Dismiss">✕</button>
       </div>
     `;
 
-    // Inject styles inline so this works before CSS loads
     const style = document.createElement('style');
     style.textContent = `
       #pwa-install-banner {
         position: fixed;
-        bottom: 68px; /* sit above the tab bar */
+        bottom: 68px;
         left: 0; right: 0;
         z-index: 9999;
         padding: 0 12px 8px;
@@ -171,14 +160,13 @@
   }
 
   function hideInstallBanner() {
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) banner.remove();
+    const el = document.getElementById('pwa-install-banner');
+    if (el) el.remove();
   }
 
-  // ── Update available banner ───────────────────────────────────────────────
+  // ── Update banner ─────────────────────────────────────────────────────────
   function showUpdateBanner() {
     if (document.getElementById('pwa-update-banner')) return;
-
     const banner = document.createElement('div');
     banner.id = 'pwa-update-banner';
     banner.innerHTML = `
@@ -189,9 +177,7 @@
 
     document.getElementById('pwaUpdateBtn').addEventListener('click', () => {
       navigator.serviceWorker.getRegistration().then(reg => {
-        if (reg && reg.waiting) {
-          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
+        if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         location.reload();
       });
     });
@@ -199,7 +185,7 @@
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function resolveIconPath() {
-    return location.pathname.startsWith('/pages/')
+    return location.pathname.startsWith('/ZenoVibes/pages/')
       ? '../images/icons/icon-192.png'
       : 'images/icons/icon-192.png';
   }
