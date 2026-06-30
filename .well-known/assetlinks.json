@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.mucyobrian.twa",
+        "sha256_cert_fingerprints": ["5B:BA:39:66:F4:94:07:C3:B5:EA:2A:1B:17:C0:4D:9B:46:04:01:81:EF:B7:1F:18:24:E9:0C:47:50:92:DF:0F"]
+      }
+    }]
